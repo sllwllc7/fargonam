@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fargonam Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+    .tab-active { background-color: #1e293b; color: white; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen" class="hidden min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-1">Fargonam Admin</h1>
+    <p class="text-slate-500 mb-6">Admin sifatida kiring</p>
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Telefon</label>
+        <input id="loginPhone" type="text" placeholder="+998901234567" required
+               class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-700" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Parol</label>
+        <input id="loginPassword" type="password" required
+               class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-700" />
+      </div>
+      <button type="submit" class="w-full bg-slate-800 text-white py-2 rounded-lg hover:bg-slate-900">
+        Kirish
+      </button>
+      <p id="loginError" class="text-red-600 text-sm hidden"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div id="dashboard" class="hidden">
+  <header class="bg-slate-800 text-white">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-xl font-bold">Fargonam Admin</span>
+        <span id="adminWho" class="text-slate-300 text-sm"></span>
+      </div>
+      <button id="logoutBtn" class="text-sm px-3 py-1 bg-slate-700 rounded hover:bg-slate-600">
+        Chiqish
+      </button>
+    </div>
+    <nav class="max-w-6xl mx-auto px-6 flex gap-1 text-sm">
+      <button data-tab="stats" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Statistika</button>
+      <button data-tab="categories" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Kategoriyalar</button>
+      <button data-tab="users" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Foydalanuvchilar</button>
+      <button data-tab="orders" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Buyurtmalar</button>
+      <button data-tab="news" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Yangiliklar</button>
+      <button data-tab="banners" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Bannerlar</button>
+    </nav>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-6">
+
+    <!-- ============ STATS TAB ============ -->
+    <section data-pane="stats" class="pane hidden">
+      <h2 class="text-2xl font-bold mb-4">Umumiy statistika</h2>
+      <div id="statsGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- ============ CATEGORIES TAB ============ -->
+    <section data-pane="categories" class="pane hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">Kategoriyalar</h2>
+      </div>
+      <form id="categoryForm" class="bg-white rounded-xl shadow p-4 mb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+        <input id="catName" placeholder="Nomi" required class="border rounded px-3 py-2" />
+        <input id="catSlug" placeholder="slug (masalan: kiyim-kechak)" required class="border rounded px-3 py-2" />
+        <input id="catParent" type="number" placeholder="Parent ID (ixtiyoriy)" class="border rounded px-3 py-2" />
+        <button class="bg-slate-800 text-white rounded px-4 py-2 hover:bg-slate-900">Qo'shish</button>
+      </form>
+      <div class="bg-white rounded-xl shadow overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-100 text-left">
+            <tr>
+              <th class="p-3">ID</th><th class="p-3">Nomi</th><th class="p-3">Slug</th><th class="p-3">Parent</th>
+            </tr>
+          </thead>
+          <tbody id="catTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ USERS TAB ============ -->
+    <section data-pane="users" class="pane hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">Foydalanuvchilar</h2>
+        <input id="userSearch" placeholder="Telefon yoki ism..." class="border rounded px-3 py-2 w-64" />
+      </div>
+      <div class="bg-white rounded-xl shadow overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-100 text-left">
+            <tr>
+              <th class="p-3">ID</th><th class="p-3">Telefon</th><th class="p-3">Ism</th>
+              <th class="p-3">Rol</th><th class="p-3">Holat</th><th class="p-3">Amal</th>
+            </tr>
+          </thead>
+          <tbody id="userTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ ORDERS TAB ============ -->
+    <section data-pane="orders" class="pane hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">Buyurtmalar</h2>
+        <select id="orderStatusFilter" class="border rounded px-3 py-2">
+          <option value="">— Hammasi —</option>
+          <option value="pending">pending</option>
+          <option value="paid">paid</option>
+          <option value="shipped">shipped</option>
+          <option value="delivered">delivered</option>
+          <option value="cancelled">cancelled</option>
+        </select>
+      </div>
+      <div class="bg-white rounded-xl shadow overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-100 text-left">
+            <tr>
+              <th class="p-3">ID</th><th class="p-3">User</th><th class="p-3">Sana</th>
+              <th class="p-3">Jami</th><th class="p-3">Holat</th><th class="p-3">Amal</th>
+            </tr>
+          </thead>
+          <tbody id="orderTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ NEWS TAB ============ -->
+    <section data-pane="news" class="pane hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">Yangiliklar</h2>
+      </div>
+      <form id="newsForm" class="bg-white rounded-xl shadow p-4 mb-4 space-y-3" enctype="multipart/form-data">
+        <input id="newsTitle" placeholder="Sarlavha" required class="w-full border rounded px-3 py-2" />
+        <textarea id="newsBody" placeholder="Matn" required rows="3" class="w-full border rounded px-3 py-2"></textarea>
+        <div class="flex gap-3 items-center">
+          <input id="newsFile" type="file" accept="image/*" class="text-sm" />
+          <button class="bg-slate-800 text-white rounded px-4 py-2 hover:bg-slate-900">E'lon qilish</button>
+        </div>
+      </form>
+      <div id="newsList" class="space-y-3"></div>
+    </section>
+
+    <!-- ============ BANNERS TAB ============ -->
+    <section data-pane="banners" class="pane hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">Bannerlar</h2>
+      </div>
+      <form id="bannerForm" class="bg-white rounded-xl shadow p-4 mb-4 space-y-3" enctype="multipart/form-data">
+        <input id="bannerTitle" placeholder="Banner nomi" required class="w-full border rounded px-3 py-2" />
+        <div class="flex gap-3 items-center">
+          <input id="bannerFile" type="file" accept="image/*,video/mp4" required class="text-sm" />
+          <button class="bg-slate-800 text-white rounded px-4 py-2 hover:bg-slate-900">Yuklash</button>
+        </div>
+      </form>
+      <div id="bannerList" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// =========================================================
+// Fargonam Admin — vanilla JS (sodda, kutubxonasiz)
+// =========================================================
+const API = ""; // same-origin (FastAPI mountdan xizmat qiladi)
+const TOKEN_KEY = "fargonam_admin_token";
+
+// ----- Helperlar -----
+function getToken() { return localStorage.getItem(TOKEN_KEY); }
+function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+
+async function api(path, opts = {}) {
+  const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  const tok = getToken();
+  if (tok) headers["Authorization"] = "Bearer " + tok;
+  const res = await fetch(API + path, { ...opts, headers });
+  if (res.status === 401) { clearToken(); showLogin(); throw new Error("401"); }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || "Xato");
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+function showLogin() {
+  document.getElementById("loginScreen").classList.remove("hidden");
+  document.getElementById("dashboard").classList.add("hidden");
+}
+function showDashboard() {
+  document.getElementById("loginScreen").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+}
+
+// ----- LOGIN -----
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const phone = document.getElementById("loginPhone").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const errEl = document.getElementById("loginError");
+  errEl.classList.add("hidden");
+  try {
+    const res = await fetch(API + "/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, password }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Login xatosi");
+    }
+    const data = await res.json();
+    setToken(data.access_token);
+    // Tekshirish: bu user admin bo'lishi kerak
+    const me = await api("/auth/me");
+    if (me.role !== "admin") {
+      clearToken();
+      throw new Error("Bu sahifa faqat admin uchun");
+    }
+    document.getElementById("adminWho").textContent = me.full_name || me.phone;
+    showDashboard();
+    switchTab("stats");
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove("hidden");
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  clearToken();
+  showLogin();
+});
+
+// ----- TABLAR -----
+function switchTab(name) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("tab-active", b.dataset.tab === name));
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("hidden", p.dataset.pane !== name));
+  if (name === "stats") loadStats();
+  if (name === "categories") loadCategories();
+  if (name === "users") loadUsers();
+  if (name === "orders") loadOrders();
+  if (name === "news") loadNews();
+  if (name === "banners") loadBanners();
+}
+document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+
+// ----- STATS -----
+async function loadStats() {
+  const grid = document.getElementById("statsGrid");
+  grid.innerHTML = "<div class='text-slate-400'>Yuklanmoqda...</div>";
+  try {
+    const s = await api("/admin/stats");
+    const cards = [
+      ["Foydalanuvchilar", s.users_total],
+      ["Sotuvchilar", s.sellers_total],
+      ["Do'konlar", s.shops_total],
+      ["Mahsulotlar", s.products_total],
+      ["Buyurtmalar", s.orders_total],
+      ["Daromad (so'm)", Number(s.revenue_total).toLocaleString("uz-UZ")],
+    ];
+    grid.innerHTML = cards.map(([label, val]) => `
+      <div class="bg-white rounded-xl shadow p-5">
+        <div class="text-slate-500 text-sm">${label}</div>
+        <div class="text-2xl font-bold mt-1">${val}</div>
+      </div>
+    `).join("");
+  } catch (e) { grid.innerHTML = `<div class="text-red-600">${e.message}</div>`; }
+}
+
+// ----- CATEGORIES -----
+async function loadCategories() {
+  const tbody = document.getElementById("catTable");
+  tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='4'>Yuklanmoqda...</td></tr>";
+  try {
+    const cats = await api("/categories");
+    if (!cats.length) {
+      tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='4'>Hozircha kategoriya yo'q</td></tr>";
+      return;
+    }
+    tbody.innerHTML = cats.map(c => `
+      <tr class="border-t">
+        <td class="p-3">${c.id}</td>
+        <td class="p-3">${c.name}</td>
+        <td class="p-3 text-slate-500">${c.slug}</td>
+        <td class="p-3">${c.parent_id ?? "—"}</td>
+      </tr>`).join("");
+  } catch (e) { tbody.innerHTML = `<tr><td class='p-3 text-red-600' colspan='4'>${e.message}</td></tr>`; }
+}
+document.getElementById("categoryForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const body = {
+    name: document.getElementById("catName").value.trim(),
+    slug: document.getElementById("catSlug").value.trim(),
+  };
+  const parent = document.getElementById("catParent").value.trim();
+  if (parent) body.parent_id = Number(parent);
+  try {
+    await api("/categories", { method: "POST", body: JSON.stringify(body) });
+    e.target.reset();
+    loadCategories();
+  } catch (err) { alert(err.message); }
+});
+
+// ----- USERS -----
+let userSearchTimer;
+document.getElementById("userSearch").addEventListener("input", () => {
+  clearTimeout(userSearchTimer);
+  userSearchTimer = setTimeout(loadUsers, 300);
+});
+async function loadUsers() {
+  const tbody = document.getElementById("userTable");
+  tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='6'>Yuklanmoqda...</td></tr>";
+  try {
+    const q = document.getElementById("userSearch").value.trim();
+    const url = "/admin/users?limit=100" + (q ? `&q=${encodeURIComponent(q)}` : "");
+    const page = await api(url);
+    if (!page.items.length) {
+      tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='6'>Topilmadi</td></tr>";
+      return;
+    }
+    tbody.innerHTML = page.items.map(u => `
+      <tr class="border-t">
+        <td class="p-3">${u.id}</td>
+        <td class="p-3">${u.phone}</td>
+        <td class="p-3">${u.full_name ?? "—"}</td>
+        <td class="p-3">
+          <select data-uid="${u.id}" class="role-select border rounded px-2 py-1 text-xs">
+            ${["buyer","seller","admin"].map(r => `<option value="${r}" ${u.role===r?"selected":""}>${r}</option>`).join("")}
+          </select>
+        </td>
+        <td class="p-3">
+          ${u.is_active
+            ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs">faol</span>'
+            : '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs">bloklangan</span>'}
+        </td>
+        <td class="p-3">
+          <button data-uid="${u.id}" data-active="${u.is_active}" class="toggle-active text-xs underline">
+            ${u.is_active ? "Bloklash" : "Faollashtirish"}
+          </button>
+        </td>
+      </tr>`).join("");
+    document.querySelectorAll(".role-select").forEach(s => s.addEventListener("change", async (e) => {
+      try { await api(`/admin/users/${e.target.dataset.uid}`, { method: "PATCH", body: JSON.stringify({ role: e.target.value }) }); }
+      catch (err) { alert(err.message); }
+    }));
+    document.querySelectorAll(".toggle-active").forEach(b => b.addEventListener("click", async (e) => {
+      const uid = e.target.dataset.uid;
+      const cur = e.target.dataset.active === "true";
+      try {
+        await api(`/admin/users/${uid}`, { method: "PATCH", body: JSON.stringify({ is_active: !cur }) });
+        loadUsers();
+      } catch (err) { alert(err.message); }
+    }));
+  } catch (e) { tbody.innerHTML = `<tr><td class='p-3 text-red-600' colspan='6'>${e.message}</td></tr>`; }
+}
+
+// ----- ORDERS -----
+document.getElementById("orderStatusFilter").addEventListener("change", loadOrders);
+async function loadOrders() {
+  const tbody = document.getElementById("orderTable");
+  tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='6'>Yuklanmoqda...</td></tr>";
+  try {
+    const f = document.getElementById("orderStatusFilter").value;
+    const url = "/admin/orders?limit=100" + (f ? `&status=${f}` : "");
+    const page = await api(url);
+    if (!page.items.length) {
+      tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='6'>Buyurtma yo'q</td></tr>";
+      return;
+    }
+    tbody.innerHTML = page.items.map(o => `
+      <tr class="border-t">
+        <td class="p-3">#${o.id}</td>
+        <td class="p-3">${o.user_id}</td>
+        <td class="p-3 text-slate-500 text-xs">${new Date(o.created_at).toLocaleString("uz-UZ")}</td>
+        <td class="p-3">${Number(o.total).toLocaleString("uz-UZ")} so'm</td>
+        <td class="p-3">
+          <select data-oid="${o.id}" class="status-select border rounded px-2 py-1 text-xs">
+            ${["pending","paid","shipped","delivered","cancelled"].map(s => `<option value="${s}" ${o.status===s?"selected":""}>${s}</option>`).join("")}
+          </select>
+        </td>
+        <td class="p-3 text-xs text-slate-500">${o.items.length} mahsulot</td>
+      </tr>`).join("");
+    document.querySelectorAll(".status-select").forEach(s => s.addEventListener("change", async (e) => {
+      try { await api(`/admin/orders/${e.target.dataset.oid}`, { method: "PATCH", body: JSON.stringify({ status: e.target.value }) }); }
+      catch (err) { alert(err.message); }
+    }));
+  } catch (e) { tbody.innerHTML = `<tr><td class='p-3 text-red-600' colspan='6'>${e.message}</td></tr>`; }
+}
+
+// ----- NEWS -----
+async function loadNews() {
+  const el = document.getElementById("newsList");
+  el.innerHTML = "<div class='text-slate-400'>Yuklanmoqda...</div>";
+  try {
+    const data = await api("/news?limit=50");
+    const items = data.items || [];
+    if (!items.length) { el.innerHTML = "<div class='text-slate-400'>Yangilik yo'q</div>"; return; }
+    el.innerHTML = items.map(n => `
+      <div class="bg-white rounded-xl shadow p-4">
+        <div class="font-bold">${n.title}</div>
+        <div class="text-sm text-slate-500 mt-1">${n.body.substring(0,200)}${n.body.length>200?'...':''}</div>
+        ${n.image_url ? `<img src="${API}${n.image_url}" class="mt-2 rounded h-24 object-cover" />` : ''}
+      </div>`).join("");
+  } catch(e) { el.innerHTML = `<div class="text-red-600">${e.message}</div>`; }
+}
+document.getElementById("newsForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const title = document.getElementById("newsTitle").value.trim();
+  const body = document.getElementById("newsBody").value.trim();
+  const file = document.getElementById("newsFile").files[0];
+  if (!title || !body) { alert("Sarlavha va matn kiriting"); return; }
+  try {
+    const tok = getToken();
+    const url = new URL(API + "/news");
+    url.searchParams.set("title", title);
+    url.searchParams.set("body", body);
+    const fd = new FormData();
+    if (file) fd.append("file", file);
+    await fetch(url.toString(), {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + tok },
+      body: file ? fd : undefined,
+    });
+    e.target.reset();
+    loadNews();
+  } catch(err) { alert(err.message); }
+});
+
+// ----- BANNERS -----
+async function loadBanners() {
+  const el = document.getElementById("bannerList");
+  el.innerHTML = "<div class='text-slate-400'>Yuklanmoqda...</div>";
+  try {
+    const banners = await api("/feed/banners");
+    if (!banners.length) { el.innerHTML = "<div class='text-slate-400'>Banner yo'q</div>"; return; }
+    el.innerHTML = banners.map(b => `
+      <div class="bg-white rounded-xl shadow overflow-hidden">
+        <img src="${API}${b.media_url}" class="w-full h-32 object-cover" onerror="this.src=''" />
+        <div class="p-3 text-sm font-bold">${b.title}</div>
+      </div>`).join("");
+  } catch(e) { el.innerHTML = `<div class="text-red-600">${e.message}</div>`; }
+}
+document.getElementById("bannerForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const title = document.getElementById("bannerTitle").value;
+  const file = document.getElementById("bannerFile").files[0];
+  if (!file) { alert("Fayl tanlang"); return; }
+  const fd = new FormData();
+  fd.append("file", file);
+  try {
+    const tok = getToken();
+    await fetch(API + "/feed/banners?title=" + encodeURIComponent(title), {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + tok },
+      body: fd,
+    });
+    e.target.reset();
+    loadBanners();
+  } catch(err) { alert(err.message); }
+});
+
+// ----- BOSHLANISH -----
+(async function init() {
+  if (!getToken()) { showLogin(); return; }
+  try {
+    const me = await api("/auth/me");
+    if (me.role !== "admin") { clearToken(); showLogin(); return; }
+    document.getElementById("adminWho").textContent = me.full_name || me.phone;
+    showDashboard();
+    switchTab("stats");
+  } catch { showLogin(); }
+})();
+</script>
+</body>
+</html>

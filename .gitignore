@@ -46,6 +46,10 @@ redis-data/
 *.log
 logs/
 
+# Uploaded files (foydalanuvchi yuklagan rasmlar va h.k.)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
 # Secrets
 secrets/
 *.key
