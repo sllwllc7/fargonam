@@ -1,10 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets.dart';
+import '../cart/cart_screen.dart';
 import '../favorites/favorites_screen.dart';
 
 final productDetailProvider = FutureProvider.family<Map<String, dynamic>, int>((ref, id) async {
@@ -43,7 +46,7 @@ class ProductDetailScreen extends ConsumerWidget {
       ),
       body: pAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Xato: $e')),
+        error: (e, _) => ErrorRetryWidget(error: e, onRetry: () => ref.invalidate(productDetailProvider(productId))),
         data: (p) => _ProductBody(product: p),
       ),
     );
@@ -68,11 +71,20 @@ class _ProductBody extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              fullImg != null
-                  ? Image.network(fullImg, fit: BoxFit.cover)
-                  : Container(
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.image_outlined, size: 80, color: Colors.grey)),
+              Hero(
+                tag: 'product_image_${product['id']}',
+                child: fullImg != null
+                    ? AppCachedImage(
+                        url: fullImg,
+                        borderRadius: 0,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        color: AppColors.surfaceHigh,
+                        child: const Icon(Icons.image_outlined,
+                            size: 80, color: AppColors.textSecondary),
+                      ),
+              ),
               // Gradient overlay (pastdan)
               Positioned(
                 bottom: 0, left: 0, right: 0,
@@ -94,7 +106,7 @@ class _ProductBody extends StatelessWidget {
         // Tafsilotlar
         Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           transform: Matrix4.translationValues(0, -24, 0),
@@ -109,29 +121,29 @@ class _ProductBody extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.store, size: 16, color: Colors.grey),
+                    const Icon(Icons.store, size: 16, color: AppColors.textSecondary),
                     const SizedBox(width: 4),
-                    Text(product['shop_name'] as String, style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+                    Text(product['shop_name'] as String, style: const TextStyle(color: AppColors.textMuted, fontSize: 14)),
                   ],
                 ),
               ],
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Text('${product['price']} so\'m',
-                      style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppTheme.primary)),
+                  Text(_formatPrice(product['price']?.toString() ?? '0'),
+                      style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.cream)),
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: inStock ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                      color: inStock ? AppColors.successSoft : AppColors.errorSoft,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       inStock ? 'Bor: $stock dona' : 'Tugagan',
                       style: TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w600,
-                        color: inStock ? Colors.green : Colors.red,
+                        color: inStock ? AppColors.success : AppColors.error,
                       ),
                     ),
                   ),
@@ -146,7 +158,7 @@ class _ProductBody extends StatelessWidget {
                 const Text('Tavsif', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 6),
                 Text(product['description'] as String,
-                    style: TextStyle(fontSize: 15, color: Colors.grey.shade600, height: 1.5)),
+                    style: const TextStyle(fontSize: 15, color: AppColors.textMuted, height: 1.5)),
               ],
               const SizedBox(height: 16),
 
@@ -180,14 +192,31 @@ class _AddToCartButtonState extends ConsumerState<_AddToCartButton> {
   bool _added = false;
 
   Future<void> _add() async {
+    HapticFeedback.mediumImpact();
     setState(() => _loading = true);
     try {
       await ref.read(dioProvider).post('/cart', data: {'product_id': widget.productId, 'quantity': 1});
+      ref.invalidate(cartProvider);
       setState(() => _added = true);
-    } on DioException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.response?.data['detail']?.toString() ?? 'Xato'), backgroundColor: AppTheme.accent),
+          SnackBar(
+            content: const Text('Savatchaga qo\'shildi'),
+            backgroundColor: AppColors.success,
+            action: SnackBarAction(
+              label: 'Ko\'rish',
+              textColor: Colors.white,
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const CartScreen())),
+            ),
+          ),
+        );
+      }
+    } on DioException catch (e) {
+      HapticFeedback.heavyImpact();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.response?.data['detail']?.toString() ?? 'Xato'), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -200,7 +229,7 @@ class _AddToCartButtonState extends ConsumerState<_AddToCartButton> {
     if (!widget.inStock) {
       return FilledButton(
         onPressed: null,
-        style: FilledButton.styleFrom(backgroundColor: Colors.grey.shade300),
+        style: FilledButton.styleFrom(backgroundColor: AppColors.divider),
         child: const Text('Mahsulot tugagan'),
       );
     }
@@ -209,7 +238,7 @@ class _AddToCartButtonState extends ConsumerState<_AddToCartButton> {
         onPressed: null,
         icon: const Icon(Icons.check_circle),
         label: const Text('Savatchada'),
-        style: FilledButton.styleFrom(backgroundColor: AppTheme.secondary),
+        style: FilledButton.styleFrom(backgroundColor: AppColors.success),
       );
     }
     return FilledButton.icon(
@@ -231,11 +260,12 @@ class _FavoriteButton extends ConsumerWidget {
     final isFavAsync = ref.watch(isFavoriteProvider(productId));
     return isFavAsync.when(
       loading: () => const SizedBox(width: 48),
-      error: (_, __) => const SizedBox(width: 48),
+      error: (_, _) => const SizedBox(width: 48),
       data: (isFav) => IconButton(
         icon: Icon(isFav ? Icons.favorite : Icons.favorite_border,
-            color: isFav ? AppTheme.accent : Colors.white, size: 28),
+            color: isFav ? AppColors.error : Colors.white, size: 28),
         onPressed: () async {
+          HapticFeedback.lightImpact();
           final dio = ref.read(dioProvider);
           if (isFav) {
             await dio.delete('/favorites/$productId');
@@ -248,6 +278,19 @@ class _FavoriteButton extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Narxni chiroyli formatlash: 1250000 -> 1 250 000 UZS
+String _formatPrice(String raw) {
+  final num = double.tryParse(raw);
+  if (num == null) return '$raw UZS';
+  final intStr = num.toInt().toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < intStr.length; i++) {
+    if (i > 0 && (intStr.length - i) % 3 == 0) buf.write(' ');
+    buf.write(intStr[i]);
+  }
+  return '$buf UZS';
 }
 
 class _ReviewsSection extends ConsumerStatefulWidget {
@@ -284,7 +327,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
     final reviewsAsync = ref.watch(productReviewsProvider(widget.productId));
     return reviewsAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (data) {
         final avg = data['avg_rating'];
         final total = data['total'] as int;
@@ -301,8 +344,8 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
                 const SizedBox(width: 8),
                 if (avg != null) ...[
                   const Icon(Icons.star, color: Colors.amber, size: 18),
-                  Text(' ${avg}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(' ($total)', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                  Text(' $avg', style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(' ($total)', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                 ],
                 const Spacer(),
                 TextButton(
@@ -342,7 +385,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
                     color: Colors.amber, size: 16,
                   )),
                   const SizedBox(width: 8),
-                  Text(r['user_name'] as String, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text(r['user_name'] as String, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 ],
               ),
               if (r['comment'] != null && (r['comment'] as String).isNotEmpty)

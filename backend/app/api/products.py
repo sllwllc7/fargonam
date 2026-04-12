@@ -34,13 +34,31 @@ ALLOWED_IMAGE_TYPES = {
 }
 MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
 
+# Fayl boshidagi "magic bytes" — haqiqiy rasm ekanligini tekshirish uchun
+# (client content_type'ni aldashi mumkin)
+_MAGIC_BYTES = {
+    b"\xff\xd8\xff": ".jpg",      # JPEG
+    b"\x89PNG\r\n\x1a\n": ".png", # PNG
+    b"RIFF": ".webp",             # WebP (RIFF...WEBP)
+}
+
+
+def _validate_image_magic(data: bytes) -> str | None:
+    """Fayl boshidagi baytlardan haqiqiy formatni aniqlaydi. None = noma'lum."""
+    for magic, ext in _MAGIC_BYTES.items():
+        if data[:len(magic)] == magic:
+            if ext == ".webp" and data[8:12] != b"WEBP":
+                continue
+            return ext
+    return None
+
 router = APIRouter(prefix="/products", tags=["products"])
 
 
 @router.get("", response_model=Page[ProductOut])
 async def list_products(
     db: AsyncSession = Depends(get_db),
-    q: str | None = Query(default=None, description="Nomda qidirish (case-insensitive)"),
+    q: str | None = Query(default=None, max_length=100, description="Nomda qidirish (case-insensitive)"),
     shop_id: int | None = Query(default=None),
     category_id: int | None = Query(default=None),
     min_price: Decimal | None = Query(default=None, ge=0),
@@ -51,7 +69,9 @@ async def list_products(
 ):
     base = select(Product).where(Product.is_active.is_(True))
     if q:
-        base = base.where(Product.name.ilike(f"%{q}%"))
+        # LIKE maxsus belgilarini escape qilish
+        safe_q = q.replace("%", r"\%").replace("_", r"\_")
+        base = base.where(Product.name.ilike(f"%{safe_q}%"))
     if shop_id is not None:
         base = base.where(Product.shop_id == shop_id)
     if category_id is not None:
@@ -69,11 +89,25 @@ async def list_products(
         order_clause = Product.price.desc()
     elif sort == "newest":
         order_clause = Product.id.desc()
-    rows = await db.scalars(
+    rows = (await db.scalars(
         base.order_by(order_clause).limit(limit).offset(offset)
-    )
+    )).all()
+
+    # Barcha shoplarni bir so'rovda olish (N+1 o'rniga)
+    shop_ids = list({p.shop_id for p in rows})
+    shops = (await db.scalars(select(Shop).where(Shop.id.in_(shop_ids)))).all() if shop_ids else []
+    shop_map = {s.id: s for s in shops}
+
+    items = []
+    for p in rows:
+        out = ProductOut.model_validate(p)
+        shop = shop_map.get(p.shop_id)
+        if shop:
+            out.shop_name = shop.name
+        items.append(out)
+
     return Page[ProductOut](
-        items=[await _product_with_shop(p, db) for p in rows],
+        items=items,
         total=total or 0,
         limit=limit,
         offset=offset,
@@ -83,7 +117,7 @@ async def list_products(
 @router.get("/{product_id}", response_model=ProductOut)
 async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
     p = await db.get(Product, product_id)
-    if not p:
+    if not p or not p.is_active:
         raise HTTPException(status_code=404, detail="Mahsulot topilmadi")
     return await _product_with_shop(p, db)
 
@@ -161,7 +195,11 @@ async def upload_product_image(
     if not contents:
         raise HTTPException(status_code=400, detail="Bo'sh fayl")
 
-    ext = ALLOWED_IMAGE_TYPES[file.content_type]
+    # Magic bytes tekshiruvi — content_type aldanishi mumkin
+    real_ext = _validate_image_magic(contents)
+    if real_ext is None:
+        raise HTTPException(status_code=400, detail="Fayl haqiqiy rasm emas")
+    ext = real_ext
     filename = f"{product_id}_{secrets.token_hex(8)}{ext}"
     dest: Path = PRODUCTS_DIR / filename
     dest.write_bytes(contents)
@@ -222,7 +260,10 @@ async def add_product_image(
     if len(contents) > MAX_IMAGE_BYTES:
         raise HTTPException(status_code=400, detail="Rasm 5MB dan katta")
 
-    ext = ALLOWED_IMAGE_TYPES[file.content_type]
+    real_ext = _validate_image_magic(contents)
+    if real_ext is None:
+        raise HTTPException(status_code=400, detail="Fayl haqiqiy rasm emas")
+    ext = real_ext
     filename = f"{product_id}_{secrets.token_hex(8)}{ext}"
     (PRODUCTS_DIR / filename).write_bytes(contents)
 

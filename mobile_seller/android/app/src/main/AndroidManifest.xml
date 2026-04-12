@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Backend API'ga (10.0.2.2 va keyinroq real serverga) ulanish uchun -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Haydovchi real-time joylashuvi uchun -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:label="mobile_seller"
         android:usesCleartextTraffic="true"

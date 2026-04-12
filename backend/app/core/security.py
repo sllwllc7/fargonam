@@ -1,7 +1,7 @@
 """
 Parol hash va JWT yordamchilari.
 - Parollar bcrypt bilan hash qilinadi
-- JWT (HS256) access tokenlar uchun
+- JWT (HS256) access va refresh tokenlar uchun
 """
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -11,6 +11,7 @@ from passlib.context import CryptContext
 
 from app.core.config import settings
 
+# bcrypt 12 raund (default) — yetarlicha kuchli
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -27,9 +28,18 @@ def create_access_token(subject: str | int, extra: dict[str, Any] | None = None)
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
-    payload: dict[str, Any] = {"sub": str(subject), "exp": expire}
+    payload: dict[str, Any] = {"sub": str(subject), "exp": expire, "type": "access"}
     if extra:
         payload.update(extra)
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def create_refresh_token(subject: str | int) -> str:
+    """JWT refresh token yaratish — uzoq muddatli (7 kun)."""
+    expire = datetime.now(timezone.utc) + timedelta(
+        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+    )
+    payload: dict[str, Any] = {"sub": str(subject), "exp": expire, "type": "refresh"}
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 

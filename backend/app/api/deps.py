@@ -22,6 +22,9 @@ async def get_current_user(
     payload = decode_token(token)
     if not payload or "sub" not in payload:
         raise creds_exc
+    # Faqat access token qabul qilinadi (refresh emas)
+    if payload.get("type") != "access":
+        raise creds_exc
     try:
         user_id = int(payload["sub"])
     except (TypeError, ValueError):

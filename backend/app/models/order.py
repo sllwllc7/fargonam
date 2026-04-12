@@ -31,6 +31,7 @@ class Order(Base):
         SAEnum(OrderStatus, name="order_status"),
         default=OrderStatus.pending,
         nullable=False,
+        index=True,
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

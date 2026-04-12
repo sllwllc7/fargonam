@@ -5,8 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from pydantic import BaseModel, Field
+
 from app.api.deps import require_admin
+from app.core.push import send_push_to_user
 from app.db.session import get_db
+from app.models.notification import Notification
 from app.models.order import Order, OrderStatus
 from app.models.product import Product
 from app.models.shop import Shop
@@ -131,3 +135,52 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         orders_total=orders_total or 0,
         revenue_total=float(revenue or Decimal("0")),
     )
+
+
+# ========== BROADCAST (xabar yuborish) ==========
+
+class BroadcastRequest(BaseModel):
+    title: str = Field(max_length=200)
+    body: str = Field(max_length=2000)
+    # Kimga: "all", "buyers", "sellers", yoki aniq user_id lar
+    target: str = Field(default="all", pattern=r"^(all|buyers|sellers|user_ids)$")
+    user_ids: list[int] | None = None  # target=user_ids bo'lganda
+
+
+@router.post("/broadcast")
+async def broadcast_message(
+    payload: BroadcastRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin — barcha yoki tanlangan userlarga xabar yuborish."""
+    # Kimga yuborish
+    if payload.target == "user_ids" and payload.user_ids:
+        user_ids = payload.user_ids
+    else:
+        base = select(User.id).where(User.is_active.is_(True))
+        if payload.target == "buyers":
+            base = base.where(User.role == UserRole.buyer)
+        elif payload.target == "sellers":
+            base = base.where(User.role == UserRole.seller)
+        user_ids = list((await db.scalars(base)).all())
+
+    # Notification yaratish va push yuborish
+    sent = 0
+    for uid in user_ids:
+        notif = Notification(
+            user_id=uid,
+            title=payload.title,
+            body=payload.body,
+            type="system",
+        )
+        db.add(notif)
+        count = await send_push_to_user(uid, payload.title, payload.body, data={"type": "system"})
+        if count > 0:
+            sent += 1
+
+    await db.commit()
+    return {
+        "total_users": len(user_ids),
+        "push_sent": sent,
+        "notifications_created": len(user_ids),
+    }

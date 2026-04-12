@@ -12,3 +12,6 @@ bcrypt==4.0.1
 python-multipart==0.0.20
 redis==5.2.1
 slowapi==0.1.9
+httpx==0.28.1
+boto3==1.36.26
+google-auth==2.38.0

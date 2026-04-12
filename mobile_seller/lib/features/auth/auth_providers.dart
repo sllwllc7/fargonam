@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../core/config.dart';
 
 /// Joriy foydalanuvchi (UserOut). null = login qilinmagan.
 class CurrentUser {
@@ -39,9 +40,18 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> tryAutoLogin() async {
     final storage = ref.read(secureStorageProvider);
-    final tok = await storage.read(key: 'access_token');
+    final tok = await storage.read(key: AppConfig.accessTokenKey);
     if (tok == null || tok.isEmpty) return;
     await _loadMe();
+  }
+
+  /// Tokenlarni xavfsiz saqlash.
+  Future<void> _saveTokens(Map<String, dynamic> data) async {
+    final storage = ref.read(secureStorageProvider);
+    await storage.write(key: AppConfig.accessTokenKey, value: data['access_token'] as String);
+    if (data['refresh_token'] != null) {
+      await storage.write(key: AppConfig.refreshTokenKey, value: data['refresh_token'] as String);
+    }
   }
 
   Future<void> login(String phone, String password) async {
@@ -49,8 +59,7 @@ class AuthController extends Notifier<AuthState> {
     try {
       final dio = ref.read(dioProvider);
       final res = await dio.post('/auth/login', data: {'phone': phone, 'password': password});
-      final token = res.data['access_token'] as String;
-      await ref.read(secureStorageProvider).write(key: 'access_token', value: token);
+      await _saveTokens(res.data as Map<String, dynamic>);
       await _loadMe();
     } on DioException catch (e) {
       state = state.copyWith(
@@ -74,7 +83,9 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
-    await ref.read(secureStorageProvider).delete(key: 'access_token');
+    final storage = ref.read(secureStorageProvider);
+    await storage.delete(key: AppConfig.accessTokenKey);
+    await storage.delete(key: AppConfig.refreshTokenKey);
     state = const AuthState();
   }
 }

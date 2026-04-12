@@ -1,12 +1,13 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    id("com.google.gms.google-services")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
-    namespace = "uz.fargonam.mobile_user"
+    namespace = "uz.fargonam.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,11 +21,9 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "uz.fargonam.mobile_user"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        applicationId = "uz.fargonam.app"
+        // Yandex MapKit Android 8.0+ talab qiladi
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -41,4 +40,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Yandex MapKit native SDK (lite variant — kichikroq, POI'lar yo'q)
+    implementation("com.yandex.android:maps.mobile:4.22.0-lite")
 }

@@ -54,3 +54,10 @@ backend/uploads/*
 secrets/
 *.key
 *.pem
+firebase_credentials.json
+
+# Docker volumes
+minio-data/
+
+# Nginx certs
+nginx/certs/

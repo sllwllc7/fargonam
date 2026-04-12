@@ -55,6 +55,7 @@ class Ride(Base):
         SAEnum(RideStatus, name="ride_status"),
         default=RideStatus.searching,
         nullable=False,
+        index=True,
     )
     # Manzillar (hozircha matn, keyinroq koordinatalar)
     pickup_address: Mapped[str] = mapped_column(String(300))

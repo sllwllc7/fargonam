@@ -1,4 +1,4 @@
-"""Banner/Promo modeli — admin reklama videolari va rasmlari uchun."""
+"""Banner/Promo modeli — admin reklama videolari va rasmlari uchun (story formatda)."""
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, String, Text
@@ -13,6 +13,8 @@ class Banner(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(200))
+    # Story matni (qisqa tavsif)
+    body: Mapped[str | None] = mapped_column(Text, nullable=True)
     # media_url — rasm yoki video URL (lokal /static/ yoki tashqi link)
     media_url: Mapped[str] = mapped_column(String(500))
     # link_url — banner bosilganda qaerga o'tish (ixtiyoriy)

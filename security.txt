@@ -1,0 +1,216 @@
+Технический манифест разработки регионального супер-приложения: Архитектурные стратегии, информационная безопасность и интеграция в цифровую экосистему Узбекистана
+Цифровая трансформация экономики Узбекистана вступила в фазу глубокой конвергенции, где специализированные сервисы эволюционируют в многофункциональные экосистемы, известные как супер-приложения. Развитие таких платформ в региональном контексте, в частности для Ферганской долины, требует не только глубокого понимания локальных экономических реалий, но и применения передовых архитектурных парадигм, обеспечивающих отказоустойчивость, масштабируемость и абсолютную информационную безопасность. Создание минимально жизнеспособного продукта (MVP) с использованием автономных агентов искусственного интеллекта, таких как Claude Code, требует от разработчика предоставления исчерпывающего технического контекста, который исключает неоднозначность и закладывает фундамент для системы, лишенной критических уязвимостей.
+Архитектурный фундамент: Выбор между монолитом, микросервисами и модульным монолитом
+Первичным и наиболее важным решением при проектировании супер-приложения является выбор архитектурного паттерна. Традиционно дискуссия ведется между монолитной архитектурой и микросервисами, однако для условий современного рынка Узбекистана и специфики разработки MVP, третья парадигма — модульный монолит — представляет собой наиболее сбалансированное решение.1
+Монолитная архитектура характеризуется единой кодовой базой, где все функциональные блоки тесно взаимосвязаны. Преимущества такого подхода на ранних этапах очевидны: простота разработки, единая среда развертывания и централизованная отладка.1 Однако по мере роста супер-приложения, включающего в себя кошелек, маркетплейс, транспортные услуги и государственные сервисы, монолит становится громоздким. Любое изменение в одном модуле может вызвать каскадный отказ всей системы, а масштабирование требует дублирования всего приложения, даже если нагрузка возросла только на один сервис.1
+Микросервисная архитектура, напротив, разделяет приложение на независимые компоненты, взаимодействующие через API. Это позволяет командам работать автономно и использовать различные технологические стеки для разных задач.1 Однако внедрение микросервисов на стадии MVP сопряжено с колоссальными инфраструктурными затратами. Распределенные системы вносят сложности в обеспечение согласованности данных, требуют внедрения механизмов распределенных транзакций и сложного мониторинга.6
+Модульный монолит выступает как гибридное решение, объединяющее операционную простоту монолита с логической изоляцией микросервисов.2 В этой модели приложение остается единым исполняемым модулем, но внутренне организовано в виде строго изолированных компонентов с четко определенными интерфейсами.5 Это позволяет избежать сложностей распределенных систем, сохраняя при этом возможность в будущем безболезненно выделить критические модули в отдельные микросервисы.6
+Сравнительный анализ архитектурных подходов
+
+Категория
+Монолитная архитектура
+Микросервисная архитектура
+Модульный монолит
+Дизайн
+Единая кодовая база, взаимозависимые функции.1
+Независимые компоненты, общение через API.1
+Логически изолированные модули в одной базе.5
+Развертывание
+Единый пакет, простая оркестрация.1
+Индивидуальное контейнерное развертывание.1
+Единый пакет с модульной структурой.2
+Отладка
+Простая, централизованные логи.3
+Сложная, требует трассировки запросов.1
+Средняя, изоляция упрощает поиск.5
+Масштабирование
+Вертикальное или полное горизонтальное.1
+Гранулярное масштабирование сервисов.1
+Вертикальное, подготовка к разделению.8
+Сложность
+Низкая на старте, высокая при росте.1
+Высокая с самого начала.1
+Умеренная, стабильная во времени.2
+
+Для ферганского супер-приложения модульный монолит обеспечивает необходимую скорость итераций, позволяя Claude Code генерировать код внутри четко очерченных контекстов (Bounded Contexts), что снижает риск возникновения скрытых зависимостей и логических ошибок.6
+Платежная инфраструктура Узбекистана: Интеграция локальных систем
+Успех супер-приложения в Узбекистане напрямую зависит от глубины интеграции с национальными платежными системами: Payme, Click, Uzum и Paynet. Эти платформы прошли путь от простых инструментов оплаты до полноценных цифровых экосистем, охватывающих миллионы пользователей.9
+Ландшафт платежных провайдеров
+Анализ рынка показывает высокую концентрацию пользователей вокруг нескольких ключевых игроков. Click, обладающий широкой сетью приема платежей и поддержкой государственных инициатив, и Payme, поддерживаемый ресурсами TBC Bank Group, являются доминирующими операторами.9 Uzum, как первый технологический "единорог" страны, предлагает глубокую интеграцию с банковскими услугами и электронной коммерцией.9 Paynet, в свою очередь, незаменим благодаря своей агентской сети из 25 000 точек по всей стране, что критично для пополнения счетов наличными в регионах.11
+
+Провайдер
+Тип
+Поддерживаемые методы
+Сильные стороны
+Click
+Локальный
+UzCard, Humo, Visa, Mastercard.10
+Огромная база пользователей, госсектор.9
+Payme
+Локальный/Гибрид
+Локальные карты, QR, P2P.10
+Удобство UI, поддержка TBC Bank.9
+Uzum Bank
+Локальный/Экосистема
+Карты, рассрочка, вклады.12
+Единая экосистема с маркетплейсом.9
+Paynet
+Локальный
+Наличные через агентов, карты.13
+Доступность в удаленных регионах.11
+
+Унифицированная интеграция через PayTechUZ
+Ручная интеграция каждого провайдера сопряжена с необходимостью изучения разрозненной документации, реализации различных протоколов безопасности и поддержки множества API.14 Библиотека PayTechUZ предлагает разработчикам унифицированный интерфейс, который сокращает время интеграции с месяцев до считанных минут.14 Библиотека поддерживает асинхронные запросы, работу с вебхуками и бесшовную интеграцию с современными фреймворками, такими как FastAPI и Django.14
+Процесс оплаты через Merchant API (на примере Uzum) обычно включает три критических этапа:
+Проверка возможности платежа (Check): Банк отправляет запрос на сервер приложения для подтверждения существования аккаунта пользователя и возможности транзакции.12
+Создание транзакции (Create): Инициация записи о платеже в системе.12
+Подтверждение транзакции (Confirm): После успешного списания средств банком, сервер приложения получает уведомление для оказания услуги пользователю.12
+В случае возникновения ошибок или таймаутов, система должна поддерживать механизм проверки статуса (Status Webhook), который повторяется до десяти раз для достижения финального состояния (CONFIRMED или FAILED).12
+Идентификация и безопасность: Системы OneID и MyID
+Для супер-приложения, претендующего на роль центрального узла взаимодействия пользователя с цифровыми сервисами, критически важна надежная система идентификации. В Узбекистане стандартом является использование систем OneID (id.egov.uz) и MyID.16
+Протоколы OAuth 2.0 и OpenID Connect
+OneID базируется на открытых стандартах OAuth 2.0 и OpenID Connect (OIDC). OAuth 2.0 отвечает за авторизацию (предоставление прав доступа), в то время как OIDC добавляет слой идентификации (подтверждение личности пользователя).18 Использование этих протоколов позволяет приложению получать проверенные данные пользователя, такие как ПИНФЛ (персональный идентификационный номер физического лица), паспортные данные и биометрические подтверждения, без необходимости хранения паролей пользователей в собственной базе данных.20
+
+Элемент OIDC
+Описание и пример
+Scope: openid
+Обязательный параметр для активации OIDC, возвращает уникальный идентификатор sub.22
+Scope: profile
+Запрашивает полное имя пользователя.22
+Scope: phone
+Позволяет получить верифицированный номер телефона.22
+ID Token
+JWT-токен, содержащий утверждения (claims) о личности пользователя.18
+UserInfo Endpoint
+Защищенный ресурс для получения дополнительных атрибутов профиля.22
+
+При интеграции с OneID через Claude Code необходимо обеспечить использование механизма PKCE (Proof Key for Code Exchange), который предотвращает перехват кода авторизации в мобильных средах.18 Также критически важно строгое соответствие Redirect URI и использование параметра state для защиты от CSRF-атак.18
+Инженерное проектирование баз данных: Схемы и Row-Level Security
+Архитектура базы данных для супер-приложения должна обеспечивать изоляцию данных различных модулей при сохранении возможности их взаимодействия. PostgreSQL предлагает для этого механизм схем, который позволяет логически разделить таблицы внутри одной базы данных.24
+Паттерн изоляции через схемы
+Вместо использования префиксов для таблиц (например, wallet_users, shop_users), рекомендуется создавать отдельные схемы для каждого функционального блока. Это создает четкие границы ответственности и упрощает управление правами доступа.24
+
+SQL
+
+
+-- Создание структур для различных модулей
+CREATE SCHEMA core;    -- Основные данные пользователей и организаций
+CREATE SCHEMA wallet;  -- Финансовые транзакции и балансы
+CREATE SCHEMA shop;    -- Товары, заказы и корзины
+
+
+Такой подход позволяет ограничить доступ модуля shop к чувствительным данным схемы wallet на уровне ролей базы данных.24 Для реализации многопользовательской среды (multi-tenancy), особенно если приложение будет обслуживать различные организации Ферганской области, наиболее эффективным является использование Row-Level Security (RLS).25
+RLS позволяет определять политики доступа на уровне отдельных строк таблицы. Например, каждый мерчант в супер-приложении сможет видеть только свои заказы, даже если все они хранятся в одной таблице. Это реализуется путем добавления tenant_id в каждую запись и создания политики, которая автоматически фильтрует данные на основе текущей роли или параметров сессии.25
+Безопасность мобильных приложений: OWASP Mobile Top 10 2024
+Создание "неуязвимого" приложения требует системного подхода к безопасности, ориентированного на актуальный список рисков OWASP Mobile Top 10. В версии 2024 года акценты сместились в сторону безопасности цепочки поставок, защиты конфиденциальности и строгого контроля ввода-вывода.27
+Анализ и минимизация критических угроз
+
+Риск (OWASP 2024)
+Описание
+Стратегия предотвращения
+M1: Improper Credential Usage
+Небезопасное хранение или передача учетных данных.29
+Использование Android Keystore и iOS Keychain; запрет хардкода API-ключей.30
+M2: Inadequate Supply Chain Security
+Уязвимости в сторонних библиотеках и инструментах сборки.29
+Регулярный аудит зависимостей; использование доверенных источников кода.28
+M3: Insecure Auth/Authz
+Слабые механизмы аутентификации и сессионного управления.29
+MFA; короткоживущие JWT; серверная проверка прав для каждого запроса.28
+M5: Insecure Communication
+Использование незащищенных каналов передачи данных.29
+Принудительный TLS 1.3; Certificate Pinning для предотвращения MITM-атак.30
+M9: Insecure Data Storage
+Хранение чувствительных данных в открытом виде на устройстве.32
+Шифрование баз данных (AES-256); отключение логирования в продакшн-сборках.30
+
+Для реализации безопасной синхронизации данных между мобильным клиентом и сервером необходимо использовать гибридное шифрование. Это подразумевает генерацию случайного симметричного ключа для шифрования данных по алгоритму AES-256-GCM, который затем шифруется асимметричным публичным ключом сервера (RSA или ECC).34 AES-GCM является предпочтительным, так как он обеспечивает не только конфиденциальность, но и проверку целостности данных (Authenticated Encryption), что исключает возможность незаметной модификации зашифрованного пакета злоумышленником.35
+Автоматизация разработки с Claude Code: От PRD к чистому коду
+Claude Code представляет собой не просто инструмент автодополнения, а автономного агента, способного анализировать кодовую базу, планировать изменения и самостоятельно исправлять баги.37 Однако для того чтобы Claude создал архитектуру без уязвимостей, необходимо следовать строгим правилам промпт-инжиниринга.
+Структурирование требований через XML-теги
+Claude обучен обрабатывать структурированные данные, и использование XML-тегов в системных промптах и PRD (Product Requirement Documents) значительно повышает точность генерации. Теги позволяют модели четко разграничивать инструкции, контекст и ограничения, предотвращая "смешивание" логики.39
+Рекомендуемая структура PRD для Claude Code должна включать следующие разделы:
+<context>: Описание бизнес-целей и технологического стека (например, Node.js + TypeScript + PostgreSQL).41
+<functional_requirements>: Список функций с приоритетами (P0/P1) и критериями приемки.42
+<security_constraints>: Явные требования к безопасности (например, "использовать только параметризованные запросы", "обязательная валидация через Zod").41
+<data_models>: Описания схем баз данных и интерфейсов обмена данными.43
+Использование Claude 3.5 Sonnet позволяет решать до 64% задач агентного кодирования автономно, что значительно превосходит показатели предыдущих моделей.38 Для минимизации ошибок рекомендуется использовать "Сократовский метод" взаимодействия с ИИ: прежде чем просить написать код, следует попросить Claude проанализировать архитектурные риски или предложить несколько вариантов реализации задачи.45
+Оптимизация контекстного окна и стоимости
+При работе с Claude Code важно управлять размером контекста. Вместо того чтобы передавать всю кодовую базу, следует использовать @-mentions для указания только релевантных файлов.45 Для крупных задач эффективен фазовый подход:
+Фаза 1 — Архитектура: Использование наиболее мощной модели (Opus) для планирования.41
+Фаза 2 — Реализация модулей: Использование быстрой и точной модели (Sonnet) для написания кода в отдельных чатах для каждого модуля.41
+Фаза 3 — Интеграция и аудит: Финальная проверка связей между модулями.41
+Backend-архитектура на Node.js: Лучшие практики 2025 года
+Для крупномасштабного супер-приложения структура папок в Node.js должна способствовать разделению ответственности. Рекомендуется использовать Feature-based подход (организация по функциональным областям), а не по техническим ролям (MVC).8
+
+Уровень
+Описание
+src/modules/
+Основные бизнес-единицы (auth, wallet, shop, users). Каждый модуль содержит свои контроллеры, сервисы и модели.7
+src/core/
+Кросс-модульные компоненты: глобальные обработчики ошибок, логгеры, базовые конфигурации.7
+src/infrastructure/
+Технические детали реализации: клиенты баз данных, настройки внешних API, прослойки (middleware).7
+src/domain/
+Чистая бизнес-логика и сущности, не зависящие от фреймворков (Clean Architecture).7
+
+Такая структура минимизирует сцепленность (coupling) модулей. Валидация входных данных должна осуществляться на самом раннем этапе с помощью схем Zod. Это гарантирует, что некорректные или вредоносные данные не достигнут уровня бизнес-логики или базы данных.7
+Стратегический план реализации MVP
+Для ферганского супер-приложения критически важна локализация. Это касается не только языковой поддержки (узбекский/русский), но и адаптации под специфические платежные сценарии региона.
+Выбор стека: Node.js (TypeScript) для бэкенда, PostgreSQL для хранения данных, React Native или Flutter для мобильного клиента (обеспечение кроссплатформенности и высокой скорости разработки).7
+Интеграция с OneID: Реализация входа через государственную систему для мгновенного получения доверия пользователей и упрощения процесса KYC.17
+Внедрение PayTechUZ: Подключение Payme и Click в качестве основных методов оплаты для обеспечения максимального охвата транзакций.14
+Безопасность по умолчанию: Внедрение автоматического сканирования зависимостей, использование Helmet.js для защиты HTTP-заголовков и строгая политика CORS.7
+Развертывание и масштабирование: Использование контейнеризации (Docker) с самого начала. Хотя MVP запускается как модульный монолит, контейнеры упростят будущий переход к микросервисам.2
+Заключение: Формирование устойчивой цифровой экосистемы
+Создание супер-приложения в Узбекистане — это не только техническая, но и стратегическая задача. Региональный рынок Ферганской долины требует высокой доступности сервисов и надежности финансовых операций. Использование модульной архитектуры позволяет сохранить гибкость стартапа, одновременно обеспечивая стабильность промышленной системы.
+Интеграция с локальными платежными рельсами и государственными системами идентификации создает уникальную ценность для пользователя, превращая приложение в незаменимый инструмент повседневной жизни. Применение современных методов разработки с использованием ИИ-агентов, таких как Claude Code, при условии строгого контроля архитектурных границ и безопасности, позволяет сократить время выхода на рынок в несколько раз без потери качества.
+Безопасность, заложенная на уровне проектирования (Security by Design), использование надежных криптографических стандартов и следование рекомендациям OWASP делают систему устойчивой к современным киберугрозам. В конечном итоге, успех ферганского супер-приложения будет определяться тем, насколько гармонично оно впишется в динамично развивающуюся цифровую экономику Узбекистана, обеспечивая при этом абсолютную защиту данных и средств своих пользователей.
+Iqtibos keltirilgan adabiyotlar
+Monolithic vs Microservices - Difference Between Software Development Architectures, kirilgan aprel 9, 2026, https://aws.amazon.com/compare/the-difference-between-monolithic-and-microservices-architecture/
+Modular Monolith Architecture in Cloud Environments: A Systematic Literature Review, kirilgan aprel 9, 2026, https://www.mdpi.com/1999-5903/17/11/496
+Microservices vs. monolithic architecture - Atlassian, kirilgan aprel 9, 2026, https://www.atlassian.com/microservices/microservices-architecture/microservices-vs-monolith
+Monolithic Application vs Microservices Architecture Guide - OpenLegacy, kirilgan aprel 9, 2026, https://www.openlegacy.com/blog/monolithic-application
+Microservices vs. Monoliths: Lessons Learned & How to Choose | Nortal, kirilgan aprel 9, 2026, https://nortal.com/insights/microservices-vs-monoliths-lessons-learned-how-to-choose
+Modular Monolith or Microservices : r/softwarearchitecture - Reddit, kirilgan aprel 9, 2026, https://www.reddit.com/r/softwarearchitecture/comments/1sdruip/modular_monolith_or_microservices/
+Building a Scalable Express API Using Clean Architecture and a Modular Monolith (with TypeScript) | by Antoine TSINGA | Medium, kirilgan aprel 9, 2026, https://medium.com/@mwwtstq/building-a-scalable-express-api-using-clean-architecture-and-a-modular-monolith-with-typescript-c855614b05dc
+How to Structure Large Node.js Applications - OneUptime, kirilgan aprel 9, 2026, https://oneuptime.com/blog/post/2026-02-03-nodejs-large-app-structure/view
+THE RISE OF DIGITAL FINANCE IN UZBEKISTAN: A COMPARATIVE ANALYSIS OF UZUM, PAYME, AND CLICK | SHOKH LIBRARY - Journals, kirilgan aprel 9, 2026, https://www.wosjournals.com/index.php/shokh/article/view/6471
+Accepting Payments in Uzbekistan: PSPs, Compliance & Fees - PayAtlas, kirilgan aprel 9, 2026, https://payatlas.com/countries/uzbekistan-uz
+Visa Kapitalbank Sum cards can now be topped up at all points of Paynet, kirilgan aprel 9, 2026, https://www.kapitalbank.uz/en/press_center/news/visa-kapitalbank-sum-cards-can-now-be-topped-up-at-all-points-of-paynet/
+Merchant | Uzum Docs, kirilgan aprel 9, 2026, https://developer.uzumbank.uz/en/merchant/
+Knowledge base - Confluence - Atlassian, kirilgan aprel 9, 2026, https://white-lark.atlassian.net/wiki/x/AQAtBw
+Unified Payment Library for Uzbekistan | PayTechUZ, kirilgan aprel 9, 2026, https://pay-tech.uz/en/
+paytechuz - PyPI, kirilgan aprel 9, 2026, https://pypi.org/project/paytechuz/
+MyGovUz: API Manager, kirilgan aprel 9, 2026, https://integration.my.gov.uz/
+MyID - My.gov.uz, kirilgan aprel 9, 2026, https://my.gov.uz/en/faq/dc948368-27a0-4920-9e84-f77fe4e426ef
+Understanding OAuth 2.0 and OpenID Connect for Developers - OneUptime, kirilgan aprel 9, 2026, https://oneuptime.com/blog/post/2026-02-20-oauth2-oidc-explained/view
+OAuth 2.0 & OpenID Connect: The Complete Guide to What the Standards Actually Say, kirilgan aprel 9, 2026, https://mrutyunjaypatil.medium.com/oauth-2-0-openid-connect-the-complete-guide-to-what-the-standards-actually-say-e92f040a4251
+Uzbekistan for foreigners - My.gov.uz, kirilgan aprel 9, 2026, https://my.gov.uz/uz/for-foreigners
+Utilizing OneID, id.egov.uz, and my.gov.uz Platforms - Prezi, kirilgan aprel 9, 2026, https://prezi.com/p/viibmr_bcnzz/utilizing-oneid-idegovuz-and-mygovuz-platforms/
+OIDC - OneID® Developers, kirilgan aprel 9, 2026, https://docs.oneid.uk/services/oidc
+OAuth 2.0 & OpenID Connect (OIDC): Technical Overview - YouTube, kirilgan aprel 9, 2026, https://www.youtube.com/watch?v=uUxD1uF244E
+PostgreSQL Schemas Explained: The Missing Tool for Clean, Scalable Database Design, kirilgan aprel 9, 2026, https://cybernerdie.medium.com/postgresql-schemas-explained-the-missing-tool-for-clean-scalable-database-design-f6980622528e
+Multi-tenancy implementation with PostgreSQL: Learn through a simple real-world example, kirilgan aprel 9, 2026, https://blog.logto.io/implement-multi-tenancy
+How to Design Multi-Tenant Schemas in PostgreSQL - OneUptime, kirilgan aprel 9, 2026, https://oneuptime.com/blog/post/2026-01-25-multi-tenant-schemas-postgresql/view
+OWASP Mobile Top 10, kirilgan aprel 9, 2026, https://owasp.org/www-project-mobile-top-10/
+OWASP Mobile Top 10 2024: A Security Guide, kirilgan aprel 9, 2026, https://www.getastra.com/blog/mobile/owasp-mobile-top-10-2024-a-security-guide/
+OWASP Mobile Top 10 and Mobile Security Framework (MobSF) - TMA Solutions, kirilgan aprel 9, 2026, https://www.tmasolutions.com/insights/owasp-mobile-top-10-and-mobile-security-framework-mobsf
+The Ultimate Guide to OWASP Mobile Top 10 2024/2025 | by Izaz Haque - Medium, kirilgan aprel 9, 2026, https://medium.com/@izaz.haque246/the-ultimate-guide-to-owasp-mobile-top-10-2024-2025-d488c070d512
+How to Secure Node.js APIs Against Common Vulnerabilities (OWASP Top 10) - OneUptime, kirilgan aprel 9, 2026, https://oneuptime.com/blog/post/2026-01-06-nodejs-api-security-owasp-top-10/view
+A Guide to OWASP Top 10 Mobile Security Risks (2024) - SecureLayer7, kirilgan aprel 9, 2026, https://blog.securelayer7.net/a-guide-to-owasp-top-10-mobile-security-risks-2024/
+How to encrypt data in Node.js - CoreUI, kirilgan aprel 9, 2026, https://coreui.io/answers/how-to-encrypt-data-in-node-js/
+Hybrid Encryption in Node.js - Thomas Schoffelen, kirilgan aprel 9, 2026, https://schof.co/hybrid-encryption-in-nodejs/
+AES-GCM 256 encryption and decryption using nodejs and java - Stack Overflow, kirilgan aprel 9, 2026, https://stackoverflow.com/questions/77810317/aes-gcm-256-encryption-and-decryption-using-nodejs-and-java
+Node.js - AES Encryption/Decryption with AES-256-GCM using random Initialization Vector + Salt - GitHub Gist, kirilgan aprel 9, 2026, https://gist.github.com/AndiDittrich/4629e7db04819244e843
+The Claude Code Handbook: A Professional Introduction to Building with AI-Assisted Development - freeCodeCamp, kirilgan aprel 9, 2026, https://www.freecodecamp.org/news/claude-code-handbook/
+Claude 3.5 Sonnet Complete Guide: AI Capabilities & Limits | Galileo, kirilgan aprel 9, 2026, https://galileo.ai/blog/claude-3-5-sonnet-complete-guide-ai-capabilities-analysis
+Prompting best practices - Claude API Docs, kirilgan aprel 9, 2026, https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+Claude's system prompt + XML tags is the most underused power combo right now - Reddit, kirilgan aprel 9, 2026, https://www.reddit.com/r/artificial/comments/1s4odb8/claudes_system_prompt_xml_tags_is_the_most/
+Stop Burning Tokens: A Developer's Guide to Claude AI Token Optimization | by Mayank Jain | Apr, 2026 | Level Up Coding, kirilgan aprel 9, 2026, https://levelup.gitconnected.com/stop-burning-tokens-a-developers-guide-to-claude-ai-token-optimization-4c70c7c52ffb
+Claude-Octopus is the best PRD generator I've tested. : r/ClaudeCode - Reddit, kirilgan aprel 9, 2026, https://www.reddit.com/r/ClaudeCode/comments/1qhof1s/claudeoctopus_is_the_best_prd_generator_ive_tested/
+Writing PRDs for AI Code Generation Tools in 2026 - ChatPRD, kirilgan aprel 9, 2026, https://www.chatprd.ai/learn/prd-for-ai-codegen
+We Tested 25 Popular Claude Prompt Techniques: These 5 Actually Work - DreamHost Blog, kirilgan aprel 9, 2026, https://www.dreamhost.com/blog/claude-prompt-engineering/
+How to Write a PRD with AI | Claude Code Tutorial, kirilgan aprel 9, 2026, https://ccforpms.com/advanced/write-prd
+Recommended Folder Structure for Node(TS) 2025 - DEV Community, kirilgan aprel 9, 2026, https://dev.to/pramod_boda/recommended-folder-structure-for-nodets-2025-39jl
+Scalable React and Secure Node.js in 2025 | FullStack Blog, kirilgan aprel 9, 2026, https://www.fullstack.com/labs/resources/blog/best-practices-for-scalable-secure-react-node-js-apps-in-2025

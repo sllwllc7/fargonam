@@ -23,6 +23,10 @@ class RideOut(BaseModel):
     status: RideStatus
     pickup_address: str
     destination_address: str
+    pickup_lat: float | None = None
+    pickup_lng: float | None = None
+    dest_lat: float | None = None
+    dest_lng: float | None = None
     fare: Decimal | None
     created_at: datetime
     accepted_at: datetime | None
@@ -33,6 +37,10 @@ class RideOut(BaseModel):
     car_model: str | None = None
     car_number: str | None = None
     car_color: str | None = None
+    # Haydovchining real-time koordinatalari WebSocket orqali yuboriladi,
+    # REST response'da null qoladi. Frontend uni WebSocket listener'dan oladi.
+    driver_lat: float | None = None
+    driver_lng: float | None = None
     model_config = {"from_attributes": True}
 
 

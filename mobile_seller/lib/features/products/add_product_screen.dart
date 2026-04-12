@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/theme.dart';
 import 'products_providers.dart';
 
 class AddProductScreen extends ConsumerStatefulWidget {
@@ -12,7 +14,8 @@ class AddProductScreen extends ConsumerStatefulWidget {
   final int shopId;
 
   @override
-  ConsumerState<AddProductScreen> createState() => _AddProductScreenState();
+  ConsumerState<AddProductScreen> createState() =>
+      _AddProductScreenState();
 }
 
 class _AddProductScreenState extends ConsumerState<AddProductScreen> {
@@ -35,13 +38,19 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   }
 
   Future<void> _pickImage() async {
+    HapticFeedback.lightImpact();
     final picker = ImagePicker();
-    final img = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final img = await picker.pickImage(
+        source: ImageSource.gallery, imageQuality: 85);
     if (img != null) setState(() => _pickedImage = img);
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    HapticFeedback.mediumImpact();
+    if (!_formKey.currentState!.validate()) {
+      HapticFeedback.heavyImpact();
+      return;
+    }
     setState(() {
       _loading = true;
       _error = null;
@@ -56,12 +65,17 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         stock: int.parse(_stockCtrl.text.trim()),
       );
       if (_pickedImage != null) {
-        await uploadProductImage(ref, productId: product.id, filePath: _pickedImage!.path);
+        await uploadProductImage(ref,
+            productId: product.id, filePath: _pickedImage!.path);
       }
+      HapticFeedback.lightImpact();
       if (mounted) Navigator.pop(context, true);
     } on DioException catch (e) {
-      setState(() => _error = e.response?.data['detail']?.toString() ?? 'Xato');
+      HapticFeedback.heavyImpact();
+      setState(() => _error =
+          e.response?.data['detail']?.toString() ?? 'Xato');
     } catch (e) {
+      HapticFeedback.heavyImpact();
       setState(() => _error = e.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -71,50 +85,125 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.bg,
       appBar: AppBar(title: const Text('Yangi mahsulot')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Image picker
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
-                  height: 180,
+                  height: 200,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: _pickedImage != null
+                          ? AppColors.cream
+                              .withValues(alpha: 0.4)
+                          : AppColors.divider,
+                      width: _pickedImage != null ? 1.5 : 0.5,
+                    ),
                   ),
                   child: _pickedImage != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.file(File(_pickedImage!.path), fit: BoxFit.cover, width: double.infinity),
+                      ? Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius:
+                                  BorderRadius.circular(20),
+                              child: Image.file(
+                                File(_pickedImage!.path),
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
+                            ),
+                            Positioned(
+                              top: 10,
+                              right: 10,
+                              child: GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  setState(() => _pickedImage = null);
+                                },
+                                child: Container(
+                                  padding:
+                                      const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.bg
+                                        .withValues(alpha: 0.7),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.close,
+                                      color: AppColors.cream,
+                                      size: 18),
+                                ),
+                              ),
+                            ),
+                          ],
                         )
-                      : const Center(
+                      : Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
-                              SizedBox(height: 6),
-                              Text('Rasm tanlang', style: TextStyle(color: Colors.grey)),
+                              Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: AppColors.cream
+                                      .withValues(alpha: 0.12),
+                                  borderRadius:
+                                      BorderRadius.circular(18),
+                                ),
+                                child: const Icon(
+                                    Icons.add_a_photo,
+                                    size: 32,
+                                    color: AppColors.cream),
+                              ),
+                              const SizedBox(height: 10),
+                              const Text(
+                                'Mahsulot rasmini tanlang',
+                                style: TextStyle(
+                                    color:
+                                        AppColors.textSecondary,
+                                    fontWeight:
+                                        FontWeight.w600),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Galereyadan rasm tanlash uchun bosing',
+                                style: TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 11),
+                              ),
                             ],
                           ),
                         ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _nameCtrl,
-                decoration: const InputDecoration(labelText: 'Nomi', border: OutlineInputBorder()),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Nomi kerak' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Nomi',
+                  prefixIcon: Icon(Icons.label_outline),
+                ),
+                textCapitalization: TextCapitalization.sentences,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Nomi kerak' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _descCtrl,
-                decoration: const InputDecoration(labelText: 'Tavsif (ixtiyoriy)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Tavsif (ixtiyoriy)',
+                  prefixIcon: Icon(Icons.description_outlined),
+                ),
                 maxLines: 3,
               ),
               const SizedBox(height: 12),
@@ -123,7 +212,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _priceCtrl,
-                      decoration: const InputDecoration(labelText: 'Narx (so\'m)', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                        labelText: 'Narx (so\'m)',
+                        prefixIcon: Icon(Icons.payments_outlined),
+                      ),
                       keyboardType: TextInputType.number,
                       validator: (v) {
                         final n = double.tryParse(v ?? '');
@@ -134,10 +226,13 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                   ),
                   const SizedBox(width: 12),
                   SizedBox(
-                    width: 110,
+                    width: 120,
                     child: TextFormField(
                       controller: _stockCtrl,
-                      decoration: const InputDecoration(labelText: 'Stock', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                        labelText: 'Soni',
+                        prefixIcon: Icon(Icons.numbers),
+                      ),
                       keyboardType: TextInputType.number,
                       validator: (v) {
                         final n = int.tryParse(v ?? '');
@@ -148,18 +243,57 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                   ),
                 ],
               ),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(_error!, style: const TextStyle(color: Colors.red)),
-              ],
-              const SizedBox(height: 20),
-              FilledButton(
-                onPressed: _loading ? null : _submit,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                child: _error == null
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 14),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.errorSoft,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error_outline,
+                                  color: AppColors.error, size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(_error!,
+                                    style: const TextStyle(
+                                        color: AppColors.error,
+                                        fontSize: 13)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 56,
+                child: FilledButton(
+                  onPressed: _loading ? null : _submit,
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18)),
+                  ),
                   child: _loading
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Saqlash'),
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: AppColors.midnightIndigo),
+                        )
+                      : const Text(
+                          'Saqlash',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800),
+                        ),
                 ),
               ),
             ],

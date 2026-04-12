@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+alembic/versions/__pycache__/
+uploads/
+postgres-data/
+redis-data/
+firebase_credentials.json

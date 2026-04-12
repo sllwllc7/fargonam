@@ -33,8 +33,10 @@ async def list_banners(db: AsyncSession = Depends(get_db)):
         {
             "id": b.id,
             "title": b.title,
+            "body": b.body,
             "media_url": b.media_url,
             "link_url": b.link_url,
+            "created_at": b.created_at.isoformat() if b.created_at else None,
         }
         for b in rows
     ]
@@ -44,6 +46,7 @@ async def list_banners(db: AsyncSession = Depends(get_db)):
 async def create_banner(
     title: str,
     file: UploadFile = File(...),
+    body: str | None = None,
     link_url: str | None = None,
     sort_order: int = 0,
     admin=Depends(require_admin),
@@ -55,6 +58,15 @@ async def create_banner(
     contents = await file.read()
     if len(contents) > MAX_MEDIA_BYTES:
         raise HTTPException(status_code=400, detail="Fayl 50MB dan katta")
+    if not contents:
+        raise HTTPException(status_code=400, detail="Bo'sh fayl")
+    # Rasm bo'lsa magic bytes tekshiruvi
+    if file.content_type.startswith("image/"):
+        from app.core.upload_utils import validate_image
+        try:
+            validate_image(contents, max_bytes=MAX_MEDIA_BYTES)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
     BANNERS_DIR.mkdir(parents=True, exist_ok=True)
     ext = ALLOWED_MEDIA[file.content_type]
@@ -63,6 +75,7 @@ async def create_banner(
 
     banner = Banner(
         title=title,
+        body=body,
         media_url=public_url(f"banners/{filename}"),
         link_url=link_url,
         sort_order=sort_order,

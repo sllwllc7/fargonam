@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Fargonam Admin</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script>/* Tailwind inline — CDN XSS xavfini oldini olish */</script>
+  <script src="https://cdn.tailwindcss.com" integrity="sha384-..." crossorigin="anonymous"></script>
+  <!-- Production'da local tailwind build ishlatish tavsiya etiladi -->
   <style>
     [x-cloak] { display: none !important; }
     .tab-active { background-color: #1e293b; color: white; }
@@ -55,6 +57,7 @@
       <button data-tab="orders" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Buyurtmalar</button>
       <button data-tab="news" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Yangiliklar</button>
       <button data-tab="banners" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Bannerlar</button>
+      <button data-tab="broadcast" class="tab px-4 py-2 rounded-t hover:bg-slate-700">📢 Xabar yuborish</button>
     </nav>
   </header>
 
@@ -64,6 +67,18 @@
     <section data-pane="stats" class="pane hidden">
       <h2 class="text-2xl font-bold mb-4">Umumiy statistika</h2>
       <div id="statsGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+
+      <!-- Buyurtma holatlari diagrammasi -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div class="bg-white rounded-xl shadow p-5">
+          <h3 class="font-bold text-lg mb-3">Buyurtma holatlari</h3>
+          <div id="orderStatusChart" class="flex items-end gap-2 h-40"></div>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5">
+          <h3 class="font-bold text-lg mb-3">So'nggi faoliyat</h3>
+          <div id="recentActivity" class="space-y-2 max-h-40 overflow-y-auto text-sm"></div>
+        </div>
+      </div>
     </section>
 
     <!-- ============ CATEGORIES TAB ============ -->
@@ -165,6 +180,35 @@
       <div id="bannerList" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
     </section>
 
+    <!-- ============ BROADCAST TAB ============ -->
+    <section data-pane="broadcast" class="pane hidden">
+      <h2 class="text-2xl font-bold mb-4">📢 Foydalanuvchilarga xabar yuborish</h2>
+      <form id="broadcastForm" class="bg-white rounded-xl shadow p-6 space-y-4 max-w-xl">
+        <div>
+          <label class="block text-sm font-medium mb-1">Kimga</label>
+          <select id="broadcastTarget" class="w-full border rounded-lg px-3 py-2">
+            <option value="all">Barcha foydalanuvchilar</option>
+            <option value="buyers">Faqat xaridorlar</option>
+            <option value="sellers">Faqat sotuvchilar</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Sarlavha</label>
+          <input id="broadcastTitle" placeholder="Masalan: Muhim e'lon" required maxlength="200"
+                 class="w-full border rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Xabar matni</label>
+          <textarea id="broadcastBody" placeholder="Xabar matnini yozing..." required maxlength="2000" rows="4"
+                    class="w-full border rounded-lg px-3 py-2"></textarea>
+        </div>
+        <button type="submit" class="bg-slate-800 text-white rounded-lg px-6 py-2 hover:bg-slate-900">
+          📤 Yuborish
+        </button>
+        <p id="broadcastResult" class="text-sm hidden"></p>
+      </form>
+    </section>
+
   </main>
 </div>
 
@@ -176,9 +220,10 @@ const API = ""; // same-origin (FastAPI mountdan xizmat qiladi)
 const TOKEN_KEY = "fargonam_admin_token";
 
 // ----- Helperlar -----
-function getToken() { return localStorage.getItem(TOKEN_KEY); }
-function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
-function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+// sessionStorage — tab yopilganda token o'chadi (localStorage'dan xavfsizroq)
+function getToken() { return sessionStorage.getItem(TOKEN_KEY); }
+function setToken(t) { sessionStorage.setItem(TOKEN_KEY, t); }
+function clearToken() { sessionStorage.removeItem(TOKEN_KEY); }
 
 async function api(path, opts = {}) {
   const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
@@ -275,6 +320,42 @@ async function loadStats() {
         <div class="text-2xl font-bold mt-1">${val}</div>
       </div>
     `).join("");
+    // Buyurtma holatlari diagrammasi
+    try {
+      const orders = await api("/admin/orders?limit=500");
+      const statusCounts = {};
+      const statusColors = { pending: '#f59e0b', paid: '#3b82f6', shipped: '#6366f1', delivered: '#22c55e', cancelled: '#ef4444' };
+      const statusLabels = { pending: 'Kutilmoqda', paid: "To'langan", shipped: "Yo'lda", delivered: 'Yetkazildi', cancelled: 'Bekor' };
+      (orders.items || orders).forEach(o => { statusCounts[o.status] = (statusCounts[o.status] || 0) + 1; });
+      const maxCount = Math.max(...Object.values(statusCounts), 1);
+      const chart = document.getElementById("orderStatusChart");
+      chart.innerHTML = Object.entries(statusCounts).map(([status, count]) => {
+        const pct = (count / maxCount * 100).toFixed(0);
+        const color = statusColors[status] || '#94a3b8';
+        const label = statusLabels[status] || status;
+        return `<div class="flex-1 flex flex-col items-center">
+          <span class="text-xs font-bold mb-1">${count}</span>
+          <div style="height:${pct}%;background:${color};min-height:8px" class="w-full rounded-t"></div>
+          <span class="text-xs mt-1 text-slate-500">${label}</span>
+        </div>`;
+      }).join("");
+
+      // So'nggi faoliyat
+      const recent = (orders.items || orders).slice(0, 8);
+      const activity = document.getElementById("recentActivity");
+      activity.innerHTML = recent.map(o => {
+        const date = new Date(o.created_at).toLocaleDateString('uz-UZ');
+        const color = statusColors[o.status] || '#94a3b8';
+        return `<div class="flex items-center gap-2 py-1">
+          <span style="background:${color}" class="w-2 h-2 rounded-full"></span>
+          <span class="text-slate-600">Buyurtma #${o.id}</span>
+          <span class="text-slate-400">—</span>
+          <span style="color:${color}" class="font-medium">${statusLabels[o.status] || o.status}</span>
+          <span class="ml-auto text-slate-400 text-xs">${date}</span>
+        </div>`;
+      }).join("");
+    } catch (_) {}
+
   } catch (e) { grid.innerHTML = `<div class="text-red-600">${e.message}</div>`; }
 }
 
@@ -351,12 +432,19 @@ async function loadUsers() {
         </td>
       </tr>`).join("");
     document.querySelectorAll(".role-select").forEach(s => s.addEventListener("change", async (e) => {
-      try { await api(`/admin/users/${e.target.dataset.uid}`, { method: "PATCH", body: JSON.stringify({ role: e.target.value }) }); }
-      catch (err) { alert(err.message); }
+      const newRole = e.target.value;
+      const uid = e.target.dataset.uid;
+      if (!confirm(`Foydalanuvchi #${uid} ning rolini "${newRole}" ga o'zgartirasizmi?`)) {
+        loadUsers(); return;
+      }
+      try { await api(`/admin/users/${uid}`, { method: "PATCH", body: JSON.stringify({ role: newRole }) }); }
+      catch (err) { alert(err.message); loadUsers(); }
     }));
     document.querySelectorAll(".toggle-active").forEach(b => b.addEventListener("click", async (e) => {
       const uid = e.target.dataset.uid;
       const cur = e.target.dataset.active === "true";
+      const action = cur ? "bloklash" : "faollashtirish";
+      if (!confirm(`Foydalanuvchi #${uid} ni ${action}ni xohlaysizmi?`)) return;
       try {
         await api(`/admin/users/${uid}`, { method: "PATCH", body: JSON.stringify({ is_active: !cur }) });
         loadUsers();
@@ -481,6 +569,32 @@ document.getElementById("bannerForm").addEventListener("submit", async (e) => {
     switchTab("stats");
   } catch { showLogin(); }
 })();
+
+// ----- BROADCAST -----
+document.getElementById("broadcastForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const result = document.getElementById("broadcastResult");
+  result.className = "text-sm text-slate-500 mt-2";
+  result.textContent = "Yuborilmoqda...";
+  result.classList.remove("hidden");
+
+  try {
+    const data = await api("/admin/broadcast", {
+      method: "POST",
+      body: JSON.stringify({
+        title: document.getElementById("broadcastTitle").value.trim(),
+        body: document.getElementById("broadcastBody").value.trim(),
+        target: document.getElementById("broadcastTarget").value,
+      }),
+    });
+    result.className = "text-sm text-green-600 mt-2";
+    result.textContent = `✅ ${data.total_users} ta foydalanuvchiga yuborildi (${data.push_sent} ta push)`;
+    e.target.reset();
+  } catch (err) {
+    result.className = "text-sm text-red-600 mt-2";
+    result.textContent = `❌ Xato: ${err.message}`;
+  }
+});
 </script>
 </body>
 </html>

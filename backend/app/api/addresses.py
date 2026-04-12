@@ -19,6 +19,13 @@ class AddressCreate(BaseModel):
     lng: float | None = None
 
 
+class AddressUpdate(BaseModel):
+    label: str | None = Field(default=None, max_length=50)
+    address: str | None = Field(default=None, max_length=300)
+    lat: float | None = None
+    lng: float | None = None
+
+
 @router.get("")
 async def list_addresses(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     rows = (await db.scalars(select(SavedAddress).where(SavedAddress.user_id == current_user.id))).all()
@@ -32,6 +39,35 @@ async def create_address(payload: AddressCreate, current_user: User = Depends(ge
     await db.commit()
     await db.refresh(addr)
     return {"id": addr.id, "label": addr.label, "address": addr.address}
+
+
+@router.patch("/{address_id}")
+async def update_address(
+    address_id: int,
+    payload: AddressUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    addr = await db.get(SavedAddress, address_id)
+    if not addr or addr.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Manzil topilmadi")
+    if payload.label is not None:
+        addr.label = payload.label
+    if payload.address is not None:
+        addr.address = payload.address
+    if payload.lat is not None:
+        addr.lat = payload.lat
+    if payload.lng is not None:
+        addr.lng = payload.lng
+    await db.commit()
+    await db.refresh(addr)
+    return {
+        "id": addr.id,
+        "label": addr.label,
+        "address": addr.address,
+        "lat": addr.lat,
+        "lng": addr.lng,
+    }
 
 
 @router.delete("/{address_id}", status_code=status.HTTP_204_NO_CONTENT)
