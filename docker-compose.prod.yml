@@ -57,8 +57,8 @@ services:
     container_name: fargonam_backend
     restart: always
     environment:
-      DATABASE_URL: postgresql+asyncpg://${DB_USER:-fargonam}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-fargonam_db}
-      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_parol}@redis:6379/0
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY kerak (32+ belgi)}
       DEBUG: "false"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
