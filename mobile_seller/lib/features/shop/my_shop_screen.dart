@@ -8,7 +8,7 @@ import '../../core/widgets.dart';
 import '../auth/auth_providers.dart';
 import '../orders/seller_orders_screen.dart';
 import '../products/products_screen.dart';
-import 'shop_providers.dart';
+import 'shop_providers.dart' show Shop, ShopStatus, myShopProvider, createShop;
 
 class MyShopScreen extends ConsumerWidget {
   const MyShopScreen({super.key});
@@ -114,6 +114,9 @@ class _ShopView extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          // KYC holat banneri
+          _KycBanner(status: shop.status),
           const SizedBox(height: 24),
           PressableScale(
             onTap: () {
@@ -213,6 +216,92 @@ class _ActionTile extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ── KYC holat banneri ──────────────────────────────────────────
+
+class _KycBanner extends StatelessWidget {
+  const _KycBanner({required this.status});
+  final ShopStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (status) {
+      case ShopStatus.approved:
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.success.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.3)),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.verified, color: AppColors.success, size: 18),
+              SizedBox(width: 8),
+              Text(
+                'Do\'koningiz tasdiqlangan',
+                style: TextStyle(
+                    color: AppColors.success,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        );
+      case ShopStatus.rejected:
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+                color: AppColors.error.withValues(alpha: 0.3)),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.cancel_outlined, color: AppColors.error, size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Do\'koningiz rad etildi. Admin bilan bog\'laning.',
+                  style: TextStyle(
+                      color: AppColors.error,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        );
+      case ShopStatus.pending:
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.warning.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+                color: AppColors.warning.withValues(alpha: 0.3)),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.hourglass_empty, color: AppColors.warning, size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Do\'koningiz admin tasdig\'ini kutmoqda',
+                  style: TextStyle(
+                      color: AppColors.warning,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        );
+    }
   }
 }
 

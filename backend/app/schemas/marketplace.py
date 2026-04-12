@@ -5,6 +5,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from app.models.order import OrderStatus, PaymentMethod
+from app.models.shop import ShopStatus
 
 
 # ========== Shop ==========
@@ -18,6 +19,7 @@ class ShopOut(BaseModel):
     owner_id: int
     name: str
     description: str | None
+    status: ShopStatus = ShopStatus.pending
     is_active: bool
     created_at: datetime
     model_config = {"from_attributes": True}

@@ -13,7 +13,7 @@ from app.db.session import get_db
 from app.models.notification import Notification
 from app.models.order import Order, OrderStatus
 from app.models.product import Product
-from app.models.shop import Shop
+from app.models.shop import Shop, ShopStatus
 from app.models.user import User, UserRole
 from app.schemas.admin import AdminStats, OrderStatusUpdate, UserAdminUpdate
 from app.schemas.auth import UserOut
@@ -119,6 +119,9 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         select(func.count()).select_from(User).where(User.role == UserRole.seller)
     )
     shops_total = await db.scalar(select(func.count()).select_from(Shop))
+    shops_pending = await db.scalar(
+        select(func.count()).select_from(Shop).where(Shop.status == ShopStatus.pending)
+    )
     products_total = await db.scalar(select(func.count()).select_from(Product))
     orders_total = await db.scalar(select(func.count()).select_from(Order))
     # Faqat to'langan/yetkazilgan buyurtmalarni hisoblaymiz
@@ -131,10 +134,84 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         users_total=users_total or 0,
         sellers_total=sellers_total or 0,
         shops_total=shops_total or 0,
+        shops_pending=int(shops_pending or 0),
         products_total=products_total or 0,
         orders_total=orders_total or 0,
         revenue_total=float(revenue or Decimal("0")),
     )
+
+
+# ========== SHOPS / KYC ==========
+
+class ShopStatusUpdate(BaseModel):
+    status: ShopStatus
+    admin_note: str | None = Field(default=None, max_length=500)
+
+
+class ShopAdminOut(BaseModel):
+    id: int
+    owner_id: int
+    name: str
+    description: str | None
+    status: ShopStatus
+    admin_note: str | None
+    is_active: bool
+    created_at: str
+
+    model_config = {"from_attributes": True}
+
+    @classmethod
+    def model_validate(cls, obj, **kw):  # type: ignore[override]
+        return cls(
+            id=obj.id,
+            owner_id=obj.owner_id,
+            name=obj.name,
+            description=obj.description,
+            status=obj.status,
+            admin_note=obj.admin_note,
+            is_active=obj.is_active,
+            created_at=str(obj.created_at),
+        )
+
+
+@router.get("/shops", response_model=Page[ShopAdminOut])
+async def list_shops(
+    db: AsyncSession = Depends(get_db),
+    status_filter: ShopStatus | None = Query(default=None, alias="status"),
+    limit: int = Query(default=50, le=200, ge=1),
+    offset: int = Query(default=0, ge=0),
+):
+    """Barcha do'konlar ro'yxati — status bo'yicha filtrlash mumkin."""
+    base = select(Shop)
+    if status_filter is not None:
+        base = base.where(Shop.status == status_filter)
+
+    total = await db.scalar(select(func.count()).select_from(base.subquery()))
+    rows = await db.scalars(base.order_by(Shop.id.desc()).limit(limit).offset(offset))
+    return Page[ShopAdminOut](
+        items=[ShopAdminOut.model_validate(s) for s in rows],
+        total=total or 0,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.patch("/shops/{shop_id}", response_model=ShopAdminOut)
+async def update_shop_status(
+    shop_id: int,
+    payload: ShopStatusUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Do'konni tasdiqlash yoki rad etish (KYC)."""
+    shop = await db.get(Shop, shop_id)
+    if not shop:
+        raise HTTPException(status_code=404, detail="Do'kon topilmadi")
+    shop.status = payload.status
+    if payload.admin_note is not None:
+        shop.admin_note = payload.admin_note
+    await db.commit()
+    await db.refresh(shop)
+    return ShopAdminOut.model_validate(shop)
 
 
 # ========== BROADCAST (xabar yuborish) ==========

@@ -12,7 +12,7 @@ from app.core.storage import PRODUCTS_DIR, public_url
 from app.db.session import get_db
 from app.models.product import Product
 from app.models.product_image import ProductImage
-from app.models.shop import Shop
+from app.models.shop import Shop, ShopStatus
 from app.models.user import User, UserRole
 from app.schemas.common import Page
 from app.schemas.marketplace import ProductCreate, ProductOut, ProductUpdate
@@ -128,6 +128,12 @@ async def _ensure_shop_owner(db: AsyncSession, shop_id: int, user: User) -> Shop
         raise HTTPException(status_code=404, detail="Do'kon topilmadi")
     if shop.owner_id != user.id and user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Bu do'kon sizniki emas")
+    # Admin bo'lmasa — do'kon tasdiqlanganligini tekshirish
+    if user.role != UserRole.admin and shop.status != ShopStatus.approved:
+        raise HTTPException(
+            status_code=403,
+            detail="Do'koningiz hali admin tomonidan tasdiqlanmagan. Tasdiqlashni kuting.",
+        )
     return shop
 
 

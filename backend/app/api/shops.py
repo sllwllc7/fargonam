@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
-from app.models.shop import Shop
+from app.models.shop import Shop, ShopStatus
 from app.models.user import User, UserRole
 from app.schemas.marketplace import ShopCreate, ShopOut
 
@@ -17,7 +17,7 @@ async def list_shops(
     db: AsyncSession = Depends(get_db),
     q: str | None = Query(default=None, max_length=100, description="Nomda qidirish"),
 ):
-    base = select(Shop).where(Shop.is_active.is_(True))
+    base = select(Shop).where(Shop.is_active.is_(True), Shop.status == ShopStatus.approved)
     if q:
         safe_q = q.replace("%", r"\%").replace("_", r"\_")
         base = base.where(Shop.name.ilike(f"%{safe_q}%"))

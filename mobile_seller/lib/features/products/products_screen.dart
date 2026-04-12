@@ -6,7 +6,7 @@ import '../../core/api_client.dart';
 import '../../core/config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
-import '../shop/shop_providers.dart';
+import '../shop/shop_providers.dart' show Shop, ShopStatus, myShopProvider;
 import 'add_product_screen.dart';
 import 'edit_product_screen.dart';
 import 'products_providers.dart';
@@ -36,6 +36,63 @@ class ProductsScreen extends ConsumerWidget {
             backgroundColor: AppColors.bg,
             appBar: AppBar(title: const Text('Mahsulotlar')),
             body: const _NoShopState(),
+          );
+        }
+        // Do'kon tasdiqlanmagan bo'lsa — ogohlantirish
+        if (shop.status != ShopStatus.approved) {
+          return Scaffold(
+            backgroundColor: AppColors.bg,
+            appBar: AppBar(title: const Text('Mahsulotlar')),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: AppColors.warning.withValues(alpha: 0.3)),
+                      ),
+                      child: Icon(
+                        shop.status == ShopStatus.rejected
+                            ? Icons.cancel_outlined
+                            : Icons.hourglass_empty,
+                        color: shop.status == ShopStatus.rejected
+                            ? AppColors.error
+                            : AppColors.warning,
+                        size: 48,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      shop.status == ShopStatus.rejected
+                          ? 'Do\'koningiz rad etilgan'
+                          : 'Do\'koningiz tasdiqlanmagan',
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      shop.status == ShopStatus.rejected
+                          ? 'Mahsulot yuklash uchun admin bilan bog\'laning: support@fargonam.uz'
+                          : 'Mahsulot yuklash uchun admin tasdiqini kuting.',
+                      style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                          height: 1.5),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           );
         }
         return _ProductsList(shopId: shop.id);

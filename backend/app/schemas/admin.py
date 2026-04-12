@@ -17,6 +17,7 @@ class AdminStats(BaseModel):
     users_total: int
     sellers_total: int
     shops_total: int
+    shops_pending: int = 0  # Admin tasdig'ini kutayotgan do'konlar
     products_total: int
     orders_total: int
     revenue_total: float

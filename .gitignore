@@ -61,3 +61,8 @@ minio-data/
 
 # Nginx certs
 nginx/certs/
+
+# Release keystores — HECH QACHON git'ga push qilmang!
+keystores/
+*.jks
+*.keystore

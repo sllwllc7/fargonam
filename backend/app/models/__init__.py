@@ -19,7 +19,7 @@ from app.models.ride import DriverProfile, Ride, RideStatus
 from app.models.category import Category
 from app.models.order import Order, OrderItem, OrderStatus
 from app.models.product import Product
-from app.models.shop import Shop
+from app.models.shop import Shop, ShopStatus
 from app.models.user import User, UserRole
 
 __all__ = [
@@ -42,6 +42,7 @@ __all__ = [
     "User",
     "UserRole",
     "Shop",
+    "ShopStatus",
     "Category",
     "Product",
     "CartItem",

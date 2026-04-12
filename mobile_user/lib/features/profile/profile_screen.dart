@@ -13,6 +13,7 @@ import '../auth/auth_providers.dart';
 import '../addresses/addresses_screen.dart';
 import '../favorites/favorites_screen.dart';
 import '../help/help_screen.dart';
+import '../legal/legal_screen.dart';
 import '../orders/orders_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -262,6 +263,28 @@ class ProfileScreen extends ConsumerWidget {
               HapticFeedback.lightImpact();
               Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const HelpScreen()));
+            },
+          ),
+          _MenuItem(
+            icon: Icons.description_outlined,
+            title: 'Foydalanish shartlari',
+            iconColor: AppColors.textMuted,
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const LegalScreen()));
+            },
+          ),
+          _MenuItem(
+            icon: Icons.privacy_tip_outlined,
+            title: 'Maxfiylik siyosati',
+            iconColor: AppColors.textMuted,
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const LegalScreen(initialTab: 1)));
             },
           ),
 

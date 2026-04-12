@@ -6,9 +6,10 @@ import '../../core/api_client.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../auth/auth_providers.dart';
+import '../legal/legal_screen.dart';
 import '../orders/seller_orders_screen.dart';
 import '../shop/my_shop_screen.dart';
-import '../shop/shop_providers.dart';
+import '../shop/shop_providers.dart' show Shop, ShopStatus, myShopProvider;
 
 final sellerStatsProvider =
     FutureProvider<Map<String, dynamic>>((ref) async {
@@ -157,6 +158,38 @@ class DashboardScreen extends ConsumerWidget {
                 );
               },
             ),
+
+            // Qoidalar
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const LegalScreen())),
+                  child: const Text(
+                    'Foydalanish shartlari',
+                    style: TextStyle(
+                        fontSize: 12, color: AppColors.textMuted),
+                  ),
+                ),
+                const Text('·',
+                    style: TextStyle(color: AppColors.textMuted)),
+                TextButton(
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) =>
+                              const LegalScreen(initialTab: 1))),
+                  child: const Text(
+                    'Maxfiylik siyosati',
+                    style: TextStyle(
+                        fontSize: 12, color: AppColors.textMuted),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

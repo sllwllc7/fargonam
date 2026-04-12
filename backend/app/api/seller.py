@@ -13,9 +13,21 @@ from app.models.shop import Shop
 from app.models.user import User, UserRole
 from app.api.ws import notify_user
 from app.core.push import notify_order_status
-from app.schemas.marketplace import OrderOut
+from app.schemas.marketplace import OrderOut, ShopOut
 
 router = APIRouter(prefix="/seller", tags=["seller"])
+
+
+@router.get("/shops", response_model=list[ShopOut])
+async def my_shops(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Joriy sotuvchining barcha do'konlari — status'dan qat'iy nazar."""
+    if current_user.role not in (UserRole.seller, UserRole.admin):
+        raise HTTPException(status_code=403, detail="Faqat sotuvchilar uchun")
+    shops = (await db.scalars(select(Shop).where(Shop.owner_id == current_user.id))).all()
+    return list(shops)
 
 
 @router.get("/orders", response_model=list[OrderOut])

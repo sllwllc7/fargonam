@@ -68,6 +68,7 @@
       <button data-tab="orders" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Buyurtmalar</button>
       <button data-tab="news" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Yangiliklar</button>
       <button data-tab="banners" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Bannerlar</button>
+      <button data-tab="shops" class="tab px-4 py-2 rounded-t hover:bg-slate-700">Do'konlar</button>
       <button data-tab="broadcast" class="tab px-4 py-2 rounded-t hover:bg-slate-700">📢 Xabar yuborish</button>
     </nav>
   </header>
@@ -189,6 +190,34 @@
         </div>
       </form>
       <div id="bannerList" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- ============ SHOPS / KYC TAB ============ -->
+    <section data-pane="shops" class="pane hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">Do'konlar (KYC)</h2>
+        <select id="shopStatusFilter" class="border rounded px-3 py-2">
+          <option value="">— Hammasi —</option>
+          <option value="pending">Kutilmoqda</option>
+          <option value="approved">Tasdiqlangan</option>
+          <option value="rejected">Rad etilgan</option>
+        </select>
+      </div>
+      <div class="bg-white rounded-xl shadow overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-100 text-left">
+            <tr>
+              <th class="p-3">ID</th>
+              <th class="p-3">Do'kon nomi</th>
+              <th class="p-3">Egasi (ID)</th>
+              <th class="p-3">Holat</th>
+              <th class="p-3">Izoh</th>
+              <th class="p-3">Amal</th>
+            </tr>
+          </thead>
+          <tbody id="shopTable"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- ============ BROADCAST TAB ============ -->
@@ -350,6 +379,7 @@ function switchTab(name) {
   if (name === "orders") loadOrders();
   if (name === "news") loadNews();
   if (name === "banners") loadBanners();
+  if (name === "shops") loadShops();
 }
 document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
 
@@ -360,17 +390,18 @@ async function loadStats() {
   try {
     const s = await api("/admin/stats");
     const cards = [
-      ["Foydalanuvchilar", s.users_total],
-      ["Sotuvchilar", s.sellers_total],
-      ["Do'konlar", s.shops_total],
-      ["Mahsulotlar", s.products_total],
-      ["Buyurtmalar", s.orders_total],
-      ["Daromad (so'm)", Number(s.revenue_total).toLocaleString("uz-UZ")],
+      ["Foydalanuvchilar", s.users_total, null],
+      ["Sotuvchilar", s.sellers_total, null],
+      ["Do'konlar", s.shops_total, s.shops_pending > 0 ? `⏳ ${s.shops_pending} ta kutilmoqda` : null],
+      ["Mahsulotlar", s.products_total, null],
+      ["Buyurtmalar", s.orders_total, null],
+      ["Daromad (so'm)", Number(s.revenue_total).toLocaleString("uz-UZ"), null],
     ];
-    grid.innerHTML = cards.map(([label, val]) => `
-      <div class="bg-white rounded-xl shadow p-5">
+    grid.innerHTML = cards.map(([label, val, badge]) => `
+      <div class="bg-white rounded-xl shadow p-5 ${badge ? 'ring-2 ring-yellow-400' : ''}">
         <div class="text-slate-500 text-sm">${label}</div>
         <div class="text-2xl font-bold mt-1">${val}</div>
+        ${badge ? `<div class="text-xs text-yellow-600 mt-1 cursor-pointer hover:underline" onclick="switchTab('shops')">${badge}</div>` : ''}
       </div>
     `).join("");
     // Buyurtma holatlari diagrammasi
@@ -612,6 +643,58 @@ document.getElementById("bannerForm").addEventListener("submit", async (e) => {
     loadBanners();
   } catch(err) { alert(err.message); }
 });
+
+// ----- SHOPS / KYC -----
+document.getElementById("shopStatusFilter").addEventListener("change", loadShops);
+async function loadShops() {
+  const tbody = document.getElementById("shopTable");
+  tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='6'>Yuklanmoqda...</td></tr>";
+  try {
+    const f = document.getElementById("shopStatusFilter").value;
+    const url = "/admin/shops?limit=100" + (f ? `&status=${f}` : "");
+    const page = await api(url);
+    if (!page.items.length) {
+      tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='6'>Do'kon yo'q</td></tr>";
+      return;
+    }
+    const statusBadge = {
+      pending:  '<span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs">Kutilmoqda</span>',
+      approved: '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs">Tasdiqlangan</span>',
+      rejected: '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs">Rad etilgan</span>',
+    };
+    tbody.innerHTML = page.items.map(s => `
+      <tr class="border-t" data-shop-id="${s.id}">
+        <td class="p-3">${s.id}</td>
+        <td class="p-3 font-medium">${s.name}</td>
+        <td class="p-3 text-slate-500">#${s.owner_id}</td>
+        <td class="p-3">${statusBadge[s.status] || s.status}</td>
+        <td class="p-3 text-xs text-slate-500">${s.admin_note || '—'}</td>
+        <td class="p-3 flex gap-2 items-center flex-wrap">
+          ${s.status !== 'approved' ? `<button data-sid="${s.id}" class="approve-btn bg-green-600 text-white text-xs px-3 py-1 rounded hover:bg-green-700">Tasdiqlash</button>` : ''}
+          ${s.status !== 'rejected' ? `<button data-sid="${s.id}" class="reject-btn bg-red-500 text-white text-xs px-3 py-1 rounded hover:bg-red-600">Rad etish</button>` : ''}
+        </td>
+      </tr>`).join("");
+
+    document.querySelectorAll(".approve-btn").forEach(b => b.addEventListener("click", async (e) => {
+      const sid = e.target.dataset.sid;
+      try {
+        await api(`/admin/shops/${sid}`, { method: "PATCH", body: JSON.stringify({ status: "approved" }) });
+        loadShops();
+      } catch (err) { alert(err.message); }
+    }));
+    document.querySelectorAll(".reject-btn").forEach(b => b.addEventListener("click", async (e) => {
+      const sid = e.target.dataset.sid;
+      const note = prompt("Rad etish sababi (ixtiyoriy):");
+      try {
+        await api(`/admin/shops/${sid}`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: "rejected", admin_note: note || null }),
+        });
+        loadShops();
+      } catch (err) { alert(err.message); }
+    }));
+  } catch (e) { tbody.innerHTML = `<tr><td class='p-3 text-red-600' colspan='6'>${e.message}</td></tr>`; }
+}
 
 // ----- BOSHLANISH -----
 (async function init() {

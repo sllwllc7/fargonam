@@ -3,32 +3,52 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import '../auth/auth_providers.dart';
 
+/// KYC holati
+enum ShopStatus { pending, approved, rejected }
+
 class Shop {
   final int id;
   final int ownerId;
   final String name;
   final String? description;
   final bool isActive;
-  Shop({required this.id, required this.ownerId, required this.name, this.description, required this.isActive});
+  final ShopStatus status;
+
+  Shop({
+    required this.id,
+    required this.ownerId,
+    required this.name,
+    this.description,
+    required this.isActive,
+    this.status = ShopStatus.pending,
+  });
+
   factory Shop.fromJson(Map<String, dynamic> j) => Shop(
         id: j['id'] as int,
         ownerId: j['owner_id'] as int,
         name: j['name'] as String,
         description: j['description'] as String?,
         isActive: j['is_active'] as bool,
+        status: _parseStatus(j['status'] as String? ?? 'pending'),
       );
+
+  static ShopStatus _parseStatus(String s) {
+    switch (s) {
+      case 'approved': return ShopStatus.approved;
+      case 'rejected': return ShopStatus.rejected;
+      default: return ShopStatus.pending;
+    }
+  }
 }
 
-/// Joriy sotuvchining do'koni (birinchi topilgani). Yo'q bo'lsa null.
+/// Joriy sotuvchining do'konlari — `/seller/shops` dan, status'dan qat'iy nazar.
 final myShopProvider = FutureProvider<Shop?>((ref) async {
-  final user = ref.watch(authControllerProvider).user;
-  if (user == null) return null;
+  ref.watch(authControllerProvider).user; // auth o'zgarsa qayta yuklasin
   final dio = ref.watch(dioProvider);
-  final res = await dio.get('/shops');
+  final res = await dio.get('/seller/shops');
   final list = (res.data as List).cast<Map<String, dynamic>>();
-  final mine = list.where((s) => s['owner_id'] == user.id).toList();
-  if (mine.isEmpty) return null;
-  return Shop.fromJson(mine.first);
+  if (list.isEmpty) return null;
+  return Shop.fromJson(list.first);
 });
 
 Future<Shop> createShop(WidgetRef ref, {required String name, String? description}) async {

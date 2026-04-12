@@ -20,6 +20,19 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    // Release imzolash — keystores/ papkasidan o'qiladi
+    val keystoreFile = rootProject.file("../../keystores/fargonam-user-release.jks")
+    signingConfigs {
+        if (keystoreFile.exists()) {
+            create("release") {
+                storeFile = keystoreFile
+                storePassword = "fargonam@user2024"
+                keyAlias = "fargonam-user"
+                keyPassword = "fargonam@user2024"
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "uz.fargonam.app"
         // Yandex MapKit Android 8.0+ talab qiladi
@@ -47,9 +60,10 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Keystore mavjud bo'lsa — release imzo, aks holda debug
+            val relCfg = signingConfigs.findByName("release")
+            signingConfig = relCfg ?: signingConfigs.getByName("debug")
+            isMinifyEnabled = false
         }
     }
 }

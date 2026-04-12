@@ -19,11 +19,21 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    // Release imzolash — keystores/ papkasidan o'qiladi
+    val keystoreFile = rootProject.file("../../keystores/fargonam-seller-release.jks")
+    signingConfigs {
+        if (keystoreFile.exists()) {
+            create("release") {
+                storeFile = keystoreFile
+                storePassword = "fargonam@seller2024"
+                keyAlias = "fargonam-seller"
+                keyPassword = "fargonam@seller2024"
+            }
+        }
+    }
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "uz.fargonam.mobile_seller"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -32,9 +42,10 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Keystore mavjud bo'lsa — release imzo, aks holda debug
+            val relCfg = signingConfigs.findByName("release")
+            signingConfig = relCfg ?: signingConfigs.getByName("debug")
+            isMinifyEnabled = false
         }
     }
 }
