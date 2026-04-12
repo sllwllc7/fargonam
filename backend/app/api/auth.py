@@ -1,4 +1,4 @@
-"""Auth endpointlar — register, login, me, refresh, change-password."""
+"""Auth endpointlar — OTP login, me, refresh, change-password."""
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -14,7 +14,7 @@ from app.core.security import (
     verify_password,
 )
 from app.db.session import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.auth import (
     ChangePasswordRequest,
     RefreshTokenRequest,
@@ -25,8 +25,82 @@ from app.schemas.auth import (
     UserRegister,
 )
 
+# SMS server ulangandan keyin bu o'zgaradi
+STATIC_OTP = "5555"
+
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+
+# ── OTP endpointlar ────────────────────────────────────────────
+
+class SendOtpRequest(BaseModel):
+    phone: str
+
+class SendOtpResponse(BaseModel):
+    status: str
+    is_new_user: bool
+
+class VerifyOtpRequest(BaseModel):
+    phone: str
+    otp: str
+    full_name: str | None = None
+    role: str = "buyer"
+
+
+@router.post("/send-otp", response_model=SendOtpResponse)
+@limiter.limit("5/minute")
+async def send_otp(
+    request: Request,
+    payload: SendOtpRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """OTP yuborish (hozircha statik 5555)."""
+    user = await db.scalar(select(User).where(User.phone == payload.phone))
+    # Haqiqiy SMS shu yerda yuboriladi (keyinroq Eskiz.uz ulanganda)
+    return SendOtpResponse(status="ok", is_new_user=user is None)
+
+
+@router.post("/verify-otp", response_model=TokenResponse)
+@limiter.limit("10/minute")
+async def verify_otp(
+    request: Request,
+    payload: VerifyOtpRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """OTP tasdiqlash — yangi foydalanuvchi yaratadi yoki mavjudini tizimga kirgazadi."""
+    if payload.otp != STATIC_OTP:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP kod noto'g'ri",
+        )
+    user = await db.scalar(select(User).where(User.phone == payload.phone))
+    if user is None:
+        # Yangi foydalanuvchi — ro'yxatdan o'tkazish
+        try:
+            role = UserRole(payload.role)
+        except ValueError:
+            role = UserRole.buyer
+        user = User(
+            phone=payload.phone,
+            full_name=payload.full_name,
+            role=role,
+            hashed_password=None,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+    elif not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Hisob faol emas",
+        )
+    return TokenResponse(
+        access_token=create_access_token(user.id),
+        refresh_token=create_refresh_token(user.id),
+    )
+
+
+# ── Eski endpointlar (backwards compatibility) ─────────────────
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("5/minute")

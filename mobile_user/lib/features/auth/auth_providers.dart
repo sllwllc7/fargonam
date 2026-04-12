@@ -50,23 +50,26 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  Future<void> login(String phone, String password) async {
+  /// Telefon raqamga OTP yuborish. is_new_user — yangi foydalanuvchimi.
+  Future<bool?> sendOtp(String phone) async {
     state = state.copyWith(loading: true, error: null);
     try {
-      final res = await ref.read(dioProvider).post('/auth/login', data: {'phone': phone, 'password': password});
-      await _saveTokens(res.data as Map<String, dynamic>);
-      await _loadMe();
+      final res = await ref.read(dioProvider).post('/auth/send-otp', data: {'phone': phone});
+      state = state.copyWith(loading: false);
+      return res.data['is_new_user'] as bool?;
     } on DioException catch (e) {
       state = state.copyWith(loading: false, error: e.response?.data['detail']?.toString() ?? 'Tarmoq xatosi');
+      return null;
     }
   }
 
-  Future<void> register(String phone, String password, String? fullName) async {
+  /// OTP tasdiqlash — kirish yoki ro'yxatdan o'tish.
+  Future<void> verifyOtp(String phone, String otp, {String? fullName}) async {
     state = state.copyWith(loading: true, error: null);
     try {
-      final res = await ref.read(dioProvider).post('/auth/register', data: {
+      final res = await ref.read(dioProvider).post('/auth/verify-otp', data: {
         'phone': phone,
-        'password': password,
+        'otp': otp,
         'role': 'buyer',
         if (fullName != null && fullName.isNotEmpty) 'full_name': fullName,
       });
