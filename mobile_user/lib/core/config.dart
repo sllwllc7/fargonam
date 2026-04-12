@@ -7,7 +7,7 @@ class AppConfig {
   /// Yoki: flutter build apk --dart-define=API_URL=https://api.fargonam.uz
   static const String apiBaseUrl = String.fromEnvironment(
     'API_URL',
-    defaultValue: 'http://192.168.1.240:8000', // Local network
+    defaultValue: 'http://45.92.173.42', // VPS server
   );
 
   /// Token saqlash kalitlari
