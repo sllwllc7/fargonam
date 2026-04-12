@@ -16,7 +16,8 @@ from app import models  # noqa: F401 — modellarni ro'yxatga olish uchun
 config = context.config
 
 # DB URL'ni .env'dan olamiz, alembic.ini'da yozmaymiz
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# % belgisi configparser interpolation uchun ishlatiladi, shuning uchun escaping kerak
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
