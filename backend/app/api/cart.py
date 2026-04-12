@@ -2,18 +2,24 @@
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.cart import CartItem
-from app.models.order import Order, OrderItem, OrderStatus
+from app.models.order import Order, OrderItem, OrderStatus, PaymentMethod
 from app.models.product import Product
 from app.models.shop import Shop
 from app.models.user import User
 from app.core.push import notify_new_order, notify_order_status
 from app.schemas.marketplace import CartItemAdd, CartItemOut, OrderItemOut, OrderOut
+
+
+class CheckoutRequest(BaseModel):
+    payment_method: PaymentMethod = PaymentMethod.cash
+    delivery_address: str | None = None
 
 router = APIRouter(tags=["cart-orders"])
 
@@ -146,6 +152,7 @@ async def remove_from_cart(
 
 @router.post("/orders", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
 async def checkout(
+    payload: CheckoutRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -184,7 +191,13 @@ async def checkout(
             )
         )
 
-    order = Order(user_id=current_user.id, total=total, items=items_to_create)
+    order = Order(
+        user_id=current_user.id,
+        total=total,
+        items=items_to_create,
+        payment_method=payload.payment_method,
+        delivery_address=payload.delivery_address,
+    )
     db.add(order)
 
     # Savatchani tozalash

@@ -18,23 +18,34 @@
 <div id="loginScreen" class="hidden min-h-screen flex items-center justify-center p-4">
   <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
     <h1 class="text-2xl font-bold mb-1">Fargonam Admin</h1>
-    <p class="text-slate-500 mb-6">Admin sifatida kiring</p>
-    <form id="loginForm" class="space-y-4">
+    <p id="loginSubtitle" class="text-slate-500 mb-6">Telefon raqamingizni kiriting</p>
+
+    <!-- Qadam 1: Telefon -->
+    <div id="stepPhone" class="space-y-4">
       <div>
         <label class="block text-sm font-medium mb-1">Telefon</label>
         <input id="loginPhone" type="text" placeholder="+998901234567" required
                class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-700" />
       </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Parol</label>
-        <input id="loginPassword" type="password" required
-               class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-700" />
-      </div>
-      <button type="submit" class="w-full bg-slate-800 text-white py-2 rounded-lg hover:bg-slate-900">
-        Kirish
+      <button id="sendOtpBtn" class="w-full bg-slate-800 text-white py-2 rounded-lg hover:bg-slate-900">
+        Kod yuborish
       </button>
-      <p id="loginError" class="text-red-600 text-sm hidden"></p>
-    </form>
+    </div>
+
+    <!-- Qadam 2: OTP -->
+    <div id="stepOtp" class="hidden space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">SMS kod</label>
+        <input id="loginOtp" type="text" placeholder="• • • •" maxlength="4" required
+               class="w-full border rounded-lg px-3 py-2 text-center text-2xl tracking-widest focus:outline-none focus:ring-2 focus:ring-slate-700" />
+      </div>
+      <button id="verifyOtpBtn" class="w-full bg-slate-800 text-white py-2 rounded-lg hover:bg-slate-900">
+        Tasdiqlash
+      </button>
+      <button id="backToPhoneBtn" class="w-full text-slate-500 text-sm py-1">← Raqamni o'zgartirish</button>
+    </div>
+
+    <p id="loginError" class="text-red-600 text-sm mt-3 hidden"></p>
   </div>
 </div>
 
@@ -141,7 +152,7 @@
           <thead class="bg-slate-100 text-left">
             <tr>
               <th class="p-3">ID</th><th class="p-3">User</th><th class="p-3">Sana</th>
-              <th class="p-3">Jami</th><th class="p-3">Holat</th><th class="p-3">Amal</th>
+              <th class="p-3">Jami</th><th class="p-3">To'lov</th><th class="p-3">Holat</th><th class="p-3">Amal</th>
             </tr>
           </thead>
           <tbody id="orderTable"></tbody>
@@ -248,26 +259,67 @@ function showDashboard() {
   document.getElementById("dashboard").classList.remove("hidden");
 }
 
-// ----- LOGIN -----
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const phone = document.getElementById("loginPhone").value.trim();
-  const password = document.getElementById("loginPassword").value;
-  const errEl = document.getElementById("loginError");
-  errEl.classList.add("hidden");
+// ----- LOGIN (OTP) -----
+let _loginPhone = "";
+
+function showLoginError(msg) {
+  const el = document.getElementById("loginError");
+  el.textContent = msg;
+  el.classList.remove("hidden");
+}
+function clearLoginError() {
+  document.getElementById("loginError").classList.add("hidden");
+}
+
+document.getElementById("sendOtpBtn").addEventListener("click", async () => {
+  clearLoginError();
+  const phone = document.getElementById("loginPhone").value.trim().replace(/\D/g, "");
+  if (phone.length < 9) return showLoginError("To'liq raqam kiriting");
+  const btn = document.getElementById("sendOtpBtn");
+  btn.disabled = true; btn.textContent = "Yuborilmoqda...";
   try {
-    const res = await fetch(API + "/auth/login", {
+    await fetch(API + "/auth/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, password }),
+      body: JSON.stringify({ phone }),
+    });
+    _loginPhone = phone;
+    document.getElementById("stepPhone").classList.add("hidden");
+    document.getElementById("stepOtp").classList.remove("hidden");
+    document.getElementById("loginSubtitle").textContent = `${phone} ga kod yuborildi`;
+    document.getElementById("loginOtp").focus();
+  } catch (e) {
+    showLoginError(e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Kod yuborish";
+  }
+});
+
+document.getElementById("backToPhoneBtn").addEventListener("click", () => {
+  document.getElementById("stepOtp").classList.add("hidden");
+  document.getElementById("stepPhone").classList.remove("hidden");
+  document.getElementById("loginSubtitle").textContent = "Telefon raqamingizni kiriting";
+  clearLoginError();
+});
+
+document.getElementById("verifyOtpBtn").addEventListener("click", async () => {
+  clearLoginError();
+  const otp = document.getElementById("loginOtp").value.trim();
+  if (otp.length !== 4) return showLoginError("4 xonali kodni kiriting");
+  const btn = document.getElementById("verifyOtpBtn");
+  btn.disabled = true; btn.textContent = "Tekshirilmoqda...";
+  try {
+    const res = await fetch(API + "/auth/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: _loginPhone, otp }),
     });
     if (!res.ok) {
       const err = await res.json();
-      throw new Error(err.detail || "Login xatosi");
+      throw new Error(err.detail || "Xato");
     }
     const data = await res.json();
     setToken(data.access_token);
-    // Tekshirish: bu user admin bo'lishi kerak
     const me = await api("/auth/me");
     if (me.role !== "admin") {
       clearToken();
@@ -277,8 +329,9 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     showDashboard();
     switchTab("stats");
   } catch (e) {
-    errEl.textContent = e.message;
-    errEl.classList.remove("hidden");
+    showLoginError(e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Tasdiqlash";
   }
 });
 
@@ -457,27 +510,29 @@ async function loadUsers() {
 document.getElementById("orderStatusFilter").addEventListener("change", loadOrders);
 async function loadOrders() {
   const tbody = document.getElementById("orderTable");
-  tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='6'>Yuklanmoqda...</td></tr>";
+  tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='7'>Yuklanmoqda...</td></tr>";
   try {
     const f = document.getElementById("orderStatusFilter").value;
     const url = "/admin/orders?limit=100" + (f ? `&status=${f}` : "");
     const page = await api(url);
     if (!page.items.length) {
-      tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='6'>Buyurtma yo'q</td></tr>";
+      tbody.innerHTML = "<tr><td class='p-3 text-slate-400' colspan='7'>Buyurtma yo'q</td></tr>";
       return;
     }
+    const payLabels = { cash: '💵 Naqd', card: '💳 Karta', payme: '📱 Payme', click: '📱 Click' };
     tbody.innerHTML = page.items.map(o => `
       <tr class="border-t">
         <td class="p-3">#${o.id}</td>
         <td class="p-3">${o.user_id}</td>
         <td class="p-3 text-slate-500 text-xs">${new Date(o.created_at).toLocaleString("uz-UZ")}</td>
         <td class="p-3">${Number(o.total).toLocaleString("uz-UZ")} so'm</td>
+        <td class="p-3 text-xs">${payLabels[o.payment_method] || o.payment_method || '—'}</td>
         <td class="p-3">
           <select data-oid="${o.id}" class="status-select border rounded px-2 py-1 text-xs">
             ${["pending","paid","shipped","delivered","cancelled"].map(s => `<option value="${s}" ${o.status===s?"selected":""}>${s}</option>`).join("")}
           </select>
         </td>
-        <td class="p-3 text-xs text-slate-500">${o.items.length} mahsulot</td>
+        <td class="p-3 text-xs text-slate-500">${o.items.length} mahsulot${o.delivery_address ? `<br><span class='text-slate-400'>${o.delivery_address}</span>` : ''}</td>
       </tr>`).join("");
     document.querySelectorAll(".status-select").forEach(s => s.addEventListener("change", async (e) => {
       try { await api(`/admin/orders/${e.target.dataset.oid}`, { method: "PATCH", body: JSON.stringify({ status: e.target.value }) }); }

@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -17,6 +17,13 @@ class OrderStatus(str, Enum):
     shipped = "shipped"
     delivered = "delivered"
     cancelled = "cancelled"
+
+
+class PaymentMethod(str, Enum):
+    cash = "cash"        # Naqd olishda
+    card = "card"        # Plastik karta (kuryerga)
+    payme = "payme"      # Payme (keyinchalik)
+    click = "click"      # Click (keyinchalik)
 
 
 class Order(Base):
@@ -33,6 +40,13 @@ class Order(Base):
         nullable=False,
         index=True,
     )
+    payment_method: Mapped[PaymentMethod] = mapped_column(
+        SAEnum(PaymentMethod, name="payment_method"),
+        default=PaymentMethod.cash,
+        nullable=False,
+    )
+    # Yetkazib berish manzili (ixtiyoriy — do'kondan olib ketsa bo'lmaydi)
+    delivery_address: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

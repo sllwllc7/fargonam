@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from app.models.order import OrderStatus
+from app.models.order import OrderStatus, PaymentMethod
 
 
 # ========== Shop ==========
@@ -105,6 +105,8 @@ class OrderOut(BaseModel):
     user_id: int
     total: Decimal
     status: OrderStatus
+    payment_method: PaymentMethod = PaymentMethod.cash
+    delivery_address: str | None = None
     created_at: datetime
     items: list[OrderItemOut]
     model_config = {"from_attributes": True}

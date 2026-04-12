@@ -27,6 +27,22 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Yandex MapKit API kalit — local.properties dan o'qiladi
+        val localProps = java.util.Properties()
+        val localPropsFile = rootProject.file("local.properties")
+        if (localPropsFile.exists()) {
+            localPropsFile.inputStream().use { localProps.load(it) }
+        }
+        buildConfigField(
+            "String",
+            "YANDEX_MAPKIT_KEY",
+            "\"${localProps.getProperty("yandex.mapkit.key", "")}\""
+        )
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {

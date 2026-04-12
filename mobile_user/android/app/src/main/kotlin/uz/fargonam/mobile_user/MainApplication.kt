@@ -10,7 +10,7 @@ class MainApplication : Application() {
         super.onCreate()
         // O'zbek tili — kartada lokal nomlar
         MapKitFactory.setLocale("uz_UZ")
-        // Yandex MapKit Mobile SDK API key
-        MapKitFactory.setApiKey("bf5c7011-5a0b-4643-a899-097d1f3d2ab9")
+        // Yandex MapKit API kalit — local.properties dan BuildConfig orqali o'qiladi
+        MapKitFactory.setApiKey(BuildConfig.YANDEX_MAPKIT_KEY)
     }
 }

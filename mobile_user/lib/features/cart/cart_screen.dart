@@ -393,9 +393,17 @@ class _CheckoutButtonState extends ConsumerState<_CheckoutButton> {
 
   Future<void> _checkout() async {
     HapticFeedback.mediumImpact();
+    // To'lov usuli tanlash
+    final result = await _showPaymentSheet();
+    if (result == null || !mounted) return;
+
     setState(() => _loading = true);
     try {
-      final res = await ref.read(dioProvider).post('/orders');
+      final res = await ref.read(dioProvider).post('/orders', data: {
+        'payment_method': result['payment_method'],
+        if (result['delivery_address'] != null)
+          'delivery_address': result['delivery_address'],
+      });
       ref.invalidate(cartProvider);
       if (mounted) {
         await _showSuccessDialog(res.data);
@@ -414,6 +422,18 @@ class _CheckoutButtonState extends ConsumerState<_CheckoutButton> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<Map<String, dynamic>?> _showPaymentSheet() async {
+    return showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) => const _PaymentSheet(),
+    );
   }
 
   Future<void> _showSuccessDialog(Map<String, dynamic> order) async {
@@ -673,6 +693,220 @@ class _CartSkeleton extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── To'lov usuli tanlash ────────────────────────────────────
+
+class _PaymentSheet extends StatefulWidget {
+  const _PaymentSheet();
+
+  @override
+  State<_PaymentSheet> createState() => _PaymentSheetState();
+}
+
+class _PaymentSheetState extends State<_PaymentSheet> {
+  String _method = 'cash';
+  final _addressCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _addressCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textMuted.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'To\'lov usulini tanlang',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _PayMethod(
+              value: 'cash',
+              selected: _method,
+              icon: Icons.payments_outlined,
+              title: 'Naqd pul',
+              subtitle: 'Kuryerga qo\'lda to\'lash',
+              onTap: () => setState(() => _method = 'cash'),
+            ),
+            const SizedBox(height: 10),
+            _PayMethod(
+              value: 'card',
+              selected: _method,
+              icon: Icons.credit_card_outlined,
+              title: 'Plastik karta',
+              subtitle: 'Kuryerga POS terminal orqali',
+              onTap: () => setState(() => _method = 'card'),
+            ),
+            const SizedBox(height: 10),
+            _PayMethod(
+              value: 'payme',
+              selected: _method,
+              icon: Icons.account_balance_wallet_outlined,
+              title: 'Payme',
+              subtitle: 'Tez orada ishga tushadi',
+              enabled: false,
+              onTap: () {},
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _addressCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Yetkazish manzili',
+                hintText: 'Ko\'cha, uy, xonadon raqami',
+                prefixIcon: Icon(Icons.location_on_outlined),
+              ),
+              maxLines: 2,
+              minLines: 1,
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                Navigator.pop(context, {
+                  'payment_method': _method,
+                  if (_addressCtrl.text.trim().isNotEmpty)
+                    'delivery_address': _addressCtrl.text.trim(),
+                });
+              },
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)),
+              ),
+              child: const Text(
+                'Buyurtma berish',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PayMethod extends StatelessWidget {
+  final String value;
+  final String selected;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _PayMethod({
+    required this.value,
+    required this.selected,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.enabled = true,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSelected = value == selected && enabled;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppColors.cream.withValues(alpha: 0.12)
+            : AppColors.surfaceHigh,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected
+              ? AppColors.cream.withValues(alpha: 0.6)
+              : Colors.transparent,
+          width: 1.5,
+        ),
+      ),
+      child: ListTile(
+        onTap: enabled ? onTap : null,
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.cream.withValues(alpha: 0.15)
+                : AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon,
+              color: isSelected
+                  ? AppColors.cream
+                  : AppColors.textSecondary,
+              size: 22),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: enabled
+                ? AppColors.textPrimary
+                : AppColors.textMuted,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(
+              fontSize: 12, color: AppColors.textSecondary),
+        ),
+        trailing: enabled
+            ? Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected
+                        ? AppColors.cream
+                        : AppColors.textMuted,
+                    width: 2,
+                  ),
+                  color: isSelected ? AppColors.cream : Colors.transparent,
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check,
+                        size: 13, color: AppColors.midnightIndigo)
+                    : null,
+              )
+            : const Text(
+                'tez orada',
+                style: TextStyle(
+                    fontSize: 11, color: AppColors.textMuted),
+              ),
       ),
     );
   }
