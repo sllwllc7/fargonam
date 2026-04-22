@@ -24,7 +24,7 @@ class CheckoutRequest(BaseModel):
 router = APIRouter(tags=["cart-orders"])
 
 
-async def _enrich_order(order: Order, db: AsyncSession) -> OrderOut:
+async def enrich_order(order: Order, db: AsyncSession) -> OrderOut:
     """Order'ga mahsulot nomi va rasmini qo'shadi."""
     # Barcha mahsulotlarni bir so'rovda olish
     product_ids = [oi.product_id for oi in order.items]
@@ -47,6 +47,8 @@ async def _enrich_order(order: Order, db: AsyncSession) -> OrderOut:
         user_id=order.user_id,
         total=order.total,
         status=order.status,
+        payment_method=order.payment_method,
+        delivery_address=order.delivery_address,
         created_at=order.created_at,
         items=enriched_items,
     )
@@ -217,7 +219,7 @@ async def checkout(
                 notified_owners.add(shop.owner_id)
                 await notify_new_order(shop.owner_id, order.id)
 
-    return await _enrich_order(order, db)
+    return await enrich_order(order, db)
 
 
 @router.post("/orders/{order_id}/cancel", response_model=OrderOut)
@@ -240,7 +242,7 @@ async def cancel_order(
     order.status = OrderStatus.cancelled
     await db.commit()
     await db.refresh(order)
-    return await _enrich_order(order, db)
+    return await enrich_order(order, db)
 
 
 @router.get("/orders", response_model=list[OrderOut])
@@ -251,4 +253,4 @@ async def list_my_orders(
     rows = (await db.scalars(
         select(Order).where(Order.user_id == current_user.id).order_by(Order.id.desc())
     )).all()
-    return [await _enrich_order(o, db) for o in rows]
+    return [await enrich_order(o, db) for o in rows]

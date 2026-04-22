@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/api_client.dart' show navigatorKey, onTokenExpired;
+import 'core/app_config_service.dart';
 import 'core/theme.dart';
 import 'features/auth/auth_providers.dart';
 import 'features/auth/login_screen.dart';
@@ -29,15 +31,24 @@ void main() async {
   runApp(const ProviderScope(child: FargonamBiznesApp()));
 }
 
-class FargonamBiznesApp extends StatelessWidget {
+class FargonamBiznesApp extends ConsumerWidget {
   const FargonamBiznesApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Token muddati tugaganda login'ga yo'naltirish callback'ini o'rnatish
+    onTokenExpired = () {
+      ref.read(authControllerProvider.notifier).logout();
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    };
     return MaterialApp(
       title: 'Fargonam Biznes',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
+      navigatorKey: navigatorKey,
       home: const _Root(),
     );
   }
@@ -55,18 +66,53 @@ class _Root extends ConsumerStatefulWidget {
 
 class _RootState extends ConsumerState<_Root> {
   bool _checked = false;
+  RemoteConfig _config = RemoteConfig.defaults;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final config = await fetchRemoteConfig();
+      if (!mounted) return;
+      setState(() => _config = config);
+
+      if (await needsForceUpdate(config.minAppVersion)) {
+        _showForceUpdateDialog();
+        return;
+      }
+
       await ref.read(authControllerProvider.notifier).tryAutoLogin();
       if (mounted) setState(() => _checked = true);
     });
   }
 
+  void _showForceUpdateDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Yangilanish kerak'),
+          content: const Text(
+            'Ilovaning yangi versiyasi chiqdi. Davom etish uchun yangilang.',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+          actions: [
+            FilledButton(onPressed: () {}, child: const Text('Yangilash')),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_config.maintenanceMode) {
+      return _MaintenanceScreen(message: _config.maintenanceMessage);
+    }
     if (!_checked) {
       return const Scaffold(
           backgroundColor: AppColors.bg,
@@ -76,6 +122,62 @@ class _RootState extends ConsumerState<_Root> {
     final user = ref.watch(authControllerProvider).user;
     if (user == null) return const LoginScreen();
     return const _RoleRouter();
+  }
+}
+
+class _MaintenanceScreen extends StatelessWidget {
+  const _MaintenanceScreen({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceHigh,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: const Icon(Icons.build_outlined,
+                      size: 52, color: AppColors.cream),
+                ),
+                const SizedBox(height: 28),
+                const Text(
+                  'Texnik ishlar',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message.isNotEmpty
+                      ? message
+                      : 'Texnik ishlar olib borilmoqda.\nTez orada qaytamiz.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/app_config_service.dart';
+import 'core/navigator_key.dart';
 import 'core/push_service.dart';
 import 'core/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,6 +32,9 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase init xato (push/crashlytics ishlamaydi): $e');
   }
+  // Rasm keshi — 200 MB, 1000 ta rasm
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 200 * 1024 * 1024;
+  PaintingBinding.instance.imageCache.maximumSize = 1000;
   runApp(const ProviderScope(child: FargonamApp()));
 }
 
@@ -62,6 +67,14 @@ class FargonamApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    // Token muddati tugaganda login'ga yo'naltirish callback'ini o'rnatish
+    onTokenExpired = () {
+      ref.read(authControllerProvider.notifier).logout();
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    };
     return MaterialApp(
       title: 'Fargonam',
       debugShowCheckedModeBanner: false,
@@ -84,6 +97,7 @@ class _RootState extends ConsumerState<_Root> with WidgetsBindingObserver {
   bool _splashDone = false;
   bool _authChecked = false;
   bool _onboardingDone = false;
+  RemoteConfig _config = RemoteConfig.defaults;
 
   @override
   void initState() {
@@ -98,26 +112,76 @@ class _RootState extends ConsumerState<_Root> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  DateTime? _lastResumed;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Background'dan qaytganda auth va tokenni tekshirish
-      ref.read(authControllerProvider.notifier).tryAutoLogin();
+      // 10 daqiqada bir marta token tekshirish — har safar emas
+      final now = DateTime.now();
+      if (_lastResumed == null || now.difference(_lastResumed!).inMinutes >= 10) {
+        _lastResumed = now;
+        ref.read(authControllerProvider.notifier).tryAutoLogin();
+      }
     }
   }
 
   Future<void> _init() async {
     final prefs = await SharedPreferences.getInstance();
     _onboardingDone = prefs.getBool('onboarding_done') ?? false;
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) setState(() => _splashDone = true);
+
+    // Remote config va splash parallel yuklanadi
+    final results = await Future.wait([
+      fetchRemoteConfig(),
+      Future.delayed(const Duration(milliseconds: 800)),
+    ]);
+    final config = results[0] as RemoteConfig;
+    if (mounted) {
+      setState(() {
+        _config = config;
+        _splashDone = true;
+      });
+    }
+
+    // Majburiy yangilash tekshiruvi
+    if (mounted && await needsForceUpdate(config.minAppVersion)) {
+      _showForceUpdateDialog();
+      return;
+    }
+
     await ref.read(authControllerProvider.notifier).tryAutoLogin();
     if (mounted) setState(() => _authChecked = true);
+  }
+
+  void _showForceUpdateDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Yangilanish kerak'),
+          content: const Text(
+            'Ilovaning yangi versiyasi chiqdi. Davom etish uchun yangilang.',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () {},
+              child: const Text('Yangilash'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     if (!_splashDone) return const SplashScreen();
+    if (_config.maintenanceMode) return _MaintenanceScreen(message: _config.maintenanceMessage);
     if (!_onboardingDone) {
       return OnboardingScreen(onDone: () => setState(() => _onboardingDone = true));
     }
@@ -125,5 +189,61 @@ class _RootState extends ConsumerState<_Root> with WidgetsBindingObserver {
     final user = ref.watch(authControllerProvider).user;
     if (user == null) return const LoginScreen();
     return AppShell(key: appShellKey);
+  }
+}
+
+class _MaintenanceScreen extends StatelessWidget {
+  const _MaintenanceScreen({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceHigh,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: const Icon(Icons.build_outlined,
+                      size: 52, color: AppColors.cream),
+                ),
+                const SizedBox(height: 28),
+                const Text(
+                  'Texnik ishlar',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message.isNotEmpty
+                      ? message
+                      : 'Texnik ishlar olib borilmoqda.\nTez orada qaytamiz.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

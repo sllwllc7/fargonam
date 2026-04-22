@@ -138,7 +138,7 @@ async def login(
     db: AsyncSession = Depends(get_db),
 ):
     user = await db.scalar(select(User).where(User.phone == payload.phone))
-    if not user or not verify_password(payload.password, user.hashed_password):
+    if not user or not user.hashed_password or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Telefon yoki parol noto'g'ri",
@@ -168,7 +168,10 @@ async def refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Yaroqsiz refresh token",
         )
-    user_id = int(data["sub"])
+    user_id_str = data.get("sub")
+    if not user_id_str:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Yaroqsiz token payload")
+    user_id = int(user_id_str)
     user = await db.get(User, user_id)
     if not user or not user.is_active:
         raise HTTPException(
@@ -209,6 +212,8 @@ async def change_password(
     db: AsyncSession = Depends(get_db),
 ):
     """Parolni o'zgartirish (JSON body)."""
+    if not current_user.hashed_password:
+        raise HTTPException(status_code=400, detail="Siz OTP orqali kirgansiz, parol o'rnatilmagan")
     if not verify_password(payload.old_password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Eski parol noto'g'ri")
     current_user.hashed_password = hash_password(payload.new_password)

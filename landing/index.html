@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fargonam — Super App</title>
+  <meta name="description" content="Fargonam — Farg'ona viloyatining birinchi super-ilovasi. Xarid, taksi, yangiliklar — barchasi bir joyda." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d14; --surface: #14141f; --border: #1e1e2e;
+      --cream: #e8d5b0; --cream-dim: #c9b48a;
+      --purple: #6c5ce7; --purple-dim: #5a4bd1;
+      --green: #00b894; --orange: #fd7c3a; --teal: #00cec9;
+      --text: #f0ece4; --muted: #8a8699;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 40px;
+      background: rgba(13,13,20,.88); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,var(--cream),var(--cream-dim)); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .logo-text { font-size: 20px; font-weight: 800; color: var(--text); }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-btn { padding: 10px 22px; border-radius: 10px; background: linear-gradient(135deg,var(--cream),var(--cream-dim)); color: #1a1628; font-weight: 700; font-size: 14px; text-decoration: none; transition: opacity .2s; }
+    .nav-btn:hover { opacity: .85; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 120px 24px 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 800px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(108,92,231,.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 18px; border-radius: 999px;
+      background: rgba(108,92,231,.15); border: 1px solid rgba(108,92,231,.3);
+      font-size: 13px; font-weight: 600; color: #a89cf7; margin-bottom: 28px;
+    }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    h1 { font-size: clamp(40px,7vw,78px); font-weight: 900; line-height: 1.08; letter-spacing: -2px; margin-bottom: 24px; }
+    h1 span { background: linear-gradient(135deg,var(--cream) 0%,var(--cream-dim) 50%,#a89cf7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-sub { font-size: clamp(16px,2.5vw,20px); color: var(--muted); max-width: 560px; line-height: 1.6; margin-bottom: 44px; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary { display: flex; align-items: center; gap: 10px; padding: 16px 32px; border-radius: 14px; background: linear-gradient(135deg,var(--cream),var(--cream-dim)); color: #1a1628; font-weight: 800; font-size: 16px; text-decoration: none; transition: transform .2s, box-shadow .2s; box-shadow: 0 8px 32px rgba(232,213,176,.2); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(232,213,176,.3); }
+    .btn-secondary { display: flex; align-items: center; gap: 10px; padding: 16px 32px; border-radius: 14px; background: transparent; border: 1px solid var(--border); color: var(--text); font-weight: 600; font-size: 16px; text-decoration: none; transition: border-color .2s, background .2s; }
+    .btn-secondary:hover { border-color: var(--muted); background: rgba(255,255,255,.04); }
+    .hero-stats { display: flex; gap: 48px; margin-top: 72px; border-top: 1px solid var(--border); padding-top: 40px; flex-wrap: wrap; justify-content: center; }
+    .stat-num { font-size: 32px; font-weight: 900; color: var(--cream); }
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* COMMON */
+    section { padding: 100px 24px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--purple); margin-bottom: 14px; }
+    .section-title { font-size: clamp(28px,5vw,46px); font-weight: 900; line-height: 1.1; letter-spacing: -1px; margin-bottom: 16px; }
+    .section-sub { font-size: 17px; color: var(--muted); line-height: 1.6; max-width: 520px; }
+
+    /* FEATURES */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap: 20px; margin-top: 60px; }
+    .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; transition: border-color .2s, transform .2s; position: relative; overflow: hidden; }
+    .feature-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent,var(--purple)); opacity: 0; transition: opacity .25s; }
+    .feature-card:hover { border-color: #2e2e42; transform: translateY(-4px); }
+    .feature-card:hover::after { opacity: 1; }
+    .feature-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 20px; }
+    .feature-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+    .feature-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* HOW */
+    .how-bg { background: var(--surface); }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 32px; margin-top: 60px; }
+    .step { text-align: center; }
+    .step-num { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg,var(--purple),var(--purple-dim)); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; margin: 0 auto 20px; box-shadow: 0 8px 24px rgba(108,92,231,.3); }
+    .step-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+    /* APPS */
+    .apps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 60px; }
+    .app-card { border-radius: 24px; padding: 40px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 18px; }
+    .app-card.user-card { border-color: rgba(108,92,231,.35); background: linear-gradient(145deg,#14141f,#16142a); }
+    .app-card.biz-card  { border-color: rgba(232,213,176,.2); background: linear-gradient(145deg,#14141f,#1e1a12); }
+    .app-emoji { font-size: 48px; }
+    .app-name { font-size: 24px; font-weight: 800; }
+    .app-desc { font-size: 15px; color: var(--muted); line-height: 1.6; }
+    .app-features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .app-features li { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+    .app-features li::before { content: '✓'; color: var(--green); font-weight: 800; font-size: 15px; }
+    .app-dl { display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; border-radius: 12px; font-weight: 700; font-size: 15px; text-decoration: none; transition: opacity .2s, transform .2s; width: fit-content; margin-top: 8px; }
+    .app-dl:hover { opacity: .85; transform: translateY(-1px); }
+    .user-card .app-dl { background: linear-gradient(135deg,var(--purple),var(--purple-dim)); color: #fff; box-shadow: 0 8px 24px rgba(108,92,231,.3); }
+    .biz-card  .app-dl { background: linear-gradient(135deg,var(--cream),var(--cream-dim)); color: #1a1628; box-shadow: 0 8px 24px rgba(232,213,176,.2); }
+
+    /* FOOTER */
+    footer { border-top: 1px solid var(--border); padding: 48px 24px; text-align: center; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .footer-logo { display: flex; align-items: center; gap: 10px; }
+    .footer-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg,var(--cream),var(--cream-dim)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .footer-name { font-size: 18px; font-weight: 800; }
+    .footer-desc { font-size: 14px; color: var(--muted); max-width: 400px; line-height: 1.6; }
+    .footer-copy { font-size: 13px; color: var(--muted); }
+
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .nav-links { display: none; }
+      .apps-grid { grid-template-columns: 1fr; }
+      .hero-stats { gap: 28px; }
+      h1 { letter-spacing: -1px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="logo">
+    <div class="logo-icon">🏙️</div>
+    <span class="logo-text">Fargonam</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Imkoniyatlar</a></li>
+    <li><a href="#how">Qanday ishlaydi</a></li>
+    <li><a href="#apps">Ilovalar</a></li>
+  </ul>
+  <a href="#apps" class="nav-btn">Yuklab olish</a>
+</nav>
+
+<section class="hero">
+  <div class="badge"><span class="badge-dot"></span> Farg'ona viloyati uchun</div>
+  <h1>Hayotingizni<br /><span>osonlashtiruvchi</span><br />super-ilova</h1>
+  <p class="hero-sub">Xarid qiling, taksi chaqiring, yangiliklar o'qing — hammasi bir joyda. Fargonam — mintaqaning birinchi to'liq super-ilovasi.</p>
+  <div class="hero-btns">
+    <a href="#apps" class="btn-primary">📱 Ilovani yuklab olish</a>
+    <a href="#features" class="btn-secondary">Imkoniyatlarni ko'rish →</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-item"><div class="stat-num">30K+</div><div class="stat-label">Foydalanuvchi</div></div>
+    <div class="stat-item"><div class="stat-num">500+</div><div class="stat-label">Do'kon</div></div>
+    <div class="stat-item"><div class="stat-num">24/7</div><div class="stat-label">Taksi xizmati</div></div>
+    <div class="stat-item"><div class="stat-num">4.8★</div><div class="stat-label">Foydalanuvchi bahosi</div></div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="container">
+    <div class="section-label">Imkoniyatlar</div>
+    <h2 class="section-title">Bir ilova — cheksiz imkoniyat</h2>
+    <p class="section-sub">Kundalik hayotingiz uchun kerak bo'lgan hamma narsa bitta ilovada jamlangan.</p>
+    <div class="features-grid">
+      <div class="feature-card" style="--accent:#6c5ce7">
+        <div class="feature-icon" style="background:rgba(108,92,231,.15)">🛒</div>
+        <div class="feature-title">Online bozor</div>
+        <div class="feature-desc">Mahalliy do'konlardan mahsulot xarid qiling. Tez yetkazib berish, arzon narxlar, sifatli xizmat.</div>
+      </div>
+      <div class="feature-card" style="--accent:#fd7c3a">
+        <div class="feature-icon" style="background:rgba(253,124,58,.15)">🚖</div>
+        <div class="feature-title">Taksi xizmati</div>
+        <div class="feature-desc">Bir tugma bosish bilan taksi chaqiring. Aniq narx, tez haydovchi, qulay to'lov.</div>
+      </div>
+      <div class="feature-card" style="--accent:#00cec9">
+        <div class="feature-icon" style="background:rgba(0,206,201,.15)">📰</div>
+        <div class="feature-title">Mahalliy yangiliklar</div>
+        <div class="feature-desc">Farg'ona viloyatidagi so'nggi yangiliklar, e'lonlar va muhim voqealar.</div>
+      </div>
+      <div class="feature-card" style="--accent:#00b894">
+        <div class="feature-icon" style="background:rgba(0,184,148,.15)">💼</div>
+        <div class="feature-title">Biznes uchun</div>
+        <div class="feature-desc">Do'koningizni oching, mahsulot yuklang, buyurtmalarni boshqaring — hammasini mobil ilovadan.</div>
+      </div>
+      <div class="feature-card" style="--accent:#e8d5b0">
+        <div class="feature-icon" style="background:rgba(232,213,176,.12)">🔔</div>
+        <div class="feature-title">Real-vaqt bildirishnomalar</div>
+        <div class="feature-desc">Buyurtma holati, haydovchi joylashuvi va boshqa muhim ma'lumotlar darhol xabardor qiladi.</div>
+      </div>
+      <div class="feature-card" style="--accent:#6c5ce7">
+        <div class="feature-icon" style="background:rgba(108,92,231,.15)">🗺️</div>
+        <div class="feature-title">Xarita integratsiyasi</div>
+        <div class="feature-desc">Yandex Maps asosida qurilgan. Farg'ona ko'chalari, manzillar va marshrut — aniq va tez.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how" class="how-bg">
+  <div class="container">
+    <div class="section-label">Qanday ishlaydi</div>
+    <h2 class="section-title">3 qadam, 1 daqiqa</h2>
+    <p class="section-sub">Ro'yxatdan o'tishdan xarid qilishgacha atigi bir necha soniya.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Ilovani yuklab oling</div>
+        <div class="step-desc">Android uchun APK ni yuklab, o'rnating. Bir marta — doimiy foydalanish.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Ro'yxatdan o'ting</div>
+        <div class="step-desc">Telefon raqamingizni kiriting, SMS kod bilan tez va xavfsiz kirish.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Foydalaning!</div>
+        <div class="step-desc">Xarid qiling, taksi chaqiring, yangiliklar o'qing — hamma xizmat tayyor.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="apps">
+  <div class="container">
+    <div class="section-label">Ilovalar</div>
+    <h2 class="section-title">Sizga mos ilovani tanlang</h2>
+    <p class="section-sub">Foydalanuvchi yoki biznes uchun — har biri o'z ehtiyojingizga mos.</p>
+    <div class="apps-grid">
+      <div class="app-card user-card">
+        <div class="app-emoji">📱</div>
+        <div class="app-name">Fargonam</div>
+        <div class="app-desc">Oddiy foydalanuvchilar uchun. Xarid qiling, taksi chaqiring, yangiliklar o'qing.</div>
+        <ul class="app-features">
+          <li>Online bozor va do'konlar</li>
+          <li>Taksi chaqirish</li>
+          <li>Mahalliy yangiliklar va feed</li>
+          <li>Savatcha va buyurtmalar</li>
+          <li>Yandex xarita integratsiyasi</li>
+        </ul>
+        <a href="https://t.me/fargonam_app" class="app-dl">⬇ Telegramdan yuklab olish</a>
+      </div>
+      <div class="app-card biz-card">
+        <div class="app-emoji">💼</div>
+        <div class="app-name">Fargonam Biznes</div>
+        <div class="app-desc">Do'kon egalari va haydovchilar uchun. Biznesingizni mobil boshqaring.</div>
+        <ul class="app-features">
+          <li>Do'kon ochish va mahsulot yuklash</li>
+          <li>Buyurtmalarni boshqarish</li>
+          <li>Haydovchi ish rejimi</li>
+          <li>Dashboard va statistika</li>
+          <li>Real-vaqt bildirishnomalar</li>
+        </ul>
+        <a href="https://t.me/fargonam_app" class="app-dl">⬇ Telegramdan yuklab olish</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <div class="footer-icon">🏙️</div>
+      <span class="footer-name">Fargonam</span>
+    </div>
+    <p class="footer-desc">Farg'ona viloyatining birinchi super-ilovasi. Hayotingizni osonlashtirish uchun yaratilgan.</p>
+    <p class="footer-copy">© 2026 Fargonam. Barcha huquqlar himoyalangan.</p>
+  </div>
+</footer>
+
+</body>
+</html>

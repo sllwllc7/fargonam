@@ -19,16 +19,29 @@ String _wsBase() => AppConfig.apiBaseUrl
 class RideWsService {
   WebSocketChannel? _channel;
   StreamSubscription? _subscription;
+  bool _closed = false;
+  Timer? _reconnectTimer;
+  FlutterSecureStorage? _storage;
+  int? _rideId;
+
   final void Function(double lat, double lng)? onDriverLocation;
   final void Function(String status)? onStatusChange;
 
   RideWsService({this.onDriverLocation, this.onStatusChange});
 
   Future<void> connect(int rideId, FlutterSecureStorage storage) async {
-    final token = await storage.read(key: AppConfig.accessTokenKey);
+    _storage = storage;
+    _rideId = rideId;
+    _closed = false;
+    await _doConnect();
+  }
+
+  Future<void> _doConnect() async {
+    if (_closed || _rideId == null) return;
+    final token = await _storage?.read(key: AppConfig.accessTokenKey);
     if (token == null) return;
 
-    final uri = Uri.parse('${_wsBase()}/ws/ride/$rideId?token=$token');
+    final uri = Uri.parse('${_wsBase()}/ws/ride/$_rideId?token=$token');
 
     try {
       _channel = WebSocketChannel.connect(uri);
@@ -51,16 +64,33 @@ class RideWsService {
             debugPrint('WS parse xato: $e');
           }
         },
-        onError: (e) => debugPrint('Ride WS error: $e'),
-        onDone: () => debugPrint('Ride WS yopildi'),
+        onError: (e) {
+          debugPrint('Ride WS error: $e');
+          _scheduleReconnect();
+        },
+        onDone: () {
+          debugPrint('Ride WS yopildi');
+          _scheduleReconnect(); // FIX: auto-reconnect qo'shildi
+        },
       );
-      debugPrint('Ride WS ulandi: ride/$rideId');
+      debugPrint('Ride WS ulandi: ride/$_rideId');
     } catch (e) {
       debugPrint('Ride WS ulanishda xato: $e');
+      _scheduleReconnect(); // FIX: ulanish muvaffaqiyatsiz bo'lsa ham qayta urinish
     }
   }
 
+  void _scheduleReconnect() {
+    if (_closed) return;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(const Duration(seconds: 3), () {
+      if (!_closed) _doConnect();
+    });
+  }
+
   void disconnect() {
+    _closed = true;
+    _reconnectTimer?.cancel();
     _subscription?.cancel();
     _channel?.sink.close();
     _channel = null;
@@ -99,11 +129,11 @@ class ChatMessage {
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> j) => ChatMessage(
-        id: j['id'] as int,
-        senderId: j['sender_id'] as int,
+        id: (j['id'] as int?) ?? 0,
+        senderId: (j['sender_id'] as int?) ?? 0,
         receiverId: (j['receiver_id'] as int?) ?? 0,
-        text: j['text'] as String,
-        createdAt: j['created_at'] as String,
+        text: (j['text'] as String?) ?? '',
+        createdAt: (j['created_at'] as String?) ?? '',
         isMine: j['is_mine'] == true,
       );
 }

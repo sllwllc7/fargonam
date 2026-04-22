@@ -74,8 +74,17 @@ class _FavoriteCardState extends ConsumerState<_FavoriteCard> {
       final productId = widget.item['product_id'] as int;
       await ref.read(dioProvider).delete('/favorites/$productId');
       ref.invalidate(favoritesProvider);
-    } catch (_) {
-      if (mounted) setState(() => _removing = false);
+    } catch (e) {
+      debugPrint('Sevimlilardan o\'chirishda xato: $e');
+      if (mounted) {
+        setState(() => _removing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('O\'chirishda xato yuz berdi'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

@@ -9,6 +9,7 @@ import '../../core/widgets.dart';
 
 final newsProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  ref.keepAlive();
   final res = await ref
       .watch(dioProvider)
       .get('/news', queryParameters: {'limit': 30});

@@ -12,6 +12,7 @@ import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../marketplace/marketplace_screen.dart' show marketFilterProvider, MarketFilter;
 import '../news/news_screen.dart';
+import '../notifications/notifications_providers.dart';
 import '../notifications/notifications_screen.dart';
 import '../products/product_detail_screen.dart';
 import '../search/search_screen.dart';
@@ -21,39 +22,38 @@ import '../stories/story_viewer_screen.dart';
 // ── Provayderlar ────────────────────────────────────────────
 
 final bannersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  ref.keepAlive(); // Tab almashganda qayta yuklanmasin
   final dio = ref.watch(dioProvider);
   final res = await dio.get('/feed/banners');
-  return (res.data as List).cast<Map<String, dynamic>>();
+  return ((res.data as List?) ?? []).cast<Map<String, dynamic>>();
 });
 
 final categoriesProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  ref.keepAlive(); // Kategoriyalar kamdan-kam o'zgaradi — kesh
   final dio = ref.watch(dioProvider);
   final res = await dio.get('/categories');
-  return (res.data as List).cast<Map<String, dynamic>>();
+  return ((res.data as List?) ?? []).cast<Map<String, dynamic>>();
 });
 
 final topProductsProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  ref.keepAlive();
   final dio = ref.watch(dioProvider);
   final res = await dio.get('/products', queryParameters: {'limit': 10});
-  return ((res.data['items'] ?? []) as List)
+  return (((res.data is Map ? res.data['items'] : res.data) ?? []) as List)
       .cast<Map<String, dynamic>>();
 });
 
 final announcementsProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  ref.keepAlive();
   final res = await ref
       .watch(dioProvider)
       .get('/announcements', queryParameters: {'limit': 5});
-  return (res.data as List).cast<Map<String, dynamic>>();
+  return ((res.data as List?) ?? []).cast<Map<String, dynamic>>();
 });
 
-final unreadCountProvider = FutureProvider<int>((ref) async {
-  final res =
-      await ref.watch(dioProvider).get('/notifications/unread-count');
-  return res.data['count'] as int;
-});
 
 // ── Asosiy ekran ────────────────────────────────────────────
 
@@ -198,9 +198,13 @@ class _HeaderSection extends ConsumerWidget {
           Positioned.fill(
             child: bannersAsync.when(
               data: (banners) {
-                if (banners.isNotEmpty) {
-                  final url =
-                      '${AppConfig.apiBaseUrl}${banners.first['media_url']}';
+                final mediaUrl = banners.isNotEmpty
+                    ? banners.first['media_url'] as String?
+                    : null;
+                if (mediaUrl != null && mediaUrl.isNotEmpty) {
+                  final url = mediaUrl.startsWith('http')
+                      ? mediaUrl
+                      : '${AppConfig.apiBaseUrl}$mediaUrl';
                   return AppCachedImage(
                     url: url,
                     borderRadius: 0,
@@ -1408,7 +1412,8 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
         _comments = (res.data as List).cast<Map<String, dynamic>>();
         _loading = false;
       });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Izohlar yuklanmadi: $e');
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -1423,7 +1428,17 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
           data: {'text': _ctrl.text.trim()});
       _ctrl.clear();
       await _load();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Izoh yuborilmadi: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Izoh yuborishda xato'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
     if (mounted) setState(() => _sending = false);
   }
 

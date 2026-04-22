@@ -5,7 +5,7 @@ class AppConfig {
   /// Flutter build: --dart-define=API_URL=https://api.fargonam.uz
   static const String apiBaseUrl = String.fromEnvironment(
     'API_URL',
-    defaultValue: 'http://45.92.173.42', // VPS server
+    defaultValue: 'https://fargonam.duckdns.org', // VPS server (HTTPS)
   );
 
   /// Token saqlash kalitlari

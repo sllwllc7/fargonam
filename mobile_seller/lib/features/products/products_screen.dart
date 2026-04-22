@@ -6,7 +6,7 @@ import '../../core/api_client.dart';
 import '../../core/config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
-import '../shop/shop_providers.dart' show Shop, ShopStatus, myShopProvider;
+import '../shop/shop_providers.dart' show ShopStatus, myShopProvider;
 import 'add_product_screen.dart';
 import 'edit_product_screen.dart';
 import 'products_providers.dart';
@@ -324,10 +324,19 @@ class _ProductTileState extends ConsumerState<_ProductTile> {
     );
     if (ok == true) {
       HapticFeedback.mediumImpact();
-      await ref
-          .read(dioProvider)
-          .delete('/products/${widget.product.id}');
-      ref.invalidate(shopProductsProvider(widget.product.shopId));
+      try {
+        await ref.read(dioProvider).delete('/products/${widget.product.id}');
+        ref.invalidate(shopProductsProvider(widget.product.shopId));
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('O\'chirishda xato: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
     }
   }
 

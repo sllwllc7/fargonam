@@ -95,7 +95,13 @@ async def chat_ws(websocket: WebSocket):
 
     try:
         while True:
-            data = await websocket.receive_json()
+            try:
+                data = await websocket.receive_json()
+            except WebSocketDisconnect:
+                raise
+            except Exception:
+                # Noto'g'ri JSON — skip qilib davom et
+                continue
             msg_type = data.get("type")
 
             if msg_type == "message":
@@ -168,7 +174,12 @@ async def ride_ws(websocket: WebSocket, ride_id: int):
 
     try:
         while True:
-            data = await websocket.receive_json()
+            try:
+                data = await websocket.receive_json()
+            except WebSocketDisconnect:
+                raise
+            except Exception:
+                continue
             msg_type = data.get("type")
 
             if msg_type == "location":

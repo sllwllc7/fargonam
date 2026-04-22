@@ -9,7 +9,7 @@ import '../auth/auth_providers.dart';
 import '../legal/legal_screen.dart';
 import '../orders/seller_orders_screen.dart';
 import '../shop/my_shop_screen.dart';
-import '../shop/shop_providers.dart' show Shop, ShopStatus, myShopProvider;
+import '../shop/shop_providers.dart' show myShopProvider;
 
 final sellerStatsProvider =
     FutureProvider<Map<String, dynamic>>((ref) async {

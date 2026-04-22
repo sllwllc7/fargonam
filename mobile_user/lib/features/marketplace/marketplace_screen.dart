@@ -10,6 +10,7 @@ import '../../core/widgets.dart';
 import '../cart/cart_screen.dart';
 import '../home/home_feed_screen.dart';
 import '../products/product_detail_screen.dart';
+import '../search/search_screen.dart';
 import '../shops/shop_detail_screen.dart';
 import '../shops/shops_list_screen.dart';
 
@@ -17,6 +18,7 @@ import '../shops/shops_list_screen.dart';
 
 /// Do'konlar ro'yxati
 final shopsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  ref.keepAlive();
   final res = await ref.watch(dioProvider).get('/shops');
   return (res.data as List).cast<Map<String, dynamic>>();
 });
@@ -120,9 +122,7 @@ class MarketplaceScreen extends ConsumerStatefulWidget {
 }
 
 class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
-  final _searchCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
-  bool _searchExpanded = false;
 
   @override
   void initState() {
@@ -133,7 +133,6 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
   @override
   void dispose() {
     _scrollCtrl.removeListener(_onScroll);
-    _searchCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
   }
@@ -149,11 +148,12 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
     }
   }
 
-  void _submitSearch(String value) {
-    final q = value.trim();
-    ref
-        .read(marketFilterProvider.notifier)
-        .setQuery(q.isEmpty ? null : q);
+  void _openSearch() {
+    HapticFeedback.lightImpact();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SearchScreen()),
+    );
   }
 
   @override
@@ -183,70 +183,45 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
               floating: true,
               snap: true,
               toolbarHeight: 64,
-              title: _searchExpanded
-                  ? _SearchField(
-                      controller: _searchCtrl,
-                      onSubmitted: _submitSearch,
-                      onClose: () {
-                        HapticFeedback.lightImpact();
-                        setState(() => _searchExpanded = false);
-                        _searchCtrl.clear();
-                        ref
-                            .read(marketFilterProvider.notifier)
-                            .setQuery(null);
-                      },
-                    )
-                  : const Text(
-                      'Marketplace',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 26,
-                        letterSpacing: -0.5,
-                        color: AppColors.cream,
-                      ),
-                    ),
-              leading: _searchExpanded
-                  ? null
-                  : IconButton(
-                      icon: const Icon(Icons.search,
-                          color: AppColors.cream),
-                      onPressed: () {
-                        HapticFeedback.lightImpact();
-                        setState(() => _searchExpanded = true);
-                      },
-                    ),
-              actions: [
-                if (!_searchExpanded) const _CartBadgeButton(),
-              ],
+              title: const Text(
+                'Marketplace',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 26,
+                  letterSpacing: -0.5,
+                  color: AppColors.cream,
+                ),
+              ),
+              leading: IconButton(
+                icon: const Icon(Icons.search, color: AppColors.cream),
+                onPressed: _openSearch,
+              ),
+              actions: const [_CartBadgeButton()],
             ),
 
-            // ── SEARCH BAR ──
-            if (!_searchExpanded)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-                  child: GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      setState(() => _searchExpanded = true);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceHigh,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.search,
-                              color: AppColors.textMuted
-                                  .withValues(alpha: 0.6),
-                              size: 22),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Mahsulotlarni qidiring...',
-                            style: TextStyle(
+            // ── SEARCH BAR (tap → SearchScreen) ──
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                child: GestureDetector(
+                  onTap: _openSearch,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceHigh,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.search,
+                            color: AppColors.textMuted
+                                .withValues(alpha: 0.6),
+                            size: 22),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Mahsulot yoki do\'kon qidiring...',
+                          style: TextStyle(
                                 color: AppColors.textMuted
                                     .withValues(alpha: 0.6),
                                 fontSize: 15),
@@ -259,22 +234,19 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
               ),
 
             // ── PROMO BANNER ──
-            if (filter.query == null || filter.query!.isEmpty)
-              SliverToBoxAdapter(
-                child: _PromoBanner(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    ref
-                        .read(marketFilterProvider.notifier)
-                        .setCategory(null);
-                    _scrollCtrl.animateTo(
-                      _scrollCtrl.position.maxScrollExtent * 0.5,
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.easeOutCubic,
-                    );
-                  },
-                ),
+            SliverToBoxAdapter(
+              child: _PromoBanner(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  ref.read(marketFilterProvider.notifier).setCategory(null);
+                  _scrollCtrl.animateTo(
+                    _scrollCtrl.position.maxScrollExtent * 0.5,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOutCubic,
+                  );
+                },
               ),
+            ),
 
             // ── KATEGORIYALAR ──
             SliverToBoxAdapter(
@@ -295,16 +267,15 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
             ),
 
             // ── DO'KONLAR ──
-            if (filter.query == null || filter.query!.isEmpty)
-              const SliverToBoxAdapter(child: _ShopsSection()),
+            const SliverToBoxAdapter(child: _ShopsSection()),
 
             // ── MAHSULOTLAR SARLAVHASI ──
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
                 child: Text(
-                  filter.query != null && filter.query!.isNotEmpty
-                      ? '"${filter.query}" natijalari'
+                  filter.categoryId != null
+                      ? 'Kategoriya mahsulotlari'
                       : 'Tavsiya etilganlar',
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
@@ -331,19 +302,11 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
             else if (prods.items.isEmpty)
               SliverFillRemaining(
                 child: _MarketEmptyState(
-                  hasQuery: filter.query != null,
-                  onAction: () {
+                  hasCategory: filter.categoryId != null,
+                  onSearch: _openSearch,
+                  onClearCategory: () {
                     HapticFeedback.lightImpact();
-                    setState(() => _searchExpanded = true);
-                    if (filter.query != null) {
-                      ref
-                          .read(marketFilterProvider.notifier)
-                          .setQuery(null);
-                      ref
-                          .read(marketFilterProvider.notifier)
-                          .setCategory(null);
-                      _searchCtrl.clear();
-                    }
+                    ref.read(marketFilterProvider.notifier).setCategory(null);
                   },
                 ),
               )
@@ -447,48 +410,6 @@ class _CartBadgeButton extends ConsumerWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-// ── Qidiruv maydoni (app bar ichida) ────────────────────────
-
-class _SearchField extends StatelessWidget {
-  final TextEditingController controller;
-  final ValueChanged<String> onSubmitted;
-  final VoidCallback onClose;
-
-  const _SearchField({
-    required this.controller,
-    required this.onSubmitted,
-    required this.onClose,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      autofocus: true,
-      style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
-      decoration: InputDecoration(
-        hintText: 'Qidiring...',
-        hintStyle:
-            TextStyle(color: AppColors.textMuted.withValues(alpha: 0.5)),
-        filled: true,
-        fillColor: AppColors.surfaceHigh,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textMuted),
-          onPressed: onClose,
-        ),
-      ),
-      textInputAction: TextInputAction.search,
-      onSubmitted: onSubmitted,
     );
   }
 }
@@ -1364,9 +1285,14 @@ class _ProductsGridSkeleton extends StatelessWidget {
 // ── Empty state ─────────────────────────────────────────────
 
 class _MarketEmptyState extends StatelessWidget {
-  const _MarketEmptyState({required this.hasQuery, required this.onAction});
-  final bool hasQuery;
-  final VoidCallback onAction;
+  const _MarketEmptyState({
+    required this.hasCategory,
+    required this.onSearch,
+    required this.onClearCategory,
+  });
+  final bool hasCategory;
+  final VoidCallback onSearch;
+  final VoidCallback onClearCategory;
 
   @override
   Widget build(BuildContext context) {
@@ -1384,14 +1310,14 @@ class _MarketEmptyState extends StatelessWidget {
                 borderRadius: BorderRadius.circular(28),
               ),
               child: Icon(
-                hasQuery ? Icons.search_off : Icons.inventory_2_outlined,
+                Icons.inventory_2_outlined,
                 size: 48,
                 color: AppColors.textMuted.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 20),
             Text(
-              hasQuery ? 'Hech narsa topilmadi' : 'Mahsulotlar mavjud emas',
+              hasCategory ? 'Bu kategoriyada mahsulot yo\'q' : 'Mahsulotlar mavjud emas',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -1399,20 +1325,24 @@ class _MarketEmptyState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              hasQuery
-                  ? 'Boshqa kalit so\'z bilan urinib ko\'ring'
-                  : 'Tez orada yangi mahsulotlar qo\'shiladi',
+            const Text(
+              'Tez orada yangi mahsulotlar qo\'shiladi',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: AppColors.textSecondary, fontSize: 14),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
             ),
             const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: onAction,
-              icon: Icon(hasQuery ? Icons.refresh : Icons.search),
-              label: Text(hasQuery ? 'Filterlarni tozalash' : 'Qidirish'),
-            ),
+            if (hasCategory)
+              FilledButton.icon(
+                onPressed: onClearCategory,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Barcha mahsulotlar'),
+              )
+            else
+              FilledButton.icon(
+                onPressed: onSearch,
+                icon: const Icon(Icons.search),
+                label: const Text('Qidirish'),
+              ),
           ],
         ),
       ),

@@ -36,7 +36,14 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> tryAutoLogin() async {
     final storage = ref.read(secureStorageProvider);
-    final tok = await storage.read(key: AppConfig.accessTokenKey);
+    String? tok;
+    try {
+      tok = await storage.read(key: AppConfig.accessTokenKey);
+    } catch (_) {
+      // Shifrlash kaliti buzilgan — eski ma'lumotlarni tozalash
+      await storage.deleteAll();
+      return;
+    }
     if (tok == null || tok.isEmpty) return;
     await _loadMe();
   }

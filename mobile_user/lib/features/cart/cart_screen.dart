@@ -209,7 +209,17 @@ class _CartItemCardState extends ConsumerState<_CartItemCard> {
       await ref.read(dioProvider).delete('/cart/${widget.item['id']}');
       ref.invalidate(cartProvider);
       HapticFeedback.mediumImpact();
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('O\'chirishda xato. Sahifani yangilang.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      ref.invalidate(cartProvider);
+    }
   }
 
   @override

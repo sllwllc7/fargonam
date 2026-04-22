@@ -9,8 +9,7 @@ import '../../core/ws_service.dart';
 import '../ai_assistant/ai_assistant_screen.dart';
 import '../home/home_feed_screen.dart';
 import '../marketplace/marketplace_screen.dart';
-import '../notifications/notifications_screen.dart'
-    show notificationsProvider;
+import '../notifications/notifications_providers.dart';
 import '../orders/orders_screen.dart';
 import '../taxi/taxi_screen.dart';
 import '../profile/profile_screen.dart';

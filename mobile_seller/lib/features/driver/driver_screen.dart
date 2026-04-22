@@ -187,7 +187,9 @@ class _DriverScreenState extends ConsumerState<DriverScreen> {
       }
       setState(() => _activeRide = null);
       ref.invalidate(availableRidesProvider);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('_loadRides xato: $e');
+    }
   }
 
   Future<void> _toggleOnline() async {

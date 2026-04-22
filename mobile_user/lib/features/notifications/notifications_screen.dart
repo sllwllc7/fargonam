@@ -5,18 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
-
-final notificationsProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  final res = await ref.watch(dioProvider).get('/notifications');
-  return (res.data as List).cast<Map<String, dynamic>>();
-});
-
-final unreadCountProvider = FutureProvider<int>((ref) async {
-  final res =
-      await ref.watch(dioProvider).get('/notifications/unread-count');
-  return res.data['count'] as int;
-});
+import 'notifications_providers.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -143,7 +132,7 @@ class _NotificationTileState extends State<_NotificationTile> {
   Widget build(BuildContext context) {
     final n = widget.notification;
     final isRead = n['is_read'] == true;
-    final (icon, color) = _typeIcon(n['type'] as String);
+    final (icon, color) = _typeIcon((n['type'] as String?) ?? 'info');
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
@@ -190,7 +179,7 @@ class _NotificationTileState extends State<_NotificationTile> {
                       children: [
                         Expanded(
                           child: Text(
-                            n['title'] as String,
+                            (n['title'] as String?) ?? '',
                             style: TextStyle(
                               fontWeight: isRead
                                   ? FontWeight.w600
@@ -202,7 +191,7 @@ class _NotificationTileState extends State<_NotificationTile> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          _formatTime(n['created_at'] as String),
+                          _formatTime((n['created_at'] as String?) ?? ''),
                           style: const TextStyle(
                             fontSize: 11,
                             color: AppColors.textMuted,
@@ -212,7 +201,7 @@ class _NotificationTileState extends State<_NotificationTile> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      n['body'] as String,
+                      (n['body'] as String?) ?? '',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

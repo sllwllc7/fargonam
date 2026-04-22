@@ -11,6 +11,7 @@ from app.models.order import Order, OrderItem, OrderStatus
 from app.models.product import Product
 from app.models.shop import Shop
 from app.models.user import User, UserRole
+from app.api.cart import enrich_order
 from app.api.ws import notify_user
 from app.core.push import notify_order_status
 from app.schemas.marketplace import OrderOut, ShopOut
@@ -52,7 +53,7 @@ async def seller_orders(
     orders = (await db.scalars(
         select(Order).where(Order.id.in_(order_ids_q)).order_by(Order.id.desc())
     )).all()
-    return list(orders)
+    return [await enrich_order(o, db) for o in orders]
 
 
 @router.patch("/orders/{order_id}/status", response_model=OrderOut)
@@ -93,7 +94,7 @@ async def update_order_status(
         "status": new_status.value,
     })
 
-    return order
+    return await enrich_order(order, db)
 
 
 @router.get("/stats")

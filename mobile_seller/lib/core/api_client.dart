@@ -1,8 +1,16 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'config.dart';
+
+/// Global navigator key — token muddati tugaganda login'ga yo'naltirish uchun.
+final navigatorKey = GlobalKey<NavigatorState>();
+
+/// Token muddati tugaganda chaqiriladigan callback.
+/// Circular import'dan qochish uchun main.dart tomonidan o'rnatiladi.
+VoidCallback? onTokenExpired;
 
 /// Tokenni xavfsiz saqlash uchun (Android EncryptedSharedPreferences).
 final secureStorageProvider = Provider<FlutterSecureStorage>(
@@ -50,6 +58,7 @@ final dioProvider = Provider<Dio>((ref) {
           }
           await storage.delete(key: AppConfig.accessTokenKey);
           await storage.delete(key: AppConfig.refreshTokenKey);
+          _navigateToLogin();
         }
         handler.next(e);
       },
@@ -58,6 +67,11 @@ final dioProvider = Provider<Dio>((ref) {
 
   return dio;
 });
+
+/// Token muddati tugaganda login sahifasiga yo'naltirish.
+void _navigateToLogin() {
+  onTokenExpired?.call();
+}
 
 /// Refresh token orqali yangi access token olish.
 Future<bool> _tryRefreshToken(

@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
+import 'navigator_key.dart';
 import 'theme.dart';
 import '../features/chat/conversations_screen.dart';
 import '../features/notifications/notifications_screen.dart';
 import '../features/orders/orders_screen.dart';
-
-/// Global navigator key — push'dan navigatsiya uchun
-final navigatorKey = GlobalKey<NavigatorState>();
 
 /// Background message handler (top-level funksiya bo'lishi shart)
 @pragma('vm:entry-point')

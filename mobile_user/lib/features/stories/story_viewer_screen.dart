@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../core/config.dart';
 import '../../core/theme.dart';
@@ -35,11 +36,19 @@ class StoryItem {
         createdAt: j['created_at'] as String?,
       );
 
-  /// To'liq media URL
-  String get fullMediaUrl => '${AppConfig.apiBaseUrl}$mediaUrl';
+  /// To'liq media URL — agar allaqachon absolyut bo'lsa, base qo'shmasin
+  String get fullMediaUrl {
+    if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) {
+      return mediaUrl;
+    }
+    return '${AppConfig.apiBaseUrl}$mediaUrl';
+  }
 
   /// Video yoki rasm ekanligini aniqlash
-  bool get isVideo => mediaUrl.endsWith('.mp4');
+  bool get isVideo =>
+      mediaUrl.contains('.mp4') ||
+      mediaUrl.contains('.webm') ||
+      mediaUrl.contains('.mov');
 
   /// Qachon yaratilganini chiroyli ko'rsatish
   String get timeAgo {
@@ -420,15 +429,61 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   }
 }
 
-/// Story fon rasmi.
-class _StoryBackground extends StatelessWidget {
+/// Story fon — rasm yoki video.
+class _StoryBackground extends StatefulWidget {
   final StoryItem story;
   const _StoryBackground({required this.story});
 
   @override
+  State<_StoryBackground> createState() => _StoryBackgroundState();
+}
+
+class _StoryBackgroundState extends State<_StoryBackground> {
+  VideoPlayerController? _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.story.isVideo) _initVideo();
+  }
+
+  Future<void> _initVideo() async {
+    final ctrl = VideoPlayerController.networkUrl(
+      Uri.parse(widget.story.fullMediaUrl),
+    );
+    await ctrl.initialize();
+    ctrl.setLooping(true);
+    ctrl.setVolume(0);
+    ctrl.play();
+    if (mounted) setState(() => _ctrl = ctrl);
+  }
+
+  @override
+  void dispose() {
+    _ctrl?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (widget.story.isVideo) {
+      if (_ctrl == null || !_ctrl!.value.isInitialized) {
+        return Container(color: AppColors.bg,
+          child: const Center(child: CircularProgressIndicator(color: AppColors.cream)));
+      }
+      return SizedBox.expand(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: _ctrl!.value.size.width,
+            height: _ctrl!.value.size.height,
+            child: VideoPlayer(_ctrl!),
+          ),
+        ),
+      );
+    }
     return AppCachedImage(
-      url: story.fullMediaUrl,
+      url: widget.story.fullMediaUrl,
       borderRadius: 0,
       fit: BoxFit.cover,
       width: double.infinity,

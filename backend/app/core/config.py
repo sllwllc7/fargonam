@@ -15,8 +15,8 @@ class Settings(BaseSettings):
 
     # JWT
     SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 43200   # 30 kun
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 90        # 3 oy
     JWT_ALGORITHM: str = "HS256"
 
     # App

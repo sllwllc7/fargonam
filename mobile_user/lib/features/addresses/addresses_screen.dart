@@ -107,7 +107,17 @@ class AddressesScreen extends ConsumerWidget {
       try {
         await ref.read(dioProvider).delete('/addresses/${a['id']}');
         ref.invalidate(addressesProvider);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Manzil o\'chirishda xato: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Manzil o\'chirishda xato yuz berdi'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 

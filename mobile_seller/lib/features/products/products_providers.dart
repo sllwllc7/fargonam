@@ -38,7 +38,7 @@ class Product {
 final shopProductsProvider =
     FutureProvider.family<List<Product>, int>((ref, shopId) async {
   final dio = ref.watch(dioProvider);
-  final res = await dio.get('/products', queryParameters: {'shop_id': shopId, 'limit': 100});
+  final res = await dio.get('/products', queryParameters: {'shop_id': shopId, 'limit': 500});
   final items = (res.data['items'] as List).cast<Map<String, dynamic>>();
   return items.map(Product.fromJson).toList();
 });

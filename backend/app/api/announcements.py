@@ -82,3 +82,17 @@ async def create_announcement(
             await send_push_to_user(uid, f"⚠️ {payload.title}", payload.body, data={"type": "system"})
 
     return {"id": ann.id, "title": ann.title}
+
+
+@router.delete("/{ann_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_announcement(
+    ann_id: int,
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin e'lonni o'chiradi."""
+    ann = await db.get(Announcement, ann_id)
+    if not ann:
+        raise HTTPException(status_code=404, detail="E'lon topilmadi")
+    await db.delete(ann)
+    await db.commit()

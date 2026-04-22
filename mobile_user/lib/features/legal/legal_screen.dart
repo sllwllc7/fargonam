@@ -1,5 +1,5 @@
-/// Foydalanish shartlari va Maxfiylik siyosati ekrani.
-/// Play Store uchun majburiy.
+// Foydalanish shartlari va Maxfiylik siyosati ekrani.
+// Play Store uchun majburiy.
 import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';

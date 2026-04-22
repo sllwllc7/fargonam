@@ -53,7 +53,7 @@ final myShopProvider = FutureProvider<Shop?>((ref) async {
 
 Future<Shop> createShop(WidgetRef ref, {required String name, String? description}) async {
   final dio = ref.read(dioProvider);
-  final res = await dio.post('/shops', data: {
+  final res = await dio.post('/seller/shops', data: {
     'name': name,
     if (description != null && description.isNotEmpty) 'description': description,
   });

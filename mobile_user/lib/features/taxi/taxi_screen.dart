@@ -70,7 +70,8 @@ Future<ymk.BitmapDescriptor> _circleMarker({
   final picture = recorder.endRecording();
   final image = await picture.toImage(size.toInt(), size.toInt());
   final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-  return ymk.BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
+  if (bytes == null) throw Exception('Marker ikon yaratishda xato: bytes null');
+  return ymk.BitmapDescriptor.fromBytes(bytes.buffer.asUint8List());
 }
 
 /// Bitta marta yasalib, qayta ishlatish uchun cache qilinadi

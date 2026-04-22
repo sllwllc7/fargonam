@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api import addresses as addresses_api
 from app.api import announcements as announcements_api
+from app.api import app_config as app_config_api
 from app.api import admin as admin_api
 from app.api import auth as auth_api
 from app.api import chat as chat_api
@@ -61,6 +62,7 @@ app.add_middleware(
 ensure_dirs()
 app.mount("/static", StaticFiles(directory=UPLOAD_ROOT), name="static")
 
+app.include_router(app_config_api.router)
 app.include_router(auth_api.router)
 app.include_router(shops_api.router)
 app.include_router(categories_api.router)

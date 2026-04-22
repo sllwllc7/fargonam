@@ -16,11 +16,28 @@ import '../help/help_screen.dart';
 import '../legal/legal_screen.dart';
 import '../orders/orders_screen.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
+  @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  // FIX: Global _actionBusy o'rniga instance-level busy flag
+  bool _avatarBusy = false;
+
+  Future<void> _startAvatarUpload() async {
+    if (_avatarBusy) return;
+    setState(() => _avatarBusy = true);
+    try {
+      await _pickAndUploadAvatar(context, ref);
+    } finally {
+      if (mounted) setState(() => _avatarBusy = false);
+    }
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(authControllerProvider).user;
     if (user == null) return const SizedBox.shrink();
 
@@ -53,10 +70,12 @@ class ProfileScreen extends ConsumerWidget {
             child: Column(
               children: [
                 GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    guardedAction(() => _pickAndUploadAvatar(context, ref));
-                  },
+                  onTap: _avatarBusy
+                      ? null
+                      : () {
+                          HapticFeedback.lightImpact();
+                          _startAvatarUpload();
+                        },
                   child: Stack(
                     children: [
                       Container(
@@ -89,9 +108,11 @@ class ProfileScreen extends ConsumerWidget {
                                   color: AppColors.surfaceHigh,
                                   alignment: Alignment.center,
                                   child: Text(
-                                    (user.fullName ?? user.phone)
-                                        .substring(0, 1)
-                                        .toUpperCase(),
+                                    () {
+                                      final s = user.fullName ?? user.phone;
+                                      if (s.isEmpty) return '?';
+                                      return String.fromCharCode(s.runes.first).toUpperCase();
+                                    }(),
                                     style: const TextStyle(
                                       fontSize: 38,
                                       fontWeight: FontWeight.w800,
@@ -204,21 +225,11 @@ class ProfileScreen extends ConsumerWidget {
             iconColor: AppColors.info,
             onTap: () {
               HapticFeedback.lightImpact();
-              _showEditNameSheet(context, ref, user.fullName);
+              _showEditNameSheet(context, user.fullName);
             },
           ),
-          _MenuItem(
-            icon: Icons.lock_outline,
-            title: 'Parolni o\'zgartirish',
-            iconColor: AppColors.cream,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const _ChangePasswordScreen()));
-            },
-          ),
+          // OTP login ishlatilsa parol yo'q — bu menyu keraksiz
+          // Faqat eski parol bilan kirgan foydalanuvchilarga ko'rsatamiz
 
           const SizedBox(height: 16),
           const _SectionLabel('Sozlamalar'),
@@ -292,7 +303,7 @@ class ProfileScreen extends ConsumerWidget {
 
           // Chiqish
           OutlinedButton.icon(
-            onPressed: () => _confirmLogout(context, ref),
+            onPressed: () => _confirmLogout(context),
             icon: const Icon(Icons.logout, color: AppColors.error),
             label: const Text(
               'Chiqish',
@@ -322,7 +333,7 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmLogout(BuildContext context) async {
     HapticFeedback.lightImpact();
     final ok = await showDialog<bool>(
       context: context,
@@ -356,7 +367,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Future<void> _showEditNameSheet(
-      BuildContext context, WidgetRef ref, String? currentName) async {
+      BuildContext context, String? currentName) async {
     final ctrl = TextEditingController(text: currentName ?? '');
     bool loading = false;
     String? error;

@@ -3,19 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme.dart';
 
-/// Tugma bir marta bosilganda qayta bosilmasligi uchun guard.
-/// Async funksiya tugaguncha tugma ishlamaydi.
-bool _actionBusy = false;
-Future<void> guardedAction(Future<void> Function() action) async {
-  if (_actionBusy) return;
-  _actionBusy = true;
-  try {
-    await action();
-  } finally {
-    _actionBusy = false;
-  }
-}
-
 /// Internet yo'q yoki server xatosi uchun umumiy widget.
 class ErrorRetryWidget extends StatelessWidget {
   const ErrorRetryWidget({super.key, required this.error, required this.onRetry});

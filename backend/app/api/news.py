@@ -62,32 +62,38 @@ async def get_news(news_id: int, db: AsyncSession = Depends(get_db)):
     return {"id": n.id, "title": n.title, "body": n.body, "image_url": n.image_url, "created_at": n.created_at.isoformat()}
 
 
+class NewsCreate(BaseModel):
+    title: str = Field(max_length=500)
+    body: str = Field(max_length=10000)
+    image_url: str | None = None
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_news(
-    title: str,
-    body: str,
-    file: UploadFile | None = File(default=None),
+    payload: NewsCreate,
     admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    """Admin yangilik/e'lon yaratadi (rasm ixtiyoriy)."""
-    image_url = None
-    if file and file.size and file.size > 0:
-        contents = await file.read()
-        try:
-            ext = validate_image(contents, max_bytes=10 * 1024 * 1024)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
-        NEWS_IMG_DIR.mkdir(parents=True, exist_ok=True)
-        fname = f"news_{secrets.token_hex(8)}{ext}"
-        (NEWS_IMG_DIR / fname).write_bytes(contents)
-        image_url = public_url(f"news/{fname}")
-
-    post = NewsPost(author_id=admin.id, title=title, body=body, image_url=image_url)
+    """Admin yangilik yaratadi (JSON body, image_url — ixtiyoriy URL)."""
+    post = NewsPost(author_id=admin.id, title=payload.title, body=payload.body, image_url=payload.image_url)
     db.add(post)
     await db.commit()
     await db.refresh(post)
     return {"id": post.id, "title": post.title}
+
+
+@router.delete("/{news_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_news(
+    news_id: int,
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin yangilikni o'chiradi."""
+    post = await db.get(NewsPost, news_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Yangilik topilmadi")
+    await db.delete(post)
+    await db.commit()
 
 
 # ========== LIKE ==========
