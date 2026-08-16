@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Fargonam yagona rang palitrasi.
 /// Asosiy ranglar: Midnight Indigo (#212842) + Vanilla Cream (#F0E7D5)
@@ -6,6 +7,21 @@ class AppColors {
   // ── Asosiy ranglar ──
   static const midnightIndigo = Color(0xFF212842);
   static const vanillaCream = Color(0xFFF0E7D5);
+
+  // ── Marketplace UI (Stitch mockup, 2026-08-16 UX qarori) ──
+  // Yangi nomlangan token'lar — pastdagi success/warning/error/divider'ga
+  // TEGILMADI (taxi_screen.dart yolg'iz 37 marta ishlatadi, boshqa
+  // unrelated ekranlar rangini o'zgartirib yubormaslik uchun).
+  static const paperWhite = Color(0xFFFFFFFF);
+  static const background = Color(0xFFF8F9FA);
+  static const onSurface = Color(0xFF191C1D);
+  static const onSurfaceVariant = Color(0xFF46464D);
+  static const outlineVariant = Color(0xFFC6C6CE);
+  static const surfaceContainer = Color(0xFFEDEEEF);
+  static const marketPrimaryText = Color(0xFF0C132C);
+  static const statusSuccess = Color(0xFF27AE60);
+  static const statusWarning = Color(0xFFF2994A);
+  static const statusError = Color(0xFFBA1A1A);
 
   // ── Indigo oilasi (dark -> light) ──
   static const bgDeep = Color(0xFF181D33);      // eng qorong'i fon
@@ -163,10 +179,10 @@ class AppTheme {
   static ThemeData get lightTheme => ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFF5F3EF),
+        scaffoldBackgroundColor: AppColors.background,
         colorSchemeSeed: AppColors.midnightIndigo,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF5F3EF),
+          backgroundColor: AppColors.background,
           foregroundColor: AppColors.midnightIndigo,
           elevation: 0,
           scrolledUnderElevation: 0,
@@ -274,5 +290,72 @@ class AppTheme {
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5),
         ),
+      );
+}
+
+/// Bo'shliq shkalasi — Stitch mockup (2026-08-16 UX qarori).
+class AppSpacing {
+  static const xs = 4.0;
+  static const sm = 8.0;
+  static const md = 16.0;
+  static const lg = 24.0;
+}
+
+/// Radius shkalasi — Stitch mockup (2026-08-16 UX qarori).
+class AppRadius {
+  static const sm = 4.0;
+  static const lg = 8.0;
+  static const xl = 12.0;
+  static const full = 9999.0;
+}
+
+/// Fixed balandliklar — Stitch mockup (2026-08-16 UX qarori).
+class AppSizes {
+  static const topBar = 64.0;
+  static const bottomNav = 72.0;
+  static const searchInput = 48.0;
+  static const primaryButton = 56.0;
+}
+
+/// Marketplace UI shrift shkalasi — Inter, Stitch mockup (2026-08-16 UX
+/// qarori). Rang shu yerda belgilanmaydi — chaqiruvchi `.copyWith(color:)`
+/// bilan kontekstga mos rang qo'shadi.
+class AppTypography {
+  static TextStyle get headlineLgMobile => GoogleFonts.inter(
+        fontSize: 24,
+        height: 32 / 24,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.01 * 24,
+      );
+
+  static TextStyle get headlineMd => GoogleFonts.inter(
+        fontSize: 20,
+        height: 28 / 20,
+        fontWeight: FontWeight.w600,
+      );
+
+  static TextStyle get priceDisplay => GoogleFonts.inter(
+        fontSize: 18,
+        height: 24 / 18,
+        fontWeight: FontWeight.w700,
+      );
+
+  static TextStyle get bodyLg => GoogleFonts.inter(
+        fontSize: 16,
+        height: 24 / 16,
+        fontWeight: FontWeight.w400,
+      );
+
+  static TextStyle get bodyMd => GoogleFonts.inter(
+        fontSize: 14,
+        height: 20 / 14,
+        fontWeight: FontWeight.w400,
+      );
+
+  static TextStyle get labelSm => GoogleFonts.inter(
+        fontSize: 12,
+        height: 16 / 12,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.05 * 12,
       );
 }
