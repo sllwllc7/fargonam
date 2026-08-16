@@ -258,7 +258,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(AppSpacing.xl, 8.h, AppSpacing.xl, 0),
-                  child: GestureDetector(
+                  child: _PressableScale(
                     onTap: _openSearch,
                     child: Container(
                       height: tokens.AppSizes.searchInput,
@@ -369,9 +369,12 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                   padding: EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.lg),
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
-                      (ctx, i) => _ProductCard(
-                        product: prods.items[i],
-                        showQuickAdd: widget.groupName != null,
+                      (ctx, i) => _StaggeredEntrance(
+                        index: i,
+                        child: _ProductCard(
+                          product: prods.items[i],
+                          showQuickAdd: widget.groupName != null,
+                        ),
                       ),
                       childCount: prods.items.length,
                     ),
@@ -887,6 +890,51 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Kartochka paydo bo'lish animatsiyasi (fade + pastdan sirg'alish,
+// har biri 40ms kechikish bilan — ro'yxat jonli tuyulishi uchun) ──
+
+class _StaggeredEntrance extends StatefulWidget {
+  const _StaggeredEntrance({required this.index, required this.child});
+  final int index;
+  final Widget child;
+
+  @override
+  State<_StaggeredEntrance> createState() => _StaggeredEntranceState();
+}
+
+class _StaggeredEntranceState extends State<_StaggeredEntrance> with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 320));
+    final curve = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
+    _fade = curve;
+    _slide = Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero).animate(curve);
+    final delayMs = 40 * widget.index.clamp(0, 10);
+    Future.delayed(Duration(milliseconds: delayMs), () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(position: _slide, child: widget.child),
     );
   }
 }
