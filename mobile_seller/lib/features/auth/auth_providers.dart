@@ -3,21 +3,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/config.dart';
+import '../../core/push_service.dart';
 
 /// Joriy foydalanuvchi (UserOut). null = login qilinmagan.
 class CurrentUser {
   final int id;
-  final String phone;
+  final String? phone;
   final String? fullName;
   final String role;
-  CurrentUser({required this.id, required this.phone, required this.fullName, required this.role});
+  CurrentUser({required this.id, this.phone, this.fullName, required this.role});
 
   factory CurrentUser.fromJson(Map<String, dynamic> j) => CurrentUser(
         id: j['id'] as int,
-        phone: j['phone'] as String,
+        phone: j['phone'] as String?,
         fullName: j['full_name'] as String?,
         role: j['role'] as String,
       );
+}
+
+class TelegramSession {
+  final String sessionId;
+  final String botUrl;
+  const TelegramSession({required this.sessionId, required this.botUrl});
 }
 
 class AuthState {
@@ -40,7 +47,14 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> tryAutoLogin() async {
     final storage = ref.read(secureStorageProvider);
-    final tok = await storage.read(key: AppConfig.accessTokenKey);
+    String? tok;
+    try {
+      tok = await storage.read(key: AppConfig.accessTokenKey);
+    } catch (_) {
+      // Shifrlash kaliti buzilgan — eski ma'lumotlarni tozalash
+      await storage.deleteAll();
+      return;
+    }
     if (tok == null || tok.isEmpty) return;
     await _loadMe();
   }
@@ -54,13 +68,21 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  /// Telefon raqamga OTP yuborish. is_new_user — yangi foydalanuvchimi.
-  Future<bool?> sendOtp(String phone) async {
+  /// Telegram login sessiyasini boshlaydi — bot havolasini qaytaradi.
+  /// Yangi foydalanuvchi rol="seller" bilan yaratiladi.
+  Future<TelegramSession?> startTelegramLogin() async {
     state = state.copyWith(loading: true, error: null);
     try {
-      final res = await ref.read(dioProvider).post('/auth/send-otp', data: {'phone': phone});
+      final res = await ref.read(dioProvider).post(
+            '/auth/telegram/session',
+            queryParameters: {'role': 'seller'},
+          );
+      final data = res.data as Map<String, dynamic>;
       state = state.copyWith(loading: false);
-      return res.data['is_new_user'] as bool?;
+      return TelegramSession(
+        sessionId: data['session_id'] as String,
+        botUrl: data['bot_url'] as String,
+      );
     } on DioException catch (e) {
       state = state.copyWith(
         loading: false,
@@ -70,23 +92,21 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  /// OTP tasdiqlash — kirish yoki ro'yxatdan o'tish.
-  Future<void> verifyOtp(String phone, String otp, {String? fullName, String role = 'seller'}) async {
-    state = state.copyWith(loading: true, error: null);
+  /// Sessiya holatini bir marta tekshiradi.
+  /// true = tasdiqlangan va login qilindi, false = hali kutilmoqda, null = sessiya tugagan/xato.
+  Future<bool?> pollTelegramSession(String sessionId) async {
     try {
-      final res = await ref.read(dioProvider).post('/auth/verify-otp', data: {
-        'phone': phone,
-        'otp': otp,
-        'role': role,
-        if (fullName != null && fullName.isNotEmpty) 'full_name': fullName,
-      });
-      await _saveTokens(res.data as Map<String, dynamic>);
-      await _loadMe();
+      final res = await ref.read(dioProvider).get('/auth/telegram/session/$sessionId');
+      final data = res.data as Map<String, dynamic>;
+      if (data['status'] == 'confirmed') {
+        await _saveTokens(data);
+        await _loadMe();
+        return true;
+      }
+      return false;
     } on DioException catch (e) {
-      state = state.copyWith(
-        loading: false,
-        error: e.response?.data['detail']?.toString() ?? 'Tarmoq xatosi',
-      );
+      if (e.response?.statusCode == 410) return null;
+      return false;
     }
   }
 
@@ -96,13 +116,24 @@ class AuthController extends Notifier<AuthState> {
       final res = await dio.get('/auth/me');
       final user = CurrentUser.fromJson(res.data as Map<String, dynamic>);
       state = state.copyWith(loading: false, user: user, error: null);
+      // Login muvaffaqiyatli — push notification'ni boshlash
+      ref.read(pushServiceProvider).init();
     } on DioException catch (e) {
       state = state.copyWith(loading: false, error: e.message);
     }
   }
 
   Future<void> logout() async {
+    // Push tokenni o'chirish
+    try { await ref.read(pushServiceProvider).unregister(); } catch (_) {}
     final storage = ref.read(secureStorageProvider);
+    // Refresh tokenni serverda ham bekor qilish (boshqa qurilmada o'g'irlansa ishlamasin)
+    try {
+      final refreshToken = await storage.read(key: AppConfig.refreshTokenKey);
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        await ref.read(dioProvider).post('/auth/logout', data: {'refresh_token': refreshToken});
+      }
+    } catch (_) {}
     await storage.delete(key: AppConfig.accessTokenKey);
     await storage.delete(key: AppConfig.refreshTokenKey);
     state = const AuthState();

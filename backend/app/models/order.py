@@ -26,6 +26,11 @@ class PaymentMethod(str, Enum):
     click = "click"      # Click (keyinchalik)
 
 
+class DeliveryType(str, Enum):
+    delivery = "delivery"  # Kuryer orqali yetkazib berish
+    pickup = "pickup"      # Xaridor do'kondan o'zi olib ketadi (pickup_code bilan)
+
+
 class Order(Base):
     __tablename__ = "orders"
 
@@ -45,8 +50,27 @@ class Order(Base):
         default=PaymentMethod.cash,
         nullable=False,
     )
-    # Yetkazib berish manzili (ixtiyoriy — do'kondan olib ketsa bo'lmaydi)
+    delivery_type: Mapped[DeliveryType] = mapped_column(
+        SAEnum(DeliveryType, name="delivery_type"),
+        default=DeliveryType.delivery,
+        nullable=False,
+        server_default=DeliveryType.delivery.value,
+    )
+    # Yetkazib berish manzili — buyurtma paytidagi "surat" (matn), keyin
+    # SavedAddress o'zgarsa ham eski buyurtmada to'g'ri ko'rinishi uchun.
+    # pickup buyurtmalarda bo'sh qoladi.
     delivery_address: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Qaysi saqlangan manzildan olinganiga ishora (o'chirilsa ham buyurtma qolaveradi)
+    delivery_address_id: Mapped[int | None] = mapped_column(
+        ForeignKey("saved_addresses.id", ondelete="SET NULL"), nullable=True
+    )
+    # 4 xonali pickup kod (faqat delivery_type=pickup'da) — butun tarix
+    # bo'yicha unikal, hech qachon qayta ishlatilmaydi (DB darajasida
+    # unique constraint bilan kafolatlangan — NULL qiymatlar to'qnashmaydi).
+    pickup_code: Mapped[str | None] = mapped_column(String(4), unique=True, nullable=True)
+    # Bekor qilinganda sabab (xaridor bekor qilsa odatda bo'sh, sotuvchi
+    # "Bajarib bo'lmaydi" desa to'ldiriladi)
+    cancel_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -63,8 +87,8 @@ class OrderItem(Base):
     order_id: Mapped[int] = mapped_column(
         ForeignKey("orders.id", ondelete="CASCADE"), index=True
     )
-    product_id: Mapped[int] = mapped_column(
-        ForeignKey("products.id", ondelete="RESTRICT"), index=True
+    variant_id: Mapped[int] = mapped_column(
+        ForeignKey("product_variants.id", ondelete="RESTRICT"), index=True
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     # Buyurtma berilgan paytdagi narx — keyin mahsulot narxi o'zgarsa ham saqlanib qoladi

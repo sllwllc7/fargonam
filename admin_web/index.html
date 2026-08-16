@@ -198,19 +198,10 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
       <div class="llogo-ic">🏙️</div>
       <span class="llogo-tx">Fargonam Admin</span>
     </div>
-    <p class="lsub">Boshqaruv paneliga kirish</p>
-    <div id="s-phone">
-      <div class="fi"><label>Telefon raqam</label>
-        <input id="lPhone" type="tel" value="+998" maxlength="13" placeholder="+998900000000" onkeydown="if(event.key==='Enter')sendOtp()" oninput="this.value=this.value.replace(/[^+\d]/g,'');if(!this.value.startsWith('+998'))this.value='+998'"/>
-      </div>
-      <button class="btn btn-primary btn-full" onclick="sendOtp()" id="btnOtp">Kod yuborish</button>
-    </div>
-    <div id="s-otp" style="display:none">
-      <div class="fi"><label>SMS kod (hozircha: 5555)</label>
-        <input id="lOtp" type="text" placeholder="• • • •" maxlength="4" style="text-align:center;font-size:22px;letter-spacing:10px" onkeydown="if(event.key==='Enter')verifyOtp()"/>
-      </div>
-      <button class="btn btn-primary btn-full" onclick="verifyOtp()" id="btnVer">Kirish</button>
-      <button class="btn btn-ghost btn-full" onclick="backPhone()" style="margin-top:6px">← Raqamni o'zgartirish</button>
+    <p class="lsub">Boshqaruv paneliga Telegram orqali kiring</p>
+    <div id="s-tg">
+      <button class="btn btn-primary btn-full" onclick="startTgLogin()" id="btnTg">Telegram orqali kirish</button>
+      <p id="tgWait" style="display:none;font-size:13px;color:var(--t2);margin-top:14px;text-align:center;line-height:1.5">⏳ Ochilgan Telegram botida "Start" tugmasini bosing. Tasdiqlangach avtomatik kirasiz.</p>
     </div>
     <p id="lerr" class="lerr"></p>
   </div>
@@ -237,6 +228,7 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 
       <div class="sb-sec">Kontent</div>
       <button class="ni" onclick="go('categories')"><span class="ic">🗂️</span> Kategoriyalar</button>
+      <button class="ni" onclick="go('products')"><span class="ic">🛒</span> Mahsulotlar</button>
       <button class="ni" onclick="go('news')"><span class="ic">📰</span> Yangiliklar</button>
       <button class="ni" onclick="go('banners')"><span class="ic">🖼️</span> Bannerlar</button>
       <button class="ni" onclick="go('announcements')"><span class="ic">📣</span> E'lonlar</button>
@@ -280,7 +272,6 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 // ═══════════ CORE ═══════════
 const BASE = '';
 let TOKEN = localStorage.getItem('fg_tok') || '';
-let PHONE = '';
 
 async function api(method, path, body, isForm = false) {
   const h = {};
@@ -343,48 +334,69 @@ function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ═══════════ AUTH ═══════════
-async function sendOtp() {
-  const phone = document.getElementById('lPhone').value.trim();
-  if (!phone) return showLE('Telefon raqam kiriting');
-  PHONE = phone;
-  const btn = document.getElementById('btnOtp');
-  btn.disabled = true; btn.textContent = 'Yuborilmoqda...';
-  try {
-    await api('POST', '/auth/send-otp', { phone });
-    document.getElementById('s-phone').style.display = 'none';
-    document.getElementById('s-otp').style.display = 'block';
-    document.getElementById('lOtp').focus();
-    showLE('');
-  } catch(e) { showLE(e.message); }
-  finally { btn.disabled = false; btn.textContent = 'Kod yuborish'; }
+function slugify(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/['’‘ʻʼ`]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
-async function verifyOtp() {
-  const otp = document.getElementById('lOtp').value.trim();
-  if (otp.length < 4) return showLE('4 raqamli kod kiriting');
-  const btn = document.getElementById('btnVer');
-  btn.disabled = true; btn.textContent = 'Tekshirilmoqda...';
+// ═══════════ AUTH ═══════════
+let TG_SESSION = null;
+let TG_POLL = null;
+
+async function startTgLogin() {
+  const btn = document.getElementById('btnTg');
+  btn.disabled = true; btn.textContent = 'Yuklanmoqda...';
+  showLE('');
   try {
-    const res = await api('POST', '/auth/verify-otp', { phone: PHONE, otp });
-    TOKEN = res.access_token;
+    const res = await api('POST', '/auth/telegram/session');
+    TG_SESSION = res.session_id;
+    window.open(res.bot_url, '_blank');
+    document.getElementById('tgWait').style.display = 'block';
+    btn.textContent = 'Kutilmoqda...';
+    if (TG_POLL) clearInterval(TG_POLL);
+    TG_POLL = setInterval(pollTgSession, 2000);
+  } catch(e) {
+    showLE(e.message);
+    resetTgButton();
+  }
+}
+
+async function pollTgSession() {
+  if (!TG_SESSION) return;
+  try {
+    const r = await fetch(BASE + '/auth/telegram/session/' + TG_SESSION);
+    if (r.status === 410) {
+      clearInterval(TG_POLL); TG_POLL = null;
+      showLE('Sessiya muddati tugadi, qaytadan urinib ko\'ring');
+      resetTgButton();
+      return;
+    }
+    const data = await r.json();
+    if (data.status !== 'confirmed') return;
+    clearInterval(TG_POLL); TG_POLL = null;
+    TOKEN = data.access_token;
     localStorage.setItem('fg_tok', TOKEN);
     const me = await api('GET', '/auth/me');
     if (me.role !== 'admin') {
       TOKEN = ''; localStorage.removeItem('fg_tok');
-      return showLE('Sizda admin huquqi yo\'q');
+      showLE('Sizda admin huquqi yo\'q');
+      resetTgButton();
+      return;
     }
-    document.getElementById('admName').textContent = me.full_name || me.phone;
+    document.getElementById('admName').textContent = me.full_name || me.phone || 'Admin';
     document.getElementById('login').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     go('stats');
-  } catch(e) { showLE(e.message); }
-  finally { btn.disabled = false; btn.textContent = 'Kirish'; }
+  } catch(_) { /* tarmoq xatosi — keyingi pollingda qaytadan urinamiz */ }
 }
 
-function backPhone() {
-  document.getElementById('s-phone').style.display = 'block';
-  document.getElementById('s-otp').style.display = 'none';
+function resetTgButton() {
+  document.getElementById('tgWait').style.display = 'none';
+  const btn = document.getElementById('btnTg');
+  btn.disabled = false; btn.textContent = 'Telegram orqali kirish';
 }
 
 function showLE(msg) {
@@ -401,7 +413,7 @@ function logout() {
 if (TOKEN) {
   api('GET', '/auth/me').then(me => {
     if (me.role !== 'admin') { TOKEN=''; localStorage.removeItem('fg_tok'); return; }
-    document.getElementById('admName').textContent = me.full_name || me.phone;
+    document.getElementById('admName').textContent = me.full_name || me.phone || 'Admin';
     document.getElementById('login').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     go('stats');
@@ -412,11 +424,12 @@ if (TOKEN) {
 const TITLES = {
   stats:'Statistika', users:'Foydalanuvchilar', shops:"Do'konlar",
   orders:'Buyurtmalar', rides:'Taksi buyurtmalar', categories:'Kategoriyalar',
+  products:'Mahsulotlar',
   news:'Yangiliklar', banners:'Bannerlar', announcements:"E'lonlar",
   broadcast:'Xabar yuborish', appsettings:'Ilova sozlamalari'
 };
 const RENDERS = {
-  stats, users, shops, orders, rides, categories, news, banners, announcements, broadcast, appsettings
+  stats, users, shops, orders, rides, categories, products, news, banners, announcements, broadcast, appsettings
 };
 
 function go(tab) {
@@ -433,49 +446,51 @@ async function stats() {
   try {
     const d = await api('GET', '/admin/stats');
     // Check pending shops badge
-    const shops = await api('GET', '/admin/shops');
-    const pending = shops.filter(s => s.status === 'pending').length;
+    const shopsRes = await api('GET', '/admin/shops?limit=200');
+    const pending = shopsRes.items.filter(s => s.status === 'pending').length;
     const nb = document.getElementById('nShops');
     if (pending > 0) { nb.textContent = pending; nb.style.display = ''; }
     else nb.style.display = 'none';
+
+    const newsRes = await api('GET', '/news?limit=1').catch(() => ({ total: 0 }));
 
     setContent(`
       <div class="sg">
         <div class="sc" style="--acc:var(--pu)">
           <div class="sc-ic">👥</div>
           <div class="sc-lbl">Foydalanuvchilar</div>
-          <div class="sc-val">${d.total_users ?? 0}</div>
+          <div class="sc-val">${d.users_total ?? 0}</div>
           <div class="sc-sub">Jami ro'yxatdan o'tganlar</div>
         </div>
         <div class="sc" style="--acc:var(--gr)">
           <div class="sc-ic">🏪</div>
           <div class="sc-lbl">Do'konlar</div>
-          <div class="sc-val">${d.total_shops ?? 0}</div>
+          <div class="sc-val">${d.shops_total ?? 0}</div>
           <div class="sc-sub">${pending > 0 ? `${pending} ta tasdiqlash kutmoqda` : 'Hammasi faol'}</div>
         </div>
         <div class="sc" style="--acc:var(--or)">
           <div class="sc-ic">📦</div>
           <div class="sc-lbl">Buyurtmalar</div>
-          <div class="sc-val">${d.total_orders ?? 0}</div>
+          <div class="sc-val">${d.orders_total ?? 0}</div>
           <div class="sc-sub">Jami buyurtmalar</div>
         </div>
         <div class="sc" style="--acc:var(--bl)">
           <div class="sc-ic">📰</div>
           <div class="sc-lbl">Yangiliklar</div>
-          <div class="sc-val">${d.total_news ?? 0}</div>
+          <div class="sc-val">${newsRes.total ?? 0}</div>
           <div class="sc-sub">Jami maqolalar</div>
         </div>
         <div class="sc" style="--acc:var(--te)">
           <div class="sc-ic">🛒</div>
           <div class="sc-lbl">Mahsulotlar</div>
-          <div class="sc-val">${d.total_products ?? 0}</div>
+          <div class="sc-val">${d.products_total ?? 0}</div>
           <div class="sc-sub">Jami mahsulotlar</div>
         </div>
         <div class="sc" style="--acc:var(--ye)">
-          <div class="sc-ic">🚖</div>
-          <div class="sc-lbl">Taksi</div>
-          <div class="sc-val">${d.total_rides ?? 0}</div>
-          <div class="sc-sub">Jami sayohatlar</div>
+          <div class="sc-ic">💰</div>
+          <div class="sc-lbl">Daromad</div>
+          <div class="sc-val">${formatSum(d.revenue_total)}</div>
+          <div class="sc-sub">To'langan buyurtmalar</div>
         </div>
       </div>
 
@@ -497,7 +512,8 @@ async function users(page = 1) {
   loading();
   document.getElementById('tbAct').innerHTML = '';
   try {
-    const all = await api('GET', '/admin/users');
+    const res = await api('GET', '/admin/users?limit=200');
+    const all = res.items;
     let data = all.filter(u =>
       (!uQ || u.phone?.includes(uQ) || u.full_name?.toLowerCase().includes(uQ.toLowerCase())) &&
       (!uRole || u.role === uRole)
@@ -567,7 +583,8 @@ async function shops() {
   loading();
   document.getElementById('tbAct').innerHTML = '';
   try {
-    const all = await api('GET', '/admin/shops');
+    const res = await api('GET', '/admin/shops?limit=200');
+    const all = res.items;
     const pending = all.filter(s => s.status === 'pending');
     const nb = document.getElementById('nShops');
     if (pending.length > 0) { nb.textContent = pending.length; nb.style.display = ''; }
@@ -632,7 +649,8 @@ async function orders(page = 1) {
   loading();
   document.getElementById('tbAct').innerHTML = '';
   try {
-    const all = await api('GET', '/admin/orders');
+    const res = await api('GET', '/admin/orders?limit=200');
+    const all = res.items;
     let data = ordStatus ? all.filter(o => o.status === ordStatus) : all;
     const total = data.length, ps = 20;
     data = data.slice((page-1)*ps, page*ps);
@@ -661,20 +679,11 @@ async function orders(page = 1) {
               <td class="td2">${o.id}</td>
               <td>${esc(o.user_phone || o.user_id)}</td>
               <td class="td2">${(o.items||[]).length} ta mahsulot</td>
-              <td><b>${formatSum(o.total_price)}</b></td>
+              <td><b>${formatSum(o.total)}</b></td>
               <td>${orderBadge(o.status)}</td>
               <td class="td2">${o.payment_method || '—'}</td>
               <td class="td2">${fmt(o.created_at)}</td>
-              <td>
-                <select class="sel" style="font-size:11px;padding:4px 8px" onchange="changeOrderStatus(${o.id},this.value)" >
-                  <option value="">Status o'zgartir</option>
-                  <option value="pending">Kutmoqda</option>
-                  <option value="paid">To'langan</option>
-                  <option value="shipped">Yo'lda</option>
-                  <option value="delivered">Yetkazildi</option>
-                  <option value="cancelled">Bekor qilindi</option>
-                </select>
-              </td>
+              <td>${orderStatusSelect(o)}</td>
             </tr>`).join('') : `<tr><td colspan="8">${empty()}</td></tr>`}
           </tbody>
         </table>
@@ -682,6 +691,29 @@ async function orders(page = 1) {
       </div>
     `);
   } catch(e) { setContent(`<div class="empty"><div class="empty-tx">${e.message}</div></div>`); }
+}
+
+// Backend'dagi ALLOWED_TRANSITIONS (backend/app/api/cart.py) bilan sinxron
+// saqlanishi kerak — o'zgarsa ikkalasini ham yangilash.
+const ORDER_TRANSITIONS = {
+  pending: ['paid', 'cancelled'],
+  paid: ['shipped', 'cancelled'],
+  shipped: ['delivered'],
+  delivered: [],
+  cancelled: [],
+};
+const ORDER_STATUS_LABELS = { pending:'Kutmoqda', paid:"To'langan", shipped:"Yo'lda", delivered:'Yetkazildi', cancelled:'Bekor qilindi' };
+
+function orderStatusSelect(o) {
+  const next = ORDER_TRANSITIONS[o.status] || [];
+  if (!next.length) {
+    return `<select class="sel" style="font-size:11px;padding:4px 8px" disabled><option>— (yakuniy holat)</option></select>`;
+  }
+  const opts = next.map(s => `<option value="${s}">${ORDER_STATUS_LABELS[s]}</option>`).join('');
+  return `<select class="sel" style="font-size:11px;padding:4px 8px" onchange="changeOrderStatus(${o.id},this.value)">
+    <option value="">Status o'zgartir</option>
+    ${opts}
+  </select>`;
 }
 
 function orderBadge(s) {
@@ -747,19 +779,23 @@ async function categories() {
   document.getElementById('tbAct').innerHTML = `<button class="btn btn-sm btn-add" onclick="addCategory()">+ Kategoriya</button>`;
   try {
     const data = await api('GET', '/categories');
+    const counts = await Promise.all(data.map(c =>
+      api('GET', `/products?category_id=${c.id}&limit=1`).then(r => r.total).catch(() => 0)
+    ));
+    const catName = id => data.find(c => c.id === id)?.name;
     setContent(`
       <div class="card">
         <div class="ch"><span class="ct">Kategoriyalar (${data.length})</span></div>
         <table>
-          <thead><tr><th>#ID</th><th>Nomi</th><th>Icon</th><th>Mahsulotlar</th><th>Amallar</th></tr></thead>
+          <thead><tr><th>#ID</th><th>Nomi</th><th>Ota kategoriya</th><th>Mahsulotlar</th><th>Amallar</th></tr></thead>
           <tbody>
-            ${data.length ? data.map(c => `
-            <tr>
+            ${data.length ? data.map((c,i) => `
+            <tr style="cursor:pointer" onclick="openCategoryProducts(${c.id})" title="Mahsulotlarini ko'rish uchun bosing">
               <td class="td2">${c.id}</td>
-              <td><b>${esc(c.name)}</b></td>
-              <td style="font-size:24px">${c.icon || '📦'}</td>
-              <td class="td2">${c.product_count ?? 0}</td>
-              <td>
+              <td><b>${esc(c.name)}</b><div class="td2">${esc(c.slug)}</div></td>
+              <td class="td2">${c.parent_id ? esc(catName(c.parent_id) || '—') : '—'}</td>
+              <td class="td2">${counts[i]} ta</td>
+              <td onclick="event.stopPropagation()">
                 <button class="btn btn-sm btn-re" onclick="deleteCategory(${c.id},'${esc(c.name)}')">O'chirish</button>
               </td>
             </tr>`).join('') : `<tr><td colspan="5">${empty()}</td></tr>`}
@@ -770,11 +806,25 @@ async function categories() {
   } catch(e) { setContent(`<div class="empty"><div class="empty-tx">${e.message}</div></div>`); }
 }
 
-function addCategory() {
+function openCategoryProducts(id) {
+  pCategory = id;
+  go('products');
+}
+
+async function addCategory() {
+  let cats = [];
+  try { cats = await api('GET', '/categories'); } catch(_) {}
   openModal(`
     <div class="mt">Yangi kategoriya <button class="mc" onclick="closeModal()">×</button></div>
-    <div class="fi"><label>Nomi (o'zbekcha)</label><input id="cName" placeholder="Masalan: Elektronika"/></div>
-    <div class="fi"><label>Icon (emoji)</label><input id="cIcon" placeholder="📱" style="font-size:24px"/></div>
+    <div class="fi"><label>Nomi (o'zbekcha)</label><input id="cName" placeholder="Masalan: Ruchka" oninput="document.getElementById('cSlug').value=slugify(this.value)"/></div>
+    <div class="fi"><label>Slug (avtomatik, kerak bo'lsa o'zgartiring)</label><input id="cSlug" placeholder="ruchka"/></div>
+    <div class="fi">
+      <label>Ota kategoriya (ixtiyoriy)</label>
+      <select id="cParent">
+        <option value="">— Yo'q (asosiy kategoriya) —</option>
+        ${cats.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}
+      </select>
+    </div>
     <div class="mac">
       <button class="btn btn-primary" onclick="saveCategory()">Saqlash</button>
       <button class="btn" style="background:var(--s2);color:var(--t2)" onclick="closeModal()">Bekor</button>
@@ -784,10 +834,12 @@ function addCategory() {
 
 async function saveCategory() {
   const name = document.getElementById('cName').value.trim();
-  const icon = document.getElementById('cIcon').value.trim();
+  const slug = document.getElementById('cSlug').value.trim() || slugify(name);
+  const parent = document.getElementById('cParent').value;
   if (!name) return toast('Nom kiriting', 'err');
+  if (!slug) return toast('Slug kiriting', 'err');
   try {
-    await api('POST', '/categories', { name, icon });
+    await api('POST', '/categories', { name, slug, parent_id: parent ? Number(parent) : null });
     toast('Kategoriya qo\'shildi');
     closeModal(); categories();
   } catch(e) { toast(e.message, 'err'); }
@@ -802,6 +854,156 @@ async function deleteCategory(id, name) {
   } catch(e) { toast(e.message, 'err'); }
 }
 
+// ═══════════ PRODUCTS ═══════════
+let pPage = 1, pCategory = '', pCatMap = {};
+
+async function products(page = 1) {
+  pPage = page;
+  loading();
+  document.getElementById('tbAct').innerHTML = `<button class="btn btn-sm btn-add" onclick="addProduct()">+ Mahsulot qo'shish</button>`;
+  try {
+    const cats = await api('GET', '/categories');
+    pCatMap = {}; cats.forEach(c => pCatMap[c.id] = c.name);
+    const ps = 50;
+    const qs = new URLSearchParams({ limit: String(ps), offset: String((page-1)*ps) });
+    if (pCategory) qs.set('category_id', String(pCategory));
+    const res = await api('GET', `/products?${qs.toString()}`);
+    const total = res.total, pages = Math.ceil(total/ps);
+
+    setContent(`
+      <div class="card">
+        <div class="ch">
+          <span class="ct">Mahsulotlar (${total})</span>
+          <select class="sel" onchange="pCategory=this.value;products(1)">
+            <option value="">Barcha kategoriyalar</option>
+            ${cats.map(c => `<option value="${c.id}" ${String(pCategory)===String(c.id)?'selected':''}>${esc(c.name)}</option>`).join('')}
+          </select>
+        </div>
+        <table>
+          <thead><tr><th>Rasm</th><th>Nomi</th><th>Kategoriya</th><th>Narx</th><th>Zaxira</th><th>Holat</th><th>Amallar</th></tr></thead>
+          <tbody>
+            ${res.items.length ? res.items.map(p => `
+            <tr>
+              <td>${p.image_url ? `<img class="thumb" src="${esc(p.image_url)}" onerror="this.style.display='none'"/>` : '<div class="thumb"></div>'}</td>
+              <td><b>${esc(p.name)}</b>${p.shop_name ? `<div class="td2">${esc(p.shop_name)}</div>` : ''}</td>
+              <td class="td2">${esc(pCatMap[p.category_id] || '—')}</td>
+              <td>${priceRange(p)}</td>
+              <td class="td2">${p.total_stock ?? 0} dona</td>
+              <td>${p.is_active ? '<span class="bge bge-gr">Faol</span>' : '<span class="bge bge-re">Nofaol</span>'}</td>
+              <td style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="btn btn-sm" style="background:var(--s3);color:var(--t2)" onclick="toggleProduct(${p.id},${p.is_active})">${p.is_active?'O\'chirish':'Yoqish'}</button>
+                <button class="btn btn-sm btn-re" onclick="deleteProduct(${p.id})">Butunlay o'chirish</button>
+              </td>
+            </tr>`).join('') : `<tr><td colspan="7">${empty('Mahsulot yo\'q')}</td></tr>`}
+          </tbody>
+        </table>
+        ${pagination(page, pages, total, ps, 'products')}
+      </div>
+    `);
+  } catch(e) { setContent(`<div class="empty"><div class="empty-tx">${e.message}</div></div>`); }
+}
+
+function priceRange(p) {
+  if (p.min_price == null) return '—';
+  if (Number(p.min_price) === Number(p.max_price)) return formatSum(p.min_price);
+  return `${formatSum(p.min_price)} – ${formatSum(p.max_price)}`;
+}
+
+async function addProduct() {
+  let cats = [], shops = [];
+  try { cats = await api('GET', '/categories'); } catch(_) {}
+  try { const r = await api('GET', '/admin/shops?status=approved&limit=200'); shops = r.items || []; } catch(_) {}
+  if (shops.length === 0) {
+    toast("Avval kamida bitta do'konni tasdiqlang (Do'konlar bo'limi)", 'err');
+    return;
+  }
+  openModal(`
+    <div class="mt">Yangi mahsulot <button class="mc" onclick="closeModal()">×</button></div>
+    <div class="fi"><label>Nomi</label><input id="pName" placeholder="Masalan: Alfa ruchka"/></div>
+    <div class="fi">
+      <label>Kategoriya</label>
+      <select id="pCatSel">
+        <option value="">— Tanlanmagan —</option>
+        ${cats.map(c => `<option value="${c.id}" ${String(pCategory)===String(c.id)?'selected':''}>${esc(c.name)}</option>`).join('')}
+      </select>
+    </div>
+    ${shops.length > 1 ? `
+    <div class="fi">
+      <label>Do'kon</label>
+      <select id="pShopSel">${shops.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>
+    </div>` : `<input type="hidden" id="pShopSel" value="${shops[0].id}"/>`}
+    <div class="fi"><label>Tavsif (ixtiyoriy)</label><textarea id="pDesc" placeholder="Mahsulot haqida..."></textarea></div>
+    <div class="fi"><label>Narx (so'm)</label><input id="pPrice" type="number" min="1" placeholder="15000"/></div>
+    <div class="fi"><label>Zaxira (dona)</label><input id="pStock" type="number" min="0" value="0"/></div>
+    <div class="fi">
+      <label>Rasm (ixtiyoriy)</label>
+      <input type="file" id="pFile" accept="image/*" class="fi-file"/>
+      <div id="pPrev" style="margin-top:8px;display:none"><img id="pImg" style="width:100%;border-radius:10px;max-height:180px;object-fit:cover"/></div>
+    </div>
+    <div class="mac">
+      <button class="btn btn-primary" id="pBtn" onclick="saveProduct()">Saqlash</button>
+      <button class="btn" style="background:var(--s2);color:var(--t2)" onclick="closeModal()">Bekor</button>
+    </div>
+  `);
+  document.getElementById('pFile').addEventListener('change', function() {
+    const f = this.files[0];
+    if (f) {
+      document.getElementById('pImg').src = URL.createObjectURL(f);
+      document.getElementById('pPrev').style.display = 'block';
+    }
+  });
+}
+
+async function saveProduct() {
+  const name = document.getElementById('pName').value.trim();
+  const category_id = document.getElementById('pCatSel').value;
+  const shop_id = document.getElementById('pShopSel').value;
+  const description = document.getElementById('pDesc').value.trim();
+  const price = document.getElementById('pPrice').value;
+  const stock = document.getElementById('pStock').value || '0';
+  const file = document.getElementById('pFile').files[0];
+  if (!name) return toast('Nom kiriting', 'err');
+  if (!price || Number(price) <= 0) return toast("To'g'ri narx kiriting", 'err');
+
+  const btn = document.getElementById('pBtn');
+  btn.disabled = true; btn.textContent = 'Saqlanmoqda...';
+  try {
+    const product = await api('POST', '/products', {
+      shop_id: Number(shop_id),
+      category_id: category_id ? Number(category_id) : null,
+      name,
+      description: description || null,
+      price: Number(price),
+      stock: Number(stock),
+    });
+    if (file) {
+      const fd = new FormData();
+      fd.append('file', file);
+      await api('POST', `/products/${product.id}/image`, fd, true);
+    }
+    toast('Mahsulot qo\'shildi ✓');
+    closeModal(); products(pPage);
+  } catch(e) { toast(e.message, 'err'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = 'Saqlash'; } }
+}
+
+async function toggleProduct(id, isActive) {
+  try {
+    await api('PATCH', `/products/${id}`, { is_active: !isActive });
+    toast(isActive ? 'Mahsulot nofaol qilindi' : 'Mahsulot yoqildi');
+    products(pPage);
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm("Mahsulotni butunlay o'chirishni tasdiqlaysizmi?")) return;
+  try {
+    await api('DELETE', `/products/${id}`);
+    toast("O'chirildi");
+    products(pPage);
+  } catch(e) { toast(e.message, 'err'); }
+}
+
 // ═══════════ NEWS ═══════════
 let newsPage = 1;
 async function news(page = 1) {
@@ -809,7 +1011,8 @@ async function news(page = 1) {
   loading();
   document.getElementById('tbAct').innerHTML = `<button class="btn btn-sm btn-add" onclick="addNews()">+ Yangilik</button>`;
   try {
-    const all = await api('GET', '/news');
+    const res = await api('GET', '/news?limit=100');
+    const all = res.items;
     const total = all.length, ps = 15;
     const data = all.slice((page-1)*ps, page*ps);
     const pages = Math.ceil(total/ps);

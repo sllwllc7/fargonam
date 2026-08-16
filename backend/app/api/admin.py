@@ -11,6 +11,7 @@ from app.api.deps import require_admin
 from app.core.push import send_push_to_user
 from app.db.session import get_db
 from app.models.notification import Notification
+from app.api.cart import enrich_order, transition_order_status
 from app.models.order import Order, OrderStatus
 from app.models.product import Product
 from app.models.shop import Shop, ShopStatus
@@ -87,9 +88,9 @@ async def list_all_orders(
         base = base.where(Order.user_id == user_id)
 
     total = await db.scalar(select(func.count()).select_from(base.subquery()))
-    rows = await db.scalars(base.order_by(Order.id.desc()).limit(limit).offset(offset))
+    rows = (await db.scalars(base.order_by(Order.id.desc()).limit(limit).offset(offset))).all()
     return Page[OrderOut](
-        items=[OrderOut.model_validate(o) for o in rows],
+        items=[await enrich_order(o, db, include_phone=True) for o in rows],
         total=total or 0,
         limit=limit,
         offset=offset,
@@ -102,12 +103,12 @@ async def update_order_status(
     payload: OrderStatusUpdate,
     db: AsyncSession = Depends(get_db),
 ):
-    order = await db.get(Order, order_id)
+    order = (await db.scalars(
+        select(Order).where(Order.id == order_id).with_for_update()
+    )).first()
     if not order:
         raise HTTPException(status_code=404, detail="Buyurtma topilmadi")
-    order.status = payload.status
-    await db.commit()
-    await db.refresh(order)
+    await transition_order_status(order, payload.status, db, actor="admin")
     return order
 
 
@@ -124,10 +125,12 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
     )
     products_total = await db.scalar(select(func.count()).select_from(Product))
     orders_total = await db.scalar(select(func.count()).select_from(Order))
-    # Faqat to'langan/yetkazilgan buyurtmalarni hisoblaymiz
+    # Faqat yetkazib berilgan (pul haqiqatan qo'lga tegan) buyurtmalar —
+    # 'paid' offline oqimda faqat "sotuvchi tasdiqladi" degani, pul hali
+    # kuryerda/yetkazilmagan bo'lishi mumkin.
     revenue = await db.scalar(
         select(func.coalesce(func.sum(Order.total), 0)).where(
-            Order.status.in_([OrderStatus.paid, OrderStatus.shipped, OrderStatus.delivered])
+            Order.status == OrderStatus.delivered
         )
     )
     return AdminStats(

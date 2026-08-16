@@ -8,7 +8,7 @@ import '../../core/theme.dart';
 import '../../core/ws_service.dart';
 import '../ai_assistant/ai_assistant_screen.dart';
 import '../home/home_feed_screen.dart';
-import '../marketplace/marketplace_screen.dart';
+import '../marketplace/product_groups_screen.dart';
 import '../notifications/notifications_providers.dart';
 import '../orders/orders_screen.dart';
 import '../taxi/taxi_screen.dart';
@@ -37,7 +37,7 @@ class AppShellState extends ConsumerState<AppShell> {
   void switchTab(int index) => setState(() => _index = index);
 
   final _pages = const [
-    MarketplaceScreen(),
+    ProductGroupsScreen(),
     TaxiScreen(),
     HomeFeedScreen(),
     AiAssistantScreen(),
@@ -92,7 +92,7 @@ class AppShellState extends ConsumerState<AppShell> {
 
   String _orderStatusText(String s) => switch (s) {
         'pending' => 'Kutilmoqda',
-        'paid' => 'To\'langan',
+        'paid' => 'Tasdiqlandi',
         'shipped' => 'Yo\'lga chiqdi',
         'delivered' => 'Yetkazildi',
         'cancelled' => 'Bekor qilindi',

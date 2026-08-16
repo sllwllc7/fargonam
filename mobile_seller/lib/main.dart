@@ -1,16 +1,19 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'core/api_client.dart' show navigatorKey, onTokenExpired;
+import 'core/api_client.dart' show navigatorKey, onTokenExpired, secureStorageProvider;
 import 'core/app_config_service.dart';
+import 'core/push_service.dart';
 import 'core/theme.dart';
+import 'core/ws_service.dart';
 import 'features/auth/auth_providers.dart';
-import 'features/auth/login_screen.dart';
+import 'features/auth/telegram_login_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/driver/driver_screen.dart';
 import 'features/orders/seller_orders_screen.dart';
@@ -25,6 +28,7 @@ void main() async {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   } catch (e) {
     debugPrint('Firebase init xato: $e');
   }
@@ -40,7 +44,7 @@ class FargonamBiznesApp extends ConsumerWidget {
     onTokenExpired = () {
       ref.read(authControllerProvider.notifier).logout();
       navigatorKey.currentState?.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const TelegramLoginScreen()),
         (route) => false,
       );
     };
@@ -120,7 +124,7 @@ class _RootState extends ConsumerState<_Root> {
               child: CircularProgressIndicator(color: AppColors.cream)));
     }
     final user = ref.watch(authControllerProvider).user;
-    if (user == null) return const LoginScreen();
+    if (user == null) return const TelegramLoginScreen();
     return const _RoleRouter();
   }
 }
@@ -466,6 +470,7 @@ class _SellerShell extends ConsumerWidget {
             selectedIcon: Icon(Icons.inventory_2),
             label: 'Mahsulotlar'),
       ],
+      ordersTabIndex: 1,
       onLogout: () => onLogout(ref),
     );
   }
@@ -504,22 +509,76 @@ class _DriverShell extends ConsumerWidget {
 // BIZNES SHELL
 // ══════════════════════════════════════════════════════════════
 
-class _BiznesShell extends StatefulWidget {
+class _BiznesShell extends ConsumerStatefulWidget {
   const _BiznesShell({
     required this.pages,
     required this.destinations,
     required this.onLogout,
+    this.ordersTabIndex,
   });
   final List<Widget> pages;
   final List<NavigationDestination> destinations;
   final VoidCallback onLogout;
+  // Push bosilganda/WS orqali yangi buyurtma kelganda o'tiladigan tab.
+  // Faqat _SellerShell beradi (driver shell'da buyurtma tabi yo'q).
+  final int? ordersTabIndex;
 
   @override
-  State<_BiznesShell> createState() => _BiznesShellState();
+  ConsumerState<_BiznesShell> createState() => _BiznesShellState();
 }
 
-class _BiznesShellState extends State<_BiznesShell> {
+class _BiznesShellState extends ConsumerState<_BiznesShell> with WidgetsBindingObserver {
   int _index = 0;
+  SellerOrderEventsWsService? _orderWs;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    if (widget.ordersTabIndex != null) {
+      onSellerOrderPushTapped = () {
+        HapticFeedback.lightImpact();
+        setState(() => _index = widget.ordersTabIndex!);
+      };
+      _connectOrderWs();
+    }
+  }
+
+  void _connectOrderWs() {
+    _orderWs = SellerOrderEventsWsService(
+      onOrderStatus: (payload) {
+        ref.invalidate(sellerOrdersProvider);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Buyurtma #${payload['order_id']}: holat yangilandi'),
+              backgroundColor: AppColors.success,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      },
+    );
+    _orderWs!.connect(ref.read(secureStorageProvider));
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (widget.ordersTabIndex == null) return;
+    if (state == AppLifecycleState.paused) {
+      _orderWs?.pause();
+    } else if (state == AppLifecycleState.resumed) {
+      _orderWs?.resume();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    if (widget.ordersTabIndex != null) onSellerOrderPushTapped = null;
+    _orderWs?.disconnect();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

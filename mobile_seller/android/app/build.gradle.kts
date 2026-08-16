@@ -1,8 +1,13 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // google-services.json talab qiladi — Firebase konsolida "uz.fargonam.mobile_seller"
+    // ro'yxatdan o'tkazilgach shu fayl android/app/ ostiga qo'yiladi (hozircha yo'q).
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -16,18 +21,24 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17"
     }
 
-    // Release imzolash — keystores/ papkasidan o'qiladi
+    // Release imzolash — keystores/ papkasidan, parollar key.properties'dan
+    // o'qiladi (key.properties git'ga tushmaydi, .gitignore'da)
     val keystoreFile = rootProject.file("../../keystores/fargonam-seller-release.jks")
+    val keyProps = Properties()
+    val keyPropsFile = rootProject.file("key.properties")
+    if (keyPropsFile.exists()) {
+        keyPropsFile.inputStream().use { keyProps.load(it) }
+    }
     signingConfigs {
-        if (keystoreFile.exists()) {
+        if (keystoreFile.exists() && keyProps.containsKey("storePassword")) {
             create("release") {
                 storeFile = keystoreFile
-                storePassword = "fargonam@seller2024"
-                keyAlias = "fargonam-seller"
-                keyPassword = "fargonam@seller2024"
+                storePassword = keyProps.getProperty("storePassword")
+                keyAlias = keyProps.getProperty("keyAlias", "fargonam-seller")
+                keyPassword = keyProps.getProperty("keyPassword")
             }
         }
     }
@@ -46,6 +57,7 @@ android {
             val relCfg = signingConfigs.findByName("release")
             signingConfig = relCfg ?: signingConfigs.getByName("debug")
             isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

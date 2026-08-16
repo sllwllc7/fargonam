@@ -2,9 +2,18 @@
 Fargonam Backend — asosiy kirish nuqtasi.
 FastAPI ilovasi shu yerda yaratiladi va barcha route'lar ulanadi.
 """
+import asyncio
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+
+# Hech qayerda logging.basicConfig() chaqirilmagani uchun ilovaning o'z
+# logger'lari (logging.getLogger(__name__)) effektiv darajasi WARNING edi —
+# logger.info(...) chaqiruvlari (masalan Telegram polling holati) hech
+# qachon ko'rinmasdi. Shu qator bilan tuzatildi.
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 from app.api import addresses as addresses_api
 from app.api import announcements as announcements_api
@@ -26,6 +35,7 @@ from app.api import categories as categories_api
 from app.api import products as products_api
 from app.api import seller as seller_api
 from app.api import shops as shops_api
+from app.api import telegram_auth as telegram_auth_api
 from app.api import ws as ws_api
 from app.core.config import settings
 from app.core.middleware import setup_security
@@ -64,6 +74,7 @@ app.mount("/static", StaticFiles(directory=UPLOAD_ROOT), name="static")
 
 app.include_router(app_config_api.router)
 app.include_router(auth_api.router)
+app.include_router(telegram_auth_api.router)
 app.include_router(shops_api.router)
 app.include_router(categories_api.router)
 app.include_router(products_api.router)
@@ -103,3 +114,20 @@ async def root():
 async def health_check():
     """Health check — keyinroq DB va Redis ulanishini ham tekshiradi."""
     return {"status": "ok"}
+
+
+_telegram_polling_task: asyncio.Task | None = None
+
+
+@app.on_event("startup")
+async def _start_telegram_polling() -> None:
+    global _telegram_polling_task
+    if settings.TELEGRAM_BOT_TOKEN and settings.TELEGRAM_USE_POLLING:
+        from app.core.telegram_polling import run_polling_loop
+        _telegram_polling_task = asyncio.create_task(run_polling_loop())
+
+
+@app.on_event("shutdown")
+async def _stop_telegram_polling() -> None:
+    if _telegram_polling_task:
+        _telegram_polling_task.cancel()

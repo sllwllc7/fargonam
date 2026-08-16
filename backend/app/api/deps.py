@@ -8,6 +8,29 @@ from app.db.session import get_db
 from app.models.user import User, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
+
+
+async def get_current_user_optional(
+    token: str | None = Depends(oauth2_scheme_optional),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    """get_current_user bilan bir xil, lekin token yo'q/yaroqsiz bo'lsa
+    401 o'rniga None qaytaradi — ommaviy (login shart bo'lmagan)
+    endpoint'larda "agar kirilgan bo'lsa kim ekanini bilish" uchun."""
+    if not token:
+        return None
+    payload = decode_token(token)
+    if not payload or "sub" not in payload or payload.get("type") != "access":
+        return None
+    try:
+        user_id = int(payload["sub"])
+    except (TypeError, ValueError):
+        return None
+    user = await db.get(User, user_id)
+    if not user or not user.is_active:
+        return None
+    return user
 
 
 async def get_current_user(

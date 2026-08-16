@@ -14,37 +14,87 @@ final sellerOrdersProvider =
   return (res.data as List).cast<Map<String, dynamic>>();
 });
 
-class SellerOrdersScreen extends ConsumerWidget {
+bool _matchesSearch(Map<String, dynamic> order, String query) {
+  if (query.isEmpty) return true;
+  final q = query.trim().toLowerCase();
+  final code = (order['pickup_code'] as String?)?.toLowerCase() ?? '';
+  final phone = (order['customer_phone'] as String?)?.toLowerCase() ?? '';
+  final name = (order['customer_name'] as String?)?.toLowerCase() ?? '';
+  return code.contains(q) || phone.contains(q) || name.contains(q);
+}
+
+class SellerOrdersScreen extends ConsumerStatefulWidget {
   const SellerOrdersScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SellerOrdersScreen> createState() => _SellerOrdersScreenState();
+}
+
+class _SellerOrdersScreenState extends ConsumerState<SellerOrdersScreen> {
+  String _search = '';
+
+  @override
+  Widget build(BuildContext context) {
     final ordersAsync = ref.watch(sellerOrdersProvider);
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(title: const Text('Buyurtmalar')),
-      body: ordersAsync.when(
-        loading: () => const _OrdersSkeleton(),
-        error: (e, _) => ErrorRetryWidget(
-            error: e, onRetry: () => ref.invalidate(sellerOrdersProvider)),
-        data: (orders) {
-          if (orders.isEmpty) return const _EmptyOrdersState();
-          return RefreshIndicator(
-            color: AppColors.cream,
-            backgroundColor: AppColors.surfaceHigh,
-            onRefresh: () async {
-              HapticFeedback.lightImpact();
-              ref.invalidate(sellerOrdersProvider);
-            },
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: orders.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, i) =>
-                  _OrderCard(order: orders[i]),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: TextField(
+              onChanged: (v) => setState(() => _search = v),
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Kod, ism yoki telefon bo\'yicha qidirish',
+                hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+                filled: true,
+                fillColor: AppColors.surfaceHigh,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
-          );
-        },
+          ),
+          Expanded(
+            child: ordersAsync.when(
+              loading: () => const _OrdersSkeleton(),
+              error: (e, _) => ErrorRetryWidget(
+                  error: e, onRetry: () => ref.invalidate(sellerOrdersProvider)),
+              data: (orders) {
+                if (orders.isEmpty) return const _EmptyOrdersState();
+                final filtered = orders.where((o) => _matchesSearch(o, _search)).toList();
+                if (filtered.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'Hech narsa topilmadi',
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+                    ),
+                  );
+                }
+                return RefreshIndicator(
+                  color: AppColors.cream,
+                  backgroundColor: AppColors.surfaceHigh,
+                  onRefresh: () async {
+                    HapticFeedback.lightImpact();
+                    ref.invalidate(sellerOrdersProvider);
+                  },
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, i) =>
+                        _OrderCard(order: filtered[i]),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -128,13 +178,16 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
   }
 
   static const _statusFlow = ['pending', 'paid', 'shipped', 'delivered'];
-  static const _statusLabels = {
-    'pending': 'Kutilmoqda',
-    'paid': 'To\'langan',
-    'shipped': 'Yo\'lda',
-    'delivered': 'Yetkazildi',
-    'cancelled': 'Bekor',
-  };
+
+  bool get _isPickup => widget.order['delivery_type'] == 'pickup';
+
+  Map<String, String> get _statusLabels => {
+        'pending': 'Kutilmoqda',
+        'paid': 'To\'langan',
+        'shipped': _isPickup ? 'Tayyor' : 'Yo\'lda',
+        'delivered': _isPickup ? 'Topshirildi' : 'Yetkazildi',
+        'cancelled': 'Bekor',
+      };
   static const _statusColors = {
     'pending': AppColors.warning,
     'paid': AppColors.info,
@@ -155,19 +208,24 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     if (next == null) return null;
     return switch (next) {
       'paid' => 'To\'landi',
-      'shipped' => 'Yuborildi',
-      'delivered' => 'Yetkazildi',
+      'shipped' => _isPickup ? 'Tayyor' : 'Yuborildi',
+      'delivered' => _isPickup ? 'Topshirdim' : 'Yetkazildi',
       _ => null,
     };
   }
 
-  Future<void> _updateStatus(String newStatus) async {
+  bool get _canCancel => _status == 'pending' || _status == 'paid';
+
+  Future<void> _updateStatus(String newStatus, {String? reason}) async {
     HapticFeedback.mediumImpact();
     setState(() => _updating = true);
     try {
       await ref.read(dioProvider).patch(
         '/seller/orders/${widget.order['id']}/status',
-        queryParameters: {'new_status': newStatus},
+        queryParameters: {
+          'new_status': newStatus,
+          if (reason != null && reason.isNotEmpty) 'reason': reason,
+        },
       );
       setState(() => _status = newStatus);
       ref.invalidate(sellerOrdersProvider);
@@ -193,6 +251,92 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       }
     } finally {
       if (mounted) setState(() => _updating = false);
+    }
+  }
+
+  /// 'delivered' — terminal holat, ortga qaytarib bo'lmaydi. Tasodifiy
+  /// tap bilan tuzatib bo'lmaydigan holat yaratmaslik uchun tasdiqlash.
+  Future<void> _confirmAndAdvance(String newStatus) async {
+    if (newStatus != 'delivered') {
+      await _updateStatus(newStatus);
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Yetkazildi deb belgilansinmi?'),
+        content: const Text(
+          'Bu amalni ortga qaytarib bo\'lmaydi. Buyurtma "Yetkazildi" '
+          'holatiga o\'tadi.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Bekor qilish'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Ha, tasdiqlayman'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _updateStatus(newStatus);
+    }
+  }
+
+  /// "Bajarib bo'lmaydi" — sababni majburiy so'raydi, terminal holat
+  /// ekanini ochiq ogohlantiradi (bu dialog o'zi tasdiqlash vazifasini
+  /// bajaradi — alohida qo'shimcha tasdiqlash shart emas).
+  Future<void> _cancelWithReason() async {
+    final controller = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Buyurtmani bekor qilish'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Bu amalni ortga qaytarib bo\'lmaydi. Zaxira avtomatik '
+              'qaytariladi, xaridorga xabar boradi.',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              maxLength: 500,
+              decoration: const InputDecoration(
+                labelText: 'Sabab (majburiy)',
+                hintText: 'Masalan: mahsulot omborda tugagan',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Yopish'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isEmpty) return;
+              Navigator.pop(ctx, text);
+            },
+            child: const Text('Bekor qilaman'),
+          ),
+        ],
+      ),
+    );
+    if (reason != null && reason.isNotEmpty) {
+      await _updateStatus('cancelled', reason: reason);
     }
   }
 
@@ -248,7 +392,56 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+
+          // Xaridor ismi/telefoni
+          if (widget.order['customer_name'] != null || widget.order['customer_phone'] != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.person_outline, size: 15, color: AppColors.textMuted),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      [
+                        if (widget.order['customer_name'] != null) widget.order['customer_name'],
+                        if (widget.order['customer_phone'] != null) widget.order['customer_phone'],
+                      ].join(' · '),
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Pickup kod — katta, ajratilgan
+          if (_isPickup && widget.order['pickup_code'] != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
+                ),
+                child: Center(
+                  child: Text(
+                    widget.order['pickup_code'] as String,
+                    style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.success,
+                        letterSpacing: 4),
+                  ),
+                ),
+              ),
+            ),
 
           // Mahsulotlar
           for (final item in items) ...[
@@ -317,10 +510,26 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   ],
                 ),
               ),
+              if (_canCancel)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: TextButton(
+                    onPressed: _updating ? null : _cancelWithReason,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                    ),
+                    child: const Text(
+                      'Bajarib bo\'lmaydi',
+                      style: TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
               if (_nextLabel != null)
                 FilledButton.tonal(
-                  onPressed:
-                      _updating ? null : () => _updateStatus(_nextStatus!),
+                  onPressed: _updating
+                      ? null
+                      : () => _confirmAndAdvance(_nextStatus!),
                   style: FilledButton.styleFrom(
                     backgroundColor:
                         AppColors.cream.withValues(alpha: 0.15),

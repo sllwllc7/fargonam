@@ -156,6 +156,26 @@ async def _remove_invalid_token(token: str) -> None:
         logger.error(f"Token o'chirishda xato: {e}")
 
 
+async def _create_notification(user_id: int, title: str, body: str, notif_type: str, ref_id: int | None = None) -> None:
+    """Bildirishnoma yozuvini DB'ga saqlaydi (push yetib bormasa ham
+    ilovaning bildirishnomalar ro'yxatida iz qoladi — GET /notifications)."""
+    try:
+        from app.db.session import AsyncSessionLocal
+        from app.models.notification import Notification
+
+        async with AsyncSessionLocal() as db:
+            db.add(Notification(
+                user_id=user_id,
+                title=title,
+                body=body,
+                type=notif_type,
+                ref_id=ref_id,
+            ))
+            await db.commit()
+    except Exception as e:
+        logger.error(f"Notification yozuvini saqlashda xato: {e}")
+
+
 async def send_push_to_user(user_id: int, title: str, body: str, data: dict | None = None) -> int:
     """
     Foydalanuvchining barcha qurilmalariga push yuborish.
@@ -182,18 +202,15 @@ async def send_push_to_user(user_id: int, title: str, body: str, data: dict | No
 async def notify_order_status(user_id: int, order_id: int, status: str) -> None:
     """Buyurtma holati o'zgarganda push yuborish."""
     labels = {
-        "paid": "To'landi ✓",
+        "paid": "Buyurtma tasdiqlandi ✓",
         "shipped": "Yo'lga chiqdi 🚚",
         "delivered": "Yetkazildi ✓",
         "cancelled": "Bekor qilindi ✗",
     }
     label = labels.get(status, status)
-    await send_push_to_user(
-        user_id,
-        f"Buyurtma #{order_id}",
-        label,
-        data={"type": "order", "order_id": str(order_id)},
-    )
+    title = f"Buyurtma #{order_id}"
+    await send_push_to_user(user_id, title, label, data={"type": "order", "order_id": str(order_id)})
+    await _create_notification(user_id, title, label, "order", ref_id=order_id)
 
 
 async def notify_new_message(user_id: int, sender_name: str) -> None:
@@ -226,9 +243,17 @@ async def notify_ride_status(user_id: int, ride_id: int, status: str) -> None:
 
 async def notify_new_order(seller_user_id: int, order_id: int) -> None:
     """Sotuvchiga yangi buyurtma kelganda push yuborish."""
-    await send_push_to_user(
-        seller_user_id,
-        "Yangi buyurtma! 🛒",
-        f"Buyurtma #{order_id} keldi",
-        data={"type": "seller_order", "order_id": str(order_id)},
-    )
+    title = "Yangi buyurtma! 🛒"
+    body = f"Buyurtma #{order_id} keldi"
+    await send_push_to_user(seller_user_id, title, body, data={"type": "seller_order", "order_id": str(order_id)})
+    await _create_notification(seller_user_id, title, body, "seller_order", ref_id=order_id)
+
+
+async def notify_seller_order_cancelled(seller_user_id: int, order_id: int, reason: str | None = None) -> None:
+    """Xaridor buyurtmani bekor qilganda sotuvchiga push yuborish."""
+    title = "Buyurtma bekor qilindi ✗"
+    body = f"Buyurtma #{order_id} xaridor tomonidan bekor qilindi"
+    if reason:
+        body += f": {reason}"
+    await send_push_to_user(seller_user_id, title, body, data={"type": "seller_order", "order_id": str(order_id)})
+    await _create_notification(seller_user_id, title, body, "seller_order", ref_id=order_id)
