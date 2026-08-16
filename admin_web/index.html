@@ -677,7 +677,7 @@ async function orders(page = 1) {
             ${data.length ? data.map(o => `
             <tr>
               <td class="td2">${o.id}</td>
-              <td>${esc(o.user_phone || o.user_id)}</td>
+              <td>${esc(o.customer_name || '')}${o.customer_name && o.customer_phone ? ' · ' : ''}${esc(o.customer_phone || (!o.customer_name ? '#' + o.user_id : ''))}</td>
               <td class="td2">${(o.items||[]).length} ta mahsulot</td>
               <td><b>${formatSum(o.total)}</b></td>
               <td>${orderBadge(o.status)}</td>
@@ -737,40 +737,10 @@ async function changeOrderStatus(id, status) {
 }
 
 // ═══════════ RIDES ═══════════
+// Taksi — 2-bosqich (CLAUDE.md roadmap), backend'da admin-wide ro'yxat
+// endpoint'i hali yo'q (faqat /rides/my, /rides/driver/available).
 async function rides() {
-  loading();
-  document.getElementById('tbAct').innerHTML = '';
-  try {
-    const all = await api('GET', '/rides');
-    setContent(`
-      <div class="card">
-        <div class="ch"><span class="ct">Taksi buyurtmalar (${all.length})</span></div>
-        <table>
-          <thead><tr>
-            <th>#ID</th><th>Yo'lovchi</th><th>Haydovchi</th><th>Manzil</th><th>Narx</th><th>Holat</th><th>Sana</th>
-          </tr></thead>
-          <tbody>
-            ${all.length ? all.map(r => `
-            <tr>
-              <td class="td2">${r.id}</td>
-              <td>${esc(r.passenger_phone || r.passenger_id || '—')}</td>
-              <td>${esc(r.driver_phone || r.driver_id || 'Tayinlanmagan')}</td>
-              <td class="td2" style="max-width:180px">${esc((r.from_address||'').substring(0,30))} → ${esc((r.to_address||'').substring(0,30))}</td>
-              <td>${formatSum(r.price)}</td>
-              <td>${rideBadge(r.status)}</td>
-              <td class="td2">${fmt(r.created_at)}</td>
-            </tr>`).join('') : `<tr><td colspan="7">${empty()}</td></tr>`}
-          </tbody>
-        </table>
-      </div>
-    `);
-  } catch(e) { setContent(`<div class="empty"><div class="empty-tx">${e.message}</div></div>`); }
-}
-
-function rideBadge(s) {
-  const map = { pending:'bge-ye', accepted:'bge-bl', in_progress:'bge-or', completed:'bge-gr', cancelled:'bge-re' };
-  const lb = { pending:'Kutmoqda', accepted:'Qabul qilindi', in_progress:"Yo'lda", completed:'Yakunlandi', cancelled:'Bekor' };
-  return `<span class="bge ${map[s]||'bge-mu'}">${lb[s]||s}</span>`;
+  setContent(`<div class="card">${empty("🚖 Tez orada — bu modul 2-bosqichda (Sentabr 2026+) ishga tushadi")}</div>`);
 }
 
 // ═══════════ CATEGORIES ═══════════

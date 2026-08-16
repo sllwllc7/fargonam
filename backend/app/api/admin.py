@@ -160,6 +160,8 @@ class ShopAdminOut(BaseModel):
     admin_note: str | None
     is_active: bool
     created_at: str
+    owner_phone: str | None = None
+    product_count: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -190,9 +192,31 @@ async def list_shops(
         base = base.where(Shop.status == status_filter)
 
     total = await db.scalar(select(func.count()).select_from(base.subquery()))
-    rows = await db.scalars(base.order_by(Shop.id.desc()).limit(limit).offset(offset))
+    rows = (await db.scalars(base.order_by(Shop.id.desc()).limit(limit).offset(offset))).all()
+
+    owner_ids = [s.owner_id for s in rows]
+    phone_map: dict[int, str] = {}
+    if owner_ids:
+        owners = (await db.scalars(select(User).where(User.id.in_(owner_ids)))).all()
+        phone_map = {u.id: u.phone for u in owners if u.phone}
+
+    count_map: dict[int, int] = {}
+    shop_ids = [s.id for s in rows]
+    if shop_ids:
+        count_rows = (await db.execute(
+            select(Product.shop_id, func.count()).where(Product.shop_id.in_(shop_ids)).group_by(Product.shop_id)
+        )).all()
+        count_map = {shop_id: count for shop_id, count in count_rows}
+
+    items = []
+    for s in rows:
+        out = ShopAdminOut.model_validate(s)
+        out.owner_phone = phone_map.get(s.owner_id)
+        out.product_count = count_map.get(s.id, 0)
+        items.append(out)
+
     return Page[ShopAdminOut](
-        items=[ShopAdminOut.model_validate(s) for s in rows],
+        items=items,
         total=total or 0,
         limit=limit,
         offset=offset,

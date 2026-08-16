@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_client.dart';
 import '../../core/theme.dart';
@@ -216,6 +217,12 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
 
   bool get _canCancel => _status == 'pending' || _status == 'paid';
 
+  Future<void> _callCustomer(String phone) async {
+    HapticFeedback.selectionClick();
+    final uri = Uri(scheme: 'tel', path: phone);
+    await launchUrl(uri);
+  }
+
   Future<void> _updateStatus(String newStatus, {String? reason}) async {
     HapticFeedback.mediumImpact();
     setState(() => _updating = true);
@@ -404,14 +411,49 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      [
-                        if (widget.order['customer_name'] != null) widget.order['customer_name'],
-                        if (widget.order['customer_phone'] != null) widget.order['customer_phone'],
-                      ].join(' · '),
+                      (widget.order['customer_name'] as String?) ?? '',
                       style: const TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (widget.order['customer_phone'] != null)
+                    InkWell(
+                      onTap: () => _callCustomer(widget.order['customer_phone'] as String),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.call, size: 14, color: AppColors.success),
+                            const SizedBox(width: 4),
+                            Text(
+                              widget.order['customer_phone'] as String,
+                              style: const TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.success),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+          // Yetkazib berish manzili (pickup bo'lmasa)
+          if (!_isPickup && (widget.order['delivery_address'] as String?)?.isNotEmpty == true)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.location_on_outlined, size: 15, color: AppColors.textMuted),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      widget.order['delivery_address'] as String,
+                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                     ),
                   ),
                 ],
