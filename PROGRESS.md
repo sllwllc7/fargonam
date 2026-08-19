@@ -178,6 +178,11 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | 3 | 8/17: Muvaffaqiyat (order success) — to'liq qayta yozildi | `mobile_user/lib/features/checkout/order_success_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 | 3 | 9/17: Kuzatish (order tracking) — to'liq qayta yozildi (pickup-kod/bekor-qilingan real holatlari saqlandi, timeline rang xatolari tuzatildi) | `mobile_user/lib/features/orders/order_tracking_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 | 3 | 10/17: Buyurtmalar (orders) — to'liq qayta yozildi (statusBadge 4-holat rangi tuzatildi) | `mobile_user/lib/features/orders/orders_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 3 | 11/17: Bildirishnomalar — to'liq qayta yozildi | `mobile_user/lib/features/notifications/notifications_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 3 | 12/17: AI chat — to'liq fidelity (avval faqat chip olib tashlangan edi) | `mobile_user/lib/features/ai_assistant/ai_assistant_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 3 | 13/17: Taxi "Tez orada" — to'liq qayta yozildi | `mobile_user/lib/features/taxi/taxi_coming_soon_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 3 | 14/17: Profil — to'liq qayta yozildi (6 qator aniq SVG+rang) | `mobile_user/lib/features/profile/profile_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 3 | 17/17: Sozlamalar — to'liq qayta yozildi | `mobile_user/lib/features/profile/settings_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -450,6 +455,29 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   belgisi, "Marketga o'tish" tugmasi, push toggle, tab bo'rtmasi). `categoryTints[0]`
   ham shu tokenga ishora qiladi endi (qiymat o'zgarmadi, faqat nomlandi).
 
+- [2026-08-19] **11-12-13-14-17/17: Bildirishnomalar, AI chat, Taxi, Profil, Sozlamalar**
+  ekranlari dc.html'ga moslab qayta yozildi.
+  - Bildirishnomalar: real `type` tizimi (order/ride/chat/promo — prototipda faqat
+    buyurtma-bosqichi kind'lari bor, backend'da esa umumiy `type` maydoni, ichki
+    prep/ready/done farqi yo'q — shu sabab eng ko'p uchraydigan buyurtma-ikonkasi
+    ishlatildi, `Backend farqlari`ga yozildi) saqlandi, faqat token/SVG migratsiya.
+  - AI chat: manba kodidan aniq ranglar tasdiqlandi — onlayn nuqta `success`(yashil,
+    avval `accent`=qora edi), AI pufakcha matni `textPrimary`(avval `primaryDark`),
+    input border `inputBorder`(#D5DDE9 — Checkout bo'limida qo'shilgan token endi
+    shu yerda ham qo'llanildi). Namuna chiplari **ATAYLAB tiklanmadi** — foydalanuvchi
+    "5 ta tuzatish" so'rovida olib tashlashni aniq so'ragan, bu qaror kuchda qoladi.
+  - Taxi: aniq mashina SVG ikonkasi, doira/badge foni `primaryLight` (avval legacy
+    `#EDE9FE` binafsha).
+  - Profil: 6 qatorning HAR BIRI uchun `pr` massividan aniq SVG yo'l + individual rang
+    (Buyurtmalarim/Savat/Manzillarim=`textPrimary`, Sevimlilar/Bildirishnomalar/
+    Sozlamalar=`textMuted`) — avval hammasi bir xil legacy binafsha rangda edi.
+  - Sozlamalar: bildirishnoma toggle rangi `notifToggleBg` manba kodidan tasdiqlandi —
+    yoqilganda `primaryDeep`(#14243F), o'chirilganda `border` (avval mos ravishda
+    qora/legacy binafsha, ikkalasi ham noto'g'ri edi). "Chiqish" tugmasi rangi
+    `textMuted` — dc.html'da neytral (qizil emas), aniq shu qiymatga moslandi
+    (avvalgi implementatsiya UX-yaxshilash sifatida qizil tanlagan edi, lekin bu
+    §6 "aniq dc.html qiymatidan chetlashma" qoidasiga zid edi — tuzatildi).
+
 ### Backend farqlari
 - [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),
   garchi `products` jadvalida test mahsulotlari bor. Kategoriyasiz UI to'g'ri ishlaydi
@@ -457,6 +485,11 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 - [Sinf to'plami] `KitItem` modelida kategoriya/slug yo'q — dc.html'dagi per-item
   kategoriya ikonkasi o'rniga bitta neytral ikonka ishlatildi (yuqoridagi Qarorlar
   yozuviga qarang).
+- [Bildirishnomalar] Backend `Notification.type` faqat umumiy satr ("order",
+  "seller_order", "ride", "chat", "promo", "system") — dc.html'dagi buyurtma
+  bosqichi ichki farqi (prep/ready/done, har biri boshqa ikonka/rang) yo'q. Buyurtma
+  turidagi bildirishnomalar uchun eng ko'p uchraydigan (tayyor/topshirildi) ikonkasi
+  ishlatiladi.
 (2-bosqich hali to'liq bajarilmadi — `buildData()` va mavjud model/repository to'liq
 solishtiruvi shu yerga keyingi seansda yoziladi.)
 
