@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -51,7 +50,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // (2500*2) + (5500*1) = 10500
-    expect(find.textContaining('10 500'), findsOneWidget);
+    expect(find.textContaining('10 500'), findsOneWidget);
     expect(find.text('Buyurtmani rasmiylashtirish'), findsOneWidget);
     expect(find.text('Alfa ruchka'), findsOneWidget);
     expect(find.text('Yozuvli daftar'), findsOneWidget);
@@ -79,7 +78,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('1'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.remove));
+    await tester.tap(find.text('−'));
     await tester.pump();
     // `_changeQty` next<1 bo'lsa erta qaytadi — tarmoq so'rovi yuborilmaydi,
     // shuning uchun qiymat hali ham "1" (0 emas).

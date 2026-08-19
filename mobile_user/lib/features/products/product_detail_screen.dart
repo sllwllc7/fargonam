@@ -11,12 +11,18 @@ import '../favorites/favorites_screen.dart' show favoritesProvider;
 import '../marketplace/catalog_screen.dart' show categoriesProvider;
 import '../marketplace/category_icons.dart';
 
-final productDetailProvider = FutureProvider.family<Map<String, dynamic>, int>((ref, id) async {
+final productDetailProvider = FutureProvider.family<Map<String, dynamic>, int>((
+  ref,
+  id,
+) async {
   final res = await ref.watch(dioProvider).get('/products/$id');
   return res.data as Map<String, dynamic>;
 });
 
-final isFavoriteProvider = FutureProvider.family<bool, int>((ref, productId) async {
+final isFavoriteProvider = FutureProvider.family<bool, int>((
+  ref,
+  productId,
+) async {
   try {
     final res = await ref.watch(dioProvider).get('/favorites/check/$productId');
     return res.data['is_favorite'] as bool;
@@ -41,7 +47,8 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
   final int productId;
 
   @override
-  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
+  ConsumerState<ProductDetailScreen> createState() =>
+      _ProductDetailScreenState();
 }
 
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
@@ -53,7 +60,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   void _initSelection(Map<String, dynamic> product) {
     if (_initialized) return;
     _initialized = true;
-    final variants = (product['variants'] as List? ?? []).cast<Map<String, dynamic>>();
+    final variants = (product['variants'] as List? ?? [])
+        .cast<Map<String, dynamic>>();
     if (variants.isEmpty) return;
     final attrs = _attrNames(variants);
     final first = variants.first['attributes'] as Map? ?? {};
@@ -77,7 +85,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     if (variants.length == 1) return variants.first;
     for (final v in variants) {
       final attrs = v['attributes'] as Map? ?? {};
-      final matches = _selected.entries.every((e) => attrs[e.key]?.toString() == e.value);
+      final matches = _selected.entries.every(
+        (e) => attrs[e.key]?.toString() == e.value,
+      );
       if (matches) return v;
     }
     return variants.isNotEmpty ? variants.first : null;
@@ -99,19 +109,27 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     HapticFeedback.mediumImpact();
     setState(() => _adding = true);
     try {
-      await ref.read(dioProvider).post('/cart', data: {'variant_id': variant['id'], 'quantity': _qty});
+      await ref
+          .read(dioProvider)
+          .post('/cart', data: {'variant_id': variant['id'], 'quantity': _qty});
       ref.invalidate(cartProvider);
       HapticFeedback.lightImpact();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Savatga qo\'shildi'), backgroundColor: AppColors.success),
+          const SnackBar(
+            content: Text('Savatga qo\'shildi'),
+            backgroundColor: AppColors.success,
+          ),
         );
       }
     } on DioException catch (e) {
       HapticFeedback.heavyImpact();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.response?.data['detail']?.toString() ?? 'Xato'), backgroundColor: AppColors.danger),
+          SnackBar(
+            content: Text(e.response?.data['detail']?.toString() ?? 'Xato'),
+            backgroundColor: AppColors.danger,
+          ),
         );
       }
     } finally {
@@ -128,11 +146,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: pAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (e, _) => Center(child: Text('Yuklab bo\'lmadi', style: AppTypography.caption)),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+        error: (e, _) => Center(
+          child: Text('Yuklab bo\'lmadi', style: AppTypography.caption),
+        ),
         data: (p) {
           _initSelection(p);
-          final variants = (p['variants'] as List? ?? []).cast<Map<String, dynamic>>();
+          final variants = (p['variants'] as List? ?? [])
+              .cast<Map<String, dynamic>>();
           final variant = _findVariant(variants);
           final attrNames = _attrNames(variants);
           final stock = variant?['stock'] as int? ?? 0;
@@ -151,7 +174,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               break;
             }
           }
-          final tint = AppColors.categoryTints[(categoryId ?? 0) % AppColors.categoryTints.length];
+          final tint =
+              AppColors.categoryTints[(categoryId ?? 0) %
+                  AppColors.categoryTints.length];
 
           return SafeArea(
             bottom: false,
@@ -166,8 +191,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            BackCircleButton(onTap: () => Navigator.maybePop(context)),
-                            _RoundFavButton(active: isFav, onTap: () => _toggleFav(widget.productId, isFav)),
+                            BackCircleButton(
+                              onTap: () => Navigator.maybePop(context),
+                            ),
+                            _RoundFavButton(
+                              active: isFav,
+                              onTap: () => _toggleFav(widget.productId, isFav),
+                            ),
                           ],
                         ),
                       ),
@@ -175,7 +205,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         iconPath: categorySvg(slug),
                         bg: tint[0],
                         fg: tint[1],
-                        labels: ['${name.toLowerCase()} — asosiy rasm', 'yon tomondan', 'yaqindan'],
+                        labels: [
+                          '${name.toLowerCase()} — asosiy rasm',
+                          'yon tomondan',
+                          'yaqindan',
+                        ],
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
@@ -185,23 +219,49 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             if ((p['brand'] as String? ?? '').isNotEmpty)
                               Text(
                                 (p['brand'] as String).toUpperCase(),
-                                style: AppTypography.eyebrow.copyWith(color: AppColors.textPrimary, letterSpacing: 0.5),
+                                style: AppTypography.eyebrow.copyWith(
+                                  color: AppColors.textPrimary,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             const SizedBox(height: 4),
-                            Text(name, style: AppTypography.cardTitle.copyWith(fontSize: 22, letterSpacing: -0.4, height: 1.2)),
+                            Text(
+                              name,
+                              style: AppTypography.cardTitle.copyWith(
+                                fontSize: 22,
+                                letterSpacing: -0.4,
+                                height: 1.2,
+                              ),
+                            ),
                             const SizedBox(height: 8),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.baseline,
                               textBaseline: TextBaseline.alphabetic,
                               children: [
-                                Text(formatSom(price), style: AppTypography.price),
+                                Text(
+                                  formatSom(price),
+                                  style: AppTypography.price,
+                                ),
                                 const SizedBox(width: 10),
-                                Text(stockLabel, style: AppTypography.bodyMedium.copyWith(fontSize: 12.5, height: null, color: stockColor)),
+                                Text(
+                                  stockLabel,
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    fontSize: 12.5,
+                                    height: null,
+                                    color: stockColor,
+                                  ),
+                                ),
                               ],
                             ),
-                            if ((p['description'] as String? ?? '').isNotEmpty) ...[
+                            if ((p['description'] as String? ?? '')
+                                .isNotEmpty) ...[
                               const SizedBox(height: 10),
-                              Text(p['description'] as String, style: AppTypography.body.copyWith(color: AppColors.textMuted)),
+                              Text(
+                                p['description'] as String,
+                                style: AppTypography.body.copyWith(
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
                             ],
                           ],
                         ),
@@ -212,13 +272,21 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(attrName, style: AppTypography.rowTitle.copyWith(letterSpacing: -0.1)),
+                              Text(
+                                attrName,
+                                style: AppTypography.rowTitle.copyWith(
+                                  letterSpacing: -0.1,
+                                ),
+                              ),
                               const SizedBox(height: 10),
                               Wrap(
                                 spacing: 8,
                                 runSpacing: 8,
                                 children: [
-                                  for (final val in _valuesFor(variants, attrName))
+                                  for (final val in _valuesFor(
+                                    variants,
+                                    attrName,
+                                  ))
                                     _AttrChip(
                                       label: val,
                                       selected: _selected[attrName] == val,
@@ -241,15 +309,39 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             Container(
                               decoration: BoxDecoration(
                                 color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(AppRadius.input),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.input,
+                                ),
                                 border: Border.all(color: AppColors.border),
                                 boxShadow: AppShadows.card,
                               ),
                               child: Row(
                                 children: [
-                                  _StepperButton(label: '−', fontSize: 20, onTap: () => setState(() => _qty = _qty > 1 ? _qty - 1 : 1)),
-                                  SizedBox(width: 34, child: Text('$_qty', textAlign: TextAlign.center, style: AppTypography.rowTitle.copyWith(fontSize: 16))),
-                                  _StepperButton(label: '+', fontSize: 19, onTap: () => setState(() => _qty = _qty < stock ? _qty + 1 : _qty)),
+                                  QtyStepperButton(
+                                    label: '−',
+                                    fontSize: 20,
+                                    onTap: () => setState(
+                                      () => _qty = _qty > 1 ? _qty - 1 : 1,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 34,
+                                    child: Text(
+                                      '$_qty',
+                                      textAlign: TextAlign.center,
+                                      style: AppTypography.rowTitle.copyWith(
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                  QtyStepperButton(
+                                    label: '+',
+                                    fontSize: 19,
+                                    onTap: () => setState(
+                                      () =>
+                                          _qty = _qty < stock ? _qty + 1 : _qty,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -269,7 +361,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           stops: const [0, 0.7, 1],
-                          colors: [AppColors.background, AppColors.background, AppColors.background.withValues(alpha: 0)],
+                          colors: [
+                            AppColors.background,
+                            AppColors.background,
+                            AppColors.background.withValues(alpha: 0),
+                          ],
                         ),
                       ),
                       child: Row(
@@ -277,25 +373,54 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Jami', style: AppTypography.small.copyWith(fontSize: 11)),
-                              Text(formatSom(price * _qty), style: AppTypography.price.copyWith(fontSize: 18, letterSpacing: -0.3)),
+                              Text(
+                                'Jami',
+                                style: AppTypography.small.copyWith(
+                                  fontSize: 11,
+                                ),
+                              ),
+                              Text(
+                                formatSom(price * _qty),
+                                style: AppTypography.price.copyWith(
+                                  fontSize: 18,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: PressableScale(
-                              onTap: (!canAdd || _adding) ? () {} : () => _addToCart(variant),
+                              onTap: (!canAdd || _adding)
+                                  ? () {}
+                                  : () => _addToCart(variant),
                               child: Container(
                                 height: 52,
                                 decoration: BoxDecoration(
-                                  color: canAdd ? AppColors.textPrimary : AppColors.textSecondary,
-                                  borderRadius: BorderRadius.circular(AppRadius.button),
+                                  color: canAdd
+                                      ? AppColors.textPrimary
+                                      : AppColors.textSecondary,
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.button,
+                                  ),
                                   boxShadow: AppShadows.cta,
                                 ),
                                 alignment: Alignment.center,
                                 child: _adding
-                                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                                    : Text(canAdd ? 'Savatga qo\'shish' : 'Tugagan', style: AppTypography.button),
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        canAdd
+                                            ? 'Savatga qo\'shish'
+                                            : 'Tugagan',
+                                        style: AppTypography.button,
+                                      ),
                               ),
                             ),
                           ),
@@ -312,7 +437,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     );
   }
 
-  List<String> _valuesFor(List<Map<String, dynamic>> variants, String attrName) {
+  List<String> _valuesFor(
+    List<Map<String, dynamic>> variants,
+    String attrName,
+  ) {
     final values = <String>[];
     for (final v in variants) {
       final attrs = v['attributes'] as Map? ?? {};
@@ -340,7 +468,13 @@ class _RoundFavButton extends StatelessWidget {
           color: AppColors.surface,
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.border),
-          boxShadow: [BoxShadow(color: AppColors.border, blurRadius: 2, offset: const Offset(0, 1))],
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.border,
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
         alignment: Alignment.center,
         child: FavoriteHeartIcon(active: active, size: 17),
@@ -354,7 +488,12 @@ class _RoundFavButton extends StatelessWidget {
 /// taqlid qilinadi (dekorativ effekt, biznes-mantiqqa taalluqli emas).
 /// Bosilganda keyingi rasmga o'tadi, nuqta bosilganda o'sha rasmga sakraydi.
 class _ProductImageCarousel extends StatefulWidget {
-  const _ProductImageCarousel({required this.iconPath, required this.bg, required this.fg, required this.labels});
+  const _ProductImageCarousel({
+    required this.iconPath,
+    required this.bg,
+    required this.fg,
+    required this.labels,
+  });
   final String iconPath;
   final Color bg;
   final Color fg;
@@ -383,9 +522,7 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
             height: 300,
             child: Stack(
               alignment: Alignment.center,
-              children: [
-                for (var i = 0; i < n; i++) _buildSlide(i, n),
-              ],
+              children: [for (var i = 0; i < n; i++) _buildSlide(i, n)],
             ),
           ),
         ),
@@ -402,7 +539,9 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
                   width: i == _index ? 16 : 5,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: i == _index ? AppColors.textPrimary : _dotInactiveColor,
+                    color: i == _index
+                        ? AppColors.textPrimary
+                        : _dotInactiveColor,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -437,11 +576,20 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.string(widget.iconPath, width: 96, height: 96, colorFilter: ColorFilter.mode(widget.fg, BlendMode.srcIn)),
+          SvgPicture.string(
+            widget.iconPath,
+            width: 96,
+            height: 96,
+            colorFilter: ColorFilter.mode(widget.fg, BlendMode.srcIn),
+          ),
           const SizedBox(height: 12),
           Text(
             widget.labels[i],
-            style: TextStyle(fontFamily: 'monospace', fontSize: 10, color: widget.fg.withValues(alpha: 0.65)),
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 10,
+              color: widget.fg.withValues(alpha: 0.65),
+            ),
           ),
         ],
       ),
@@ -450,7 +598,11 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
 }
 
 class _AttrChip extends StatelessWidget {
-  const _AttrChip({required this.label, required this.selected, required this.onTap});
+  const _AttrChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -469,32 +621,19 @@ class _AttrChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? AppColors.textPrimary : AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.chip),
-          border: Border.all(color: selected ? AppColors.textPrimary : AppColors.borderStrong, width: 1.5),
+          border: Border.all(
+            color: selected ? AppColors.textPrimary : AppColors.borderStrong,
+            width: 1.5,
+          ),
         ),
-        child: Text(label, style: AppTypography.cardTitleSm.copyWith(fontSize: 14, letterSpacing: 0, color: selected ? Colors.white : AppColors.textPrimary)),
-      ),
-    );
-  }
-}
-
-class _StepperButton extends StatelessWidget {
-  const _StepperButton({required this.label, required this.fontSize, required this.onTap});
-  final String label;
-  final double fontSize;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return PressableScale(
-      scale: 0.85,
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: SizedBox(
-        width: 40,
-        height: 40,
-        child: Center(child: Text(label, style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w500, color: AppColors.textPrimary))),
+        child: Text(
+          label,
+          style: AppTypography.cardTitleSm.copyWith(
+            fontSize: 14,
+            letterSpacing: 0,
+            color: selected ? Colors.white : AppColors.textPrimary,
+          ),
+        ),
       ),
     );
   }

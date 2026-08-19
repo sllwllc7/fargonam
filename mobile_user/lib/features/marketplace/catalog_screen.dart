@@ -32,7 +32,7 @@ final categoriesProvider = FutureProvider<List<CategoryItem>>((ref) async {
 });
 
 /// productId -> categoryId — savatdagi mahsulotlarni kategoriyaga bog'lash uchun.
-final _productCategoryMapProvider = FutureProvider<Map<int, int>>((ref) async {
+final productCategoryMapProvider = FutureProvider<Map<int, int>>((ref) async {
   final dio = ref.watch(dioProvider);
   final res = await dio.get('/products', queryParameters: {'limit': 200});
   final items = (res.data['items'] as List).cast<Map<String, dynamic>>();
@@ -64,7 +64,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
     final categoriesAsync = ref.watch(categoriesProvider);
     final kitsAsync = ref.watch(kitsProvider);
     final cartAsync = ref.watch(cartProvider);
-    final catMapAsync = ref.watch(_productCategoryMapProvider);
+    final catMapAsync = ref.watch(productCategoryMapProvider);
 
     final cartByCategory = <int, int>{};
     if (cartAsync.hasValue && catMapAsync.hasValue) {

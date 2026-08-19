@@ -23,6 +23,7 @@ export 'src/widgets/floating_tab_bar.dart';
 export 'src/widgets/format.dart';
 export 'src/widgets/guarded_action.dart';
 export 'src/widgets/pressable_scale.dart';
+export 'src/widgets/qty_stepper_button.dart';
 export 'src/widgets/screen_fade_in.dart';
 export 'src/widgets/shimmer_box.dart';
 export 'src/widgets/toast.dart';
