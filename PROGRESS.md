@@ -668,6 +668,30 @@ uchun alohida). `flutter test` — mobile_user 11/11, mobile_seller 8/8 (`sku_bu
 testlari — Cartesian SKU generatsiyasi mantig'iga tegilmadi). `flutter build apk
 --debug` — ikkalasi ham muvaffaqiyatli.
 
+## 4-bosqich — mobile_seller ilova nomi/ikonka/splash (5.5-bo'lim)
+
+- **Qaror**: `android:label` "Fargonam Biznes" qilib qo'yildi (avval xom "mobile_seller"
+  edi) — CLAUDE.md 5.5'da "Fargonam Sotuvchi" deb yozilgan, lekin ilovaning o'zi
+  (`main.dart`dagi `MaterialApp.title`, rol-tanlash ekrani, barcha AppBar sarlavhalari)
+  allaqachon keng qamrovli "Fargonam Biznes" nomidan foydalanadi — bitta binar ikki rolni
+  (sotuvchi VA haydovchi) birlashtirgani uchun bu nom aniqroq. O'zgartirish keng qamrovli
+  bo'lardi (ko'plab joyda "Biznes" matni bor) va mavjud, izchil brendni buzardi — shu
+  sabab mavjud nom saqlandi, faqat `AndroidManifest.xml`dagi xom joy-egallovchi tuzatildi.
+- Ikonka: navy `#16294A` fon + oq "FB" (`assets/icon/app_icon.png`/`_foreground.png`,
+  xuddi shu ImageMagick/Adwaita-Sans-ExtraBold usuli bilan — Figtree hamon lokal topilmadi).
+  mobile_user'ning "F"idan ATAYLAB farqli (ikkala ilova ekranda yonma-yon turganda
+  ajratish uchun). Splash — sof navy, rasmsiz (mobile_user bilan bir xil qaror).
+  `flutter_launcher_icons`/`flutter_native_splash` `dev_dependencies`ga qo'shildi.
+- `flutter_screenutil` pubspec'dan olib tashlandi (LEGACY olib tashlash paytida barcha
+  `.w`/`.h`/`.r`/`.sp` allaqachon tozalangan edi, endi paketning o'zi ham keraksiz).
+
+**Qolgan 4-bosqich ishi** (keyingi bosqich): har bir ekran uchun 13-bo'lim ("inson qo'li")
+tekshiruvi (letterSpacing/height, haptika joyligi, uzun matn bilan sinov, klaviatura
+bosilganda input yopilmasligi) hali qilinmadi — bu safar faqat token/rang/shrift darajasida
+birlashtirildi (LEGACY olib tashlash + ikonka). Chuqur interaksiya sayqali va har ekranning
+o'zi dc.html'siz (seller uchun alohida mockup yo'q) qanchalik "aynan fargonam_ui uslubida"
+ko'rinishini qo'lda tekshirish keyingi navbatda.
+
 ### APK
 
 ### APK
