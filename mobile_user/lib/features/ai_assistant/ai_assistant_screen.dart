@@ -1,13 +1,18 @@
 import 'dart:math';
 
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_gradients.dart';
-import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_text_styles.dart';
+const _sparkleIconSvg =
+    '<svg viewBox="0 0 24 24"><path d="M12 3.5c.6 3.8 1.9 5.1 5.7 5.7-3.8.6-5.1 1.9-5.7 5.7-.6-3.8-1.9-5.1-5.7-5.7 3.8-.6 5.1-1.9 5.7-5.7ZM18 15.5c.3 1.9 1 2.6 2.9 2.9-1.9.3-2.6 1-2.9 2.9-.3-1.9-1-2.6-2.9-2.9 1.9-.3 2.6-1 2.9-2.9Z" stroke="#EEF1F6" stroke-width="1.7" stroke-linejoin="round" fill="none"/></svg>';
+const _sendIconSvg =
+    '<svg viewBox="0 0 24 24"><path d="M4 12 20 4l-4 8 4 8-16-8ZM20 4 9 12" stroke="#EEF1F6" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" fill="none"/></svg>';
+
+/// dc.html'da yuborish tugmasi soyasi — `AppShadows.cta`dan farqli (kichikroq
+/// blur/offset), bitta joyda ishlatiladi.
+const _sendButtonShadow = [BoxShadow(color: Color(0x47101F38), blurRadius: 14, offset: Offset(0, 6))];
 
 /// Fargonam AI assistent — HANDOFF.md 2-bo'lim, 12-band. Qoida asosidagi
 /// chatbot (kelajakda backend proxy orqali Gemini bilan almashtiriladi —
@@ -106,92 +111,97 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 10.h),
-              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40.w,
-                    height: 40.w,
-                    decoration: BoxDecoration(gradient: AppGradients.primary, shape: BoxShape.circle),
-                    child: const Icon(Icons.auto_awesome, color: Colors.white, size: 19),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Fargonam AI', style: AppTextStyles.cardTitle.copyWith(fontSize: 17)),
-                        Row(
-                          children: [
-                            Container(width: 7, height: 7, decoration: const BoxDecoration(color: AppColors.accent, shape: BoxShape.circle)),
-                            SizedBox(width: 5.w),
-                            Text('Onlayn · yordamga tayyor', style: AppTextStyles.small.copyWith(fontSize: 11.5, color: AppColors.textSecondary)),
-                          ],
-                        ),
-                      ],
+        child: ScreenFadeIn(
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
+                decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(gradient: AppGradients.cta, shape: BoxShape.circle),
+                      alignment: Alignment.center,
+                      child: SvgPicture.string(_sparkleIconSvg, width: 19, height: 19),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollCtrl,
-                padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
-                itemCount: _messages.length + (_typing ? 1 : 0),
-                itemBuilder: (context, i) {
-                  if (i < _messages.length) return _MessageBubble(message: _messages[i]);
-                  return const _TypingBubble();
-                },
-              ),
-            ),
-            Padding(
-              // Suzuvchi tab bar ekran ustida chiziladi (app_shell.dart) — pastdan
-              // shuncha bo'shliq qoldirilmasa, input maydoni tab bar ostida
-              // ko'rinmay qoladi.
-              padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h + AppSizes.tabBarHeight + AppSizes.tabBarBottomInset),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(999.r), border: Border.all(color: AppColors.borderStrong)),
-                      child: TextField(
-                        controller: _ctrl,
-                        style: AppTextStyles.body.copyWith(color: AppColors.primaryDark, fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: 'Savolingizni yozing...',
-                          hintStyle: AppTextStyles.body.copyWith(color: AppColors.textMuted, fontSize: 14),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 13.h),
-                          isDense: true,
-                        ),
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _send(),
-                        maxLines: 4,
-                        minLines: 1,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Fargonam AI', style: AppTypography.cardTitle.copyWith(fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+                          Row(
+                            children: [
+                              Container(width: 7, height: 7, decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle)),
+                              const SizedBox(width: 5),
+                              Text('Onlayn · yordamga tayyor', style: AppTypography.caption.copyWith(height: null, fontSize: 11.5, color: AppColors.textSecondary)),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  SizedBox(width: 9.w),
-                  GestureDetector(
-                    onTap: () => _send(),
-                    child: Container(
-                      width: 46.w,
-                      height: 46.w,
-                      decoration: BoxDecoration(gradient: AppGradients.primary, shape: BoxShape.circle, boxShadow: [const BoxShadow(color: Color(0x4D6D28D9), blurRadius: 14, offset: Offset(0, 6))]),
-                      child: const Icon(Icons.send, color: Colors.white, size: 18),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollCtrl,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  itemCount: _messages.length + (_typing ? 1 : 0),
+                  itemBuilder: (context, i) {
+                    if (i < _messages.length) return _MessageBubble(message: _messages[i]);
+                    return const _TypingBubble();
+                  },
+                ),
+              ),
+              Padding(
+                // Suzuvchi tab bar ekran ustida chiziladi (app_shell.dart) — pastdan
+                // shuncha bo'shliq qoldirilmasa, input maydoni tab bar ostida
+                // ko'rinmay qoladi.
+                padding: EdgeInsets.fromLTRB(16, 10, 16, 12 + AppSizes.tabBarHeight + AppSizes.tabBarBottomInset),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(AppRadius.chip), border: Border.all(color: AppColors.inputBorder)),
+                        child: TextField(
+                          controller: _ctrl,
+                          style: AppTypography.body.copyWith(height: null, color: AppColors.textPrimary, fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'Savolingizni yozing...',
+                            hintStyle: AppTypography.body.copyWith(height: null, color: AppColors.textMuted, fontSize: 14),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+                            isDense: true,
+                          ),
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _send(),
+                          maxLines: 4,
+                          minLines: 1,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 9),
+                    PressableScale(
+                      scale: 0.9,
+                      onTap: () => _send(),
+                      child: Container(
+                        width: 46,
+                        height: 46,
+                        decoration: const BoxDecoration(gradient: AppGradients.cta, shape: BoxShape.circle, boxShadow: _sendButtonShadow),
+                        alignment: Alignment.center,
+                        child: SvgPicture.string(_sendIconSvg, width: 18, height: 18),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -220,10 +230,10 @@ class _MessageBubble extends StatelessWidget {
         alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
         child: Container(
           constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
-          margin: EdgeInsets.only(bottom: 10.h),
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 11.h),
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
-            gradient: isUser ? AppGradients.primary : null,
+            gradient: isUser ? AppGradients.cta : null,
             color: isUser ? null : AppColors.surface,
             borderRadius: BorderRadius.only(
               topLeft: const Radius.circular(16),
@@ -231,9 +241,9 @@ class _MessageBubble extends StatelessWidget {
               bottomLeft: Radius.circular(isUser ? 16 : 4),
               bottomRight: Radius.circular(isUser ? 4 : 16),
             ),
-            boxShadow: const [BoxShadow(color: Color(0x0D171327), blurRadius: 2, offset: Offset(0, 1))],
+            boxShadow: const [BoxShadow(color: Color(0x0A171327), blurRadius: 2, offset: Offset(0, 1))],
           ),
-          child: Text(message.text, style: AppTextStyles.body.copyWith(fontSize: 14, height: 1.5, color: isUser ? Colors.white : AppColors.primaryDark)),
+          child: Text(message.text, style: AppTypography.body.copyWith(fontSize: 14, color: isUser ? AppColors.ctaText : AppColors.textPrimary)),
         ),
       ),
     );
@@ -266,9 +276,18 @@ class _TypingBubbleState extends State<_TypingBubble> with SingleTickerProviderS
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: EdgeInsets.only(bottom: 10.h),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 13.h),
-        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16.r), border: Border.all(color: AppColors.border)),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            bottomRight: Radius.circular(16),
+            bottomLeft: Radius.circular(4),
+          ),
+          border: Border.all(color: AppColors.border),
+        ),
         child: AnimatedBuilder(
           animation: _ctrl,
           builder: (_, _) => Row(
@@ -277,7 +296,7 @@ class _TypingBubbleState extends State<_TypingBubble> with SingleTickerProviderS
               final phase = (_ctrl.value + i * 0.3) % 1.0;
               final opacity = (sin(phase * pi * 2) + 1) / 2;
               return Padding(
-                padding: EdgeInsets.symmetric(horizontal: 3.w),
+                padding: const EdgeInsets.symmetric(horizontal: 3),
                 child: Container(width: 7, height: 7, decoration: BoxDecoration(color: AppColors.textMuted.withValues(alpha: 0.3 + opacity * 0.7), shape: BoxShape.circle)),
               );
             }),
@@ -287,4 +306,3 @@ class _TypingBubbleState extends State<_TypingBubble> with SingleTickerProviderS
     );
   }
 }
-

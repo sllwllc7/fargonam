@@ -1,18 +1,18 @@
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/push_service.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
-import '../../core/theme/app_shadows.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../auth/auth_providers.dart';
 
 const _notifPrefKey = 'notifications_enabled';
+
+const _chevronIconSvg =
+    '<svg viewBox="0 0 8 14"><path d="m1 1 6 6-6 6" stroke="#1C1C22" stroke-width="2" stroke-linecap="round" fill="none"/></svg>';
 
 /// Sozlamalar — HANDOFF.md 2-bo'lim, 17-band.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -63,7 +63,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: const Text('Chiqishni tasdiqlang'),
-        content: Text('Hisobingizdan chiqmoqchimisiz?', style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
+        content: Text('Hisobingizdan chiqmoqchimisiz?', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Yo\'q')),
           FilledButton(
@@ -83,87 +83,89 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 32.h),
-          children: [
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    Navigator.maybePop(context);
-                  },
-                  child: Container(
-                    width: 36.w,
-                    height: 36.w,
-                    decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
-                    child: Icon(Icons.arrow_back_ios_new, size: 15.sp, color: AppColors.text),
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Text('Sozlamalar', style: AppTextStyles.h2.copyWith(fontSize: 23)),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-                border: Border.all(color: AppColors.border),
-                boxShadow: AppShadows.card,
-              ),
-              child: Column(
+        child: ScreenFadeIn(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+            children: [
+              Row(
                 children: [
-                  _Row(label: 'Til', trailing: Text('O\'zbek', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13.5, color: AppColors.textMuted))),
-                  const Divider(height: 1, color: AppColors.border),
-                  InkWell(
-                    onTap: _loaded ? _toggleNotif : null,
-                    child: _Row(
-                      label: 'Bildirishnomalar',
-                      trailing: _Switch(value: _notifEnabled),
-                    ),
-                  ),
-                  const Divider(height: 1, color: AppColors.border),
-                  _Row(
-                    label: 'Tungi rejim',
-                    opacity: 0.55,
-                    trailing: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 4.h),
-                      decoration: BoxDecoration(color: const Color(0xFFEDE9FE), borderRadius: BorderRadius.circular(7.r)),
-                      child: Text('Tez orada', style: AppTextStyles.small.copyWith(fontSize: 11, color: AppColors.textMuted)),
-                    ),
-                  ),
-                  const Divider(height: 1, color: AppColors.border),
-                  _Row(
-                    label: 'Ilova haqida',
-                    trailing: FutureBuilder<PackageInfo>(
-                      future: PackageInfo.fromPlatform(),
-                      builder: (context, snap) => Text('v${snap.data?.version ?? '1.0'}', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13.5, color: AppColors.textMuted)),
-                    ),
-                  ),
+                  BackCircleButton(onTap: () => Navigator.maybePop(context)),
+                  const SizedBox(width: 12),
+                  Text('Sozlamalar', style: AppTypography.h2),
                 ],
               ),
-            ),
-            SizedBox(height: 14.h),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-                border: Border.all(color: AppColors.border),
-                boxShadow: AppShadows.card,
-              ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-                onTap: _confirmLogout,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 14.h),
-                  child: Center(child: Text('Chiqish', style: AppTextStyles.cardTitleSm.copyWith(color: AppColors.danger, fontSize: 15))),
+              const SizedBox(height: 16),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: AppShadows.card,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    _Row(
+                      label: 'Til',
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('O\'zbek', style: AppTypography.cardTitleSm.copyWith(fontSize: 13.5, color: AppColors.textMuted)),
+                          const SizedBox(width: 8),
+                          SvgPicture.string(_chevronIconSvg, width: 8, height: 14),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1, color: AppColors.border),
+                    InkWell(
+                      onTap: _loaded ? _toggleNotif : null,
+                      child: _Row(
+                        label: 'Bildirishnomalar',
+                        trailing: _Switch(value: _notifEnabled),
+                      ),
+                    ),
+                    const Divider(height: 1, color: AppColors.border),
+                    _Row(
+                      label: 'Tungi rejim',
+                      opacity: 0.6,
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                        decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(7)),
+                        child: Text('Tez orada', style: AppTypography.small.copyWith(fontWeight: FontWeight.w700, fontSize: 11, color: AppColors.textMuted)),
+                      ),
+                    ),
+                    const Divider(height: 1, color: AppColors.border),
+                    _Row(
+                      label: 'Ilova haqida',
+                      trailing: FutureBuilder<PackageInfo>(
+                        future: PackageInfo.fromPlatform(),
+                        builder: (context, snap) => Text('v${snap.data?.version ?? '1.0'}', style: AppTypography.cardTitleSm.copyWith(fontSize: 13.5, color: AppColors.textMuted)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 14),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: AppShadows.card,
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  onTap: _confirmLogout,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Center(child: Text('Chiqish', style: AppTypography.rowTitle.copyWith(color: AppColors.textMuted, fontSize: 15))),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -181,10 +183,10 @@ class _Row extends StatelessWidget {
     return Opacity(
       opacity: opacity,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Expanded(child: Text(label, style: AppTextStyles.cardTitleSm.copyWith(fontSize: 15))),
+            Expanded(child: Text(label, style: AppTypography.cardTitleSm.copyWith(fontSize: 15))),
             trailing,
           ],
         ),
@@ -201,14 +203,14 @@ class _Switch extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      width: 46.w,
-      height: 28.h,
-      padding: EdgeInsets.all(3.w),
-      decoration: BoxDecoration(color: value ? AppColors.text : const Color(0xFFEDE9FE), borderRadius: BorderRadius.circular(14.r)),
+      width: 46,
+      height: 28,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(color: value ? AppColors.primaryDeep : AppColors.border, borderRadius: BorderRadius.circular(14)),
       alignment: value ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        width: 22.w,
-        height: 22.w,
+        width: 22,
+        height: 22,
         decoration: const BoxDecoration(color: AppColors.surface, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Color(0x33000000), blurRadius: 3)]),
       ),
     );

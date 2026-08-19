@@ -1,14 +1,18 @@
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/api_client.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
-import '../../core/theme/app_shadows.dart';
-import '../../core/theme/app_text_styles.dart';
 import 'notifications_providers.dart';
+
+/// dc.html'da buyurtma bildirishnomasi ikonkasi (`NI.ready`) — real backend
+/// `type`da prep/ready/done kabi ichki bosqich yo'q (faqat "order"/"seller_order"),
+/// shu sabab eng ko'p uchraydigan holat (tayyor bo'ldi/topshirildi) ikonkasi
+/// ishlatiladi.
+const _orderIconSvg =
+    '<svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 10.5a2 2 0 0 1-2 1.5H8.2a2 2 0 0 1-2-1.5ZM9 10V6a3 3 0 0 1 6 0v4" stroke="#000" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" fill="none"/></svg>';
 
 /// Bildirishnomalar — HANDOFF.md 2-bo'lim, 11-band.
 class NotificationsScreen extends ConsumerWidget {
@@ -18,85 +22,79 @@ class NotificationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notifsAsync = ref.watch(notificationsProvider);
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.maybePop(context);
-                    },
-                    child: Container(
-                      width: 36.w,
-                      height: 36.w,
-                      decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
-                      child: Icon(Icons.arrow_back_ios_new, size: 15.sp, color: AppColors.text),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(child: Text('Bildirishnomalar', style: AppTextStyles.title)),
-                  notifsAsync.maybeWhen(
-                    data: (notifs) {
-                      final hasUnread = notifs.any((n) => n['is_read'] != true);
-                      if (!hasUnread) return const SizedBox.shrink();
-                      return GestureDetector(
-                        onTap: () async {
-                          HapticFeedback.lightImpact();
-                          await ref.read(dioProvider).post('/notifications/read-all');
-                          ref.invalidate(notificationsProvider);
-                          ref.invalidate(unreadCountProvider);
-                        },
-                        child: Text('Hammasi', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13.5, color: AppColors.text)),
-                      );
-                    },
-                    orElse: () => const SizedBox.shrink(),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: notifsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-                error: (e, _) => Center(child: Text('Yuklab bo\'lmadi', style: AppTextStyles.caption)),
-                data: (notifs) {
-                  if (notifs.isEmpty) return const _EmptyNotifsState();
-                  return RefreshIndicator(
-                    color: AppColors.primary,
-                    backgroundColor: AppColors.surface,
-                    onRefresh: () async {
-                      HapticFeedback.lightImpact();
-                      ref.invalidate(notificationsProvider);
-                      ref.invalidate(unreadCountProvider);
-                    },
-                    child: ListView.separated(
-                      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 20.h),
-                      itemCount: notifs.length,
-                      separatorBuilder: (_, _) => SizedBox(height: 10.h),
-                      itemBuilder: (context, i) {
-                        final n = notifs[i];
-                        return _NotificationTile(
-                          notification: n,
+        child: ScreenFadeIn(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Row(
+                  children: [
+                    BackCircleButton(onTap: () => Navigator.maybePop(context)),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text('Bildirishnomalar', style: AppTypography.title)),
+                    notifsAsync.maybeWhen(
+                      data: (notifs) {
+                        final hasUnread = notifs.any((n) => n['is_read'] != true);
+                        if (!hasUnread) return const SizedBox.shrink();
+                        return GestureDetector(
                           onTap: () async {
                             HapticFeedback.lightImpact();
-                            if (n['is_read'] != true) {
-                              await ref.read(dioProvider).post('/notifications/${n['id']}/read');
-                              ref.invalidate(notificationsProvider);
-                              ref.invalidate(unreadCountProvider);
-                            }
+                            await ref.read(dioProvider).post('/notifications/read-all');
+                            ref.invalidate(notificationsProvider);
+                            ref.invalidate(unreadCountProvider);
                           },
+                          child: Text('Hammasi', style: AppTypography.rowTitle.copyWith(fontSize: 13.5)),
                         );
                       },
+                      orElse: () => const SizedBox.shrink(),
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
-            ),
-          ],
+              Expanded(
+                child: notifsAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                  error: (e, _) => Center(child: Text('Yuklab bo\'lmadi', style: AppTypography.caption)),
+                  data: (notifs) {
+                    if (notifs.isEmpty) return const _EmptyNotifsState();
+                    return RefreshIndicator(
+                      color: AppColors.primary,
+                      backgroundColor: AppColors.surface,
+                      onRefresh: () async {
+                        HapticFeedback.lightImpact();
+                        ref.invalidate(notificationsProvider);
+                        ref.invalidate(unreadCountProvider);
+                      },
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                        itemCount: notifs.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        itemBuilder: (context, i) {
+                          final n = notifs[i];
+                          return FadeUpItem(
+                            delay: AppMotion.staggerStep * i,
+                            child: _NotificationTile(
+                              notification: n,
+                              onTap: () async {
+                                HapticFeedback.lightImpact();
+                                if (n['is_read'] != true) {
+                                  await ref.read(dioProvider).post('/notifications/${n['id']}/read');
+                                  ref.invalidate(notificationsProvider);
+                                  ref.invalidate(unreadCountProvider);
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -108,12 +106,12 @@ class _NotificationTile extends StatelessWidget {
   final Map<String, dynamic> notification;
   final VoidCallback onTap;
 
-  (IconData, Color, Color) _typeStyle(String type) => switch (type) {
-        'order' || 'seller_order' => (Icons.receipt_long_outlined, const Color(0xFFEDE9FE), AppColors.primaryDark),
-        'ride' => (Icons.local_taxi_outlined, AppColors.warningSoft, AppColors.warning),
-        'chat' => (Icons.chat_bubble_outline, AppColors.successSoft, AppColors.success),
-        'promo' => (Icons.campaign_outlined, const Color(0xFFEDE9FE), AppColors.primaryDark),
-        _ => (Icons.notifications_outlined, AppColors.bg, AppColors.textSecondary),
+  (Widget, Color, Color) _typeStyle(String type) => switch (type) {
+        'order' || 'seller_order' => (SvgPicture.string(_orderIconSvg, width: 18, height: 18), AppColors.primaryLight, AppColors.textPrimary),
+        'ride' => (const Icon(Icons.local_taxi_outlined, size: 18, color: AppColors.warning), AppColors.warningSoft, AppColors.warning),
+        'chat' => (const Icon(Icons.chat_bubble_outline, size: 18, color: AppColors.success), AppColors.successTint, AppColors.success),
+        'promo' => (const Icon(Icons.campaign_outlined, size: 18, color: AppColors.textPrimary), AppColors.primaryLight, AppColors.textPrimary),
+        _ => (const Icon(Icons.notifications_outlined, size: 18, color: AppColors.textSecondary), AppColors.background, AppColors.textSecondary),
       };
 
   String _formatTime(String time) {
@@ -136,10 +134,10 @@ class _NotificationTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.card),
+          borderRadius: BorderRadius.circular(AppRadius.groupedCard),
           border: Border.all(color: AppColors.border),
           boxShadow: AppShadows.card,
         ),
@@ -148,14 +146,15 @@ class _NotificationTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(width: 3, decoration: BoxDecoration(color: isRead ? Colors.transparent : fg, borderRadius: BorderRadius.circular(2))),
-              SizedBox(width: 11.w),
+              const SizedBox(width: 11),
               Container(
-                width: 38.w,
-                height: 38.w,
-                decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12.r)),
-                child: Icon(icon, color: fg, size: 18.sp),
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(AppRadius.input)),
+                alignment: Alignment.center,
+                child: icon,
               ),
-              SizedBox(width: 12.w),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,14 +163,14 @@ class _NotificationTile extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: Text((n['title'] as String?) ?? '', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 14)),
+                          child: Text((n['title'] as String?) ?? '', style: AppTypography.cardTitleSm.copyWith(fontSize: 14)),
                         ),
-                        SizedBox(width: 8.w),
-                        Text(_formatTime((n['created_at'] as String?) ?? ''), style: AppTextStyles.small.copyWith(fontSize: 11)),
+                        const SizedBox(width: 8),
+                        Text(_formatTime((n['created_at'] as String?) ?? ''), style: AppTypography.small.copyWith(fontSize: 11, color: AppColors.textSecondary)),
                       ],
                     ),
-                    SizedBox(height: 3.h),
-                    Text((n['body'] as String?) ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: AppTextStyles.caption.copyWith(fontSize: 12.5, height: 1.4)),
+                    const SizedBox(height: 3),
+                    Text((n['body'] as String?) ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: AppTypography.caption.copyWith(fontSize: 12.5)),
                   ],
                 ),
               ),
@@ -189,13 +188,13 @@ class _EmptyNotifsState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32.w),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Bildirishnomalar yo\'q', style: AppTextStyles.cardTitle),
-            SizedBox(height: 6.h),
-            Text('Buyurtmangiz tayyor bo\'lganda shu yerda xabar keladi', textAlign: TextAlign.center, style: AppTextStyles.body.copyWith(color: AppColors.textMuted, fontSize: 13.5)),
+            Text('Bildirishnomalar yo\'q', style: AppTypography.cardTitle.copyWith(fontSize: 16)),
+            const SizedBox(height: 6),
+            Text('Buyurtmangiz tayyor bo\'lganda shu yerda xabar keladi', textAlign: TextAlign.center, style: AppTypography.body.copyWith(color: AppColors.textMuted, fontSize: 13.5)),
           ],
         ),
       ),
