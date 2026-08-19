@@ -183,6 +183,8 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | 3 | 13/17: Taxi "Tez orada" — to'liq qayta yozildi | `mobile_user/lib/features/taxi/taxi_coming_soon_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 | 3 | 14/17: Profil — to'liq qayta yozildi (6 qator aniq SVG+rang) | `mobile_user/lib/features/profile/profile_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 | 3 | 17/17: Sozlamalar — to'liq qayta yozildi | `mobile_user/lib/features/profile/settings_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 3 | 15/17: Sevimlilar — to'liq qayta yozildi (kategoriya ikonka+tint) | `mobile_user/lib/features/favorites/favorites_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 3 | 16/17: Manzillarim — ro'yxat qismi dc.html aynan, forma real funksiya sifatida saqlandi | `mobile_user/lib/features/addresses/addresses_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ **3-bosqich 17/17 yakunlandi** |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -478,6 +480,24 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
     (avvalgi implementatsiya UX-yaxshilash sifatida qizil tanlagan edi, lekin bu
     §6 "aniq dc.html qiymatidan chetlashma" qoidasiga zid edi — tuzatildi).
 
+- [2026-08-19] **15-16/17: Sevimlilar, Manzillarim** — 3-bosqich BARCHA 17 ekran
+  bo'yicha yakunlandi.
+  - Sevimlilar: kategoriya ikonka/tint `productCategoryMapProvider`+`categoriesProvider`
+    orqali (Cart/Mahsulot ekranlaridagi bilan bir xil yondashuv — backend `/favorites`
+    javobida `category_id` yo'q, lekin bu ham client tomonda hal qilindi). Bo'sh holat
+    tugmasi dc.html'da **qat'iy** `#14243F`(primaryDeep) — avvalgi kod gradient
+    ishlatgan edi, tuzatildi. `FavoriteHeartIcon` umumiy widget qayta ishlatildi.
+  - Manzillarim: ro'yxat qismi (karta ko'rinishi, "Asosiy" badge, dashed
+    "+ manzil qo'shish") dc.html'dan aynan. Qo'shish/tahrirlash formasi (to'liq CRUD,
+    tuman tanlash, mo'ljal, asosiy-belgilash — dc.html'da yo'q, real funksiya)
+    saqlandi — shu bilan birga ishlatilmagan `Theme.of(context).brightness==dark`
+    filiallari (`AppColorsDark`/`AppTextStylesDark` legacy shim orqali) olib
+    tashlandi, chunki Tungi rejim hali Sozlamalarda "Tez orada" holatida — bu kod
+    hech qachon ishga tushmaydigan o'lik filial edi.
+  **HANDOFF.md 2-bo'limidagi barcha 17 ekran endi dc.html bilan mos. Qolgan ishlar**:
+  4-bosqich (mobile_seller to'liq qayta dizayn, LEGACY tokenlarni olib tashlash),
+  2-bosqich (`buildData()` va real model to'liq solishtiruvi — hali yozilmagan).
+
 ### Backend farqlari
 - [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),
   garchi `products` jadvalida test mahsulotlari bor. Kategoriyasiz UI to'g'ri ishlaydi
@@ -490,6 +510,8 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   bosqichi ichki farqi (prep/ready/done, har biri boshqa ikonka/rang) yo'q. Buyurtma
   turidagi bildirishnomalar uchun eng ko'p uchraydigan (tayyor/topshirildi) ikonkasi
   ishlatiladi.
+- [Sevimlilar] `/favorites` javobida `category_id` yo'q — `product_id` orqali
+  `productCategoryMapProvider`dan client tomonda topiladi (backend o'zgartirilmadi).
 (2-bosqich hali to'liq bajarilmadi — `buildData()` va mavjud model/repository to'liq
 solishtiruvi shu yerga keyingi seansda yoziladi.)
 
