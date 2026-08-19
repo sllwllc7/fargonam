@@ -175,6 +175,9 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | 3 | `QtyStepperButton` umumiy widget (Mahsulot+Savat, matn glif −/+) | `packages/fargonam_ui/lib/src/widgets/qty_stepper_button.dart` | — | 0/0/0 | ✅ |
 | 3 | 6/17: Savat (cart) — to'liq qayta yozildi (dc.html aynan, backdrop-blur footer, kategoriya ikonka) | `mobile_user/lib/features/cart/cart_screen.dart` | 11/11 (3 tuzatildi: NBSP+minus glif) | 0/0/0 | ✅ |
 | 3 | 7/17: Rasmiylashtirish (checkout) — to'liq qayta yozildi (dc.html aynan, pickup/manzil real funksiyasi saqlandi) | `mobile_user/lib/features/checkout/checkout_screen.dart` | 11/11 (2 tuzatildi: to'g'ri formatSom) | 0/0/0 | ✅ |
+| 3 | 8/17: Muvaffaqiyat (order success) — to'liq qayta yozildi | `mobile_user/lib/features/checkout/order_success_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 3 | 9/17: Kuzatish (order tracking) — to'liq qayta yozildi (pickup-kod/bekor-qilingan real holatlari saqlandi, timeline rang xatolari tuzatildi) | `mobile_user/lib/features/orders/order_tracking_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 3 | 10/17: Buyurtmalar (orders) — to'liq qayta yozildi (statusBadge 4-holat rangi tuzatildi) | `mobile_user/lib/features/orders/orders_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -424,6 +427,28 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   Yangi qo'shildi: `AppTypography.formSectionLabel` (Checkout bo'lim yorliqlari — dc.html'da
   Katalog bo'lim yorlig'idan farqli o'lcham/rang ekan, aniqlandi), `pushReplacementAppRoute`
   (fargonam_ui, Muvaffaqiyat ekraniga o'tish uchun).
+
+- [2026-08-19] **8-9-10/17: Muvaffaqiyat, Kuzatish, Buyurtmalar** ekranlari dc.html'ning
+  `ORDER SUCCESS`/`TRACKING`/`ORDERS` bo'limlariga moslab qayta yozildi.
+  - Muvaffaqiyat: aniq check SVG (avval Material ikon), doira foni `AppColors.primaryLight`
+    (avval legacy `#EDE9FE` binafsha edi), CTA gradient/soya to'g'irlandi,
+    `pushReplacementAppRoute` orqali navigatsiya.
+  - Kuzatish: real backend'dagi pickup-kod ko'rsatish va bekor-qilingan holat (dc.html'da
+    yo'q, ilgari hujjatlashtirilgan) saqlandi. Manba kodidan aniqlangan tuzatishlar:
+    timeline+buyurtma kartalari radius `card`(18) bo'lishi kerak edi (avval `cardLarge`=22
+    noto'g'ri ishlatilgan); bosilmagan nuqta chegarasi `primaryLight` (avval `border`);
+    ENG MUHIMI — chiziq segmenti rangi: manba kodida `lineBg: i < idx ? qora : yorug'`
+    (qat'iy kichik, TENG EMAS) — ya'ni joriy faol qadamdan pastga tushuvchi chiziq hali
+    YORUG' bo'lishi kerak, avvalgi kodda `done`(`i<=idx`) bilan bir xil hisoblangani uchun
+    joriy qadam ham chiziqni qora qilib ko'rsatardi (progress noto'g'ri "bir qadam oldinda"
+    ko'rinardi). Buyurtma qatoriga `variant_name` qo'shildi.
+  - Buyurtmalar: `statusBadge()` manba kodidan 4-holatli rang xaritasi aniqlandi —
+    "Kuryerda" alohida `primaryLight`/`primaryDeep(#14243F)` rangda bo'lishi kerak edi,
+    avvalgi kodda bu holat umumiy "boshqa holatlar" shoxobchasiga tushib legacy binafsha
+    (`#EDE9FE`) rang olardi.
+  Yangi token: `AppColors.primaryDeep` (`#14243F`) — dc.html'da 5 marta uchraydi (holat
+  belgisi, "Marketga o'tish" tugmasi, push toggle, tab bo'rtmasi). `categoryTints[0]`
+  ham shu tokenga ishora qiladi endi (qiymat o'zgarmadi, faqat nomlandi).
 
 ### Backend farqlari
 - [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),
