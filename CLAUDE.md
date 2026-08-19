@@ -182,8 +182,8 @@ Quyidagilar eskirgan. **Ularga umuman amal qilma:**
 
 | ❌ HANDOFF.md'dagi xato | ✅ To'g'ri (dc.html'dan tasdiqlangan) |
 |---|---|
-| `solid #5B21B6, gradient EMAS`, radius 12px | Asosiy tugma: **gradient `#2A4A7F → #16294A → #0F1E38`** (135°), radius **16–17**, balandlik **52–54**, matn oq w700 |
-| Savat FAB — apelsin `#F59E0B` | Savat FAB — **navy `#16294A`**, 60px dumaloq, oq ikonka |
+| `solid #5B21B6, gradient EMAS`, radius 12px | Asosiy tugma (CTA — savatga qo'shish, checkout va h.k.): **gradient `#24406F → #12233F`** (180°), radius **12**, balandlik **52**, matn **`#EEF1F6`** (oq emas!) w700, soya `0 8px 20px rgba(16,31,56,.28), inset 0 1px 0 rgba(255,255,255,.14)` |
+| Savat FAB — apelsin `#F59E0B` | Savat FAB — **gradient `#2A4A7F → #16294A`(55%) `→ #0F1E38`** (180°, 3 to'xtash nuqtasi), 60px dumaloq, ikonka `#EEF1F6` |
 | Markaziy Home tab "binafsha" | **Navy** gradient pufakcha (`#2A4A7F→#16294A`) |
 | 5-bo'lim: `Plus Jakarta Sans` | **Figtree** (`google_fonts`) |
 | "Hero CTA — oq tugma, to'q matn" | Bu **to'g'ri**, faqat Market hero kartasi uchun. Boshqa joyda emas. |
@@ -211,7 +211,7 @@ kategoriya tintlari T[] = [
 
 - Shrift: **Figtree**, `GoogleFonts.figtreeTextTheme()`
 - Karta radius 16–18 (katta 22), chip/pill 999
-- Karta soyasi: `0 1px 2px rgba(25,25,112,.05)` + `0 12px 26px -16px rgba(25,25,112,.14)`, border 1px `rgba(27,0,63,.08)`
+- Karta soyasi: `0 1px 2px rgba(23,19,39,.04)` + `0 12px 26px -16px rgba(23,19,39,.08)`, border 1px solid `#E0E6EF`
 - Bosilganda `scale .92–.98` (`AnimatedScale`, 120ms)
 - Ekran kirishi: 320ms, `Curves.easeOutCubic`, translateX 14→0 + fade
 - Ro'yxat: fadeUp 10px, stagger 35–40ms
