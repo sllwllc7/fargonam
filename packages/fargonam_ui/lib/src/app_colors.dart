@@ -25,6 +25,10 @@ class AppColors {
 
   static const border = Color(0xFFE0E6EF);
 
+  /// Oq fondagi kiritish/tugma chegarasi (Filtr tugmasi, AI input, AI chip) —
+  /// `#D5DDE9`, karta chegarasi (`border`)dan farqli, ammo shunga yaqin token.
+  static const inputBorder = Color(0xFFD5DDE9);
+
   /// CTA tugma gradienti (savatga qo'shish, checkout va h.k.) — `#24406F → #12233F`.
   static const ctaStart = Color(0xFF24406F);
   static const ctaEnd = Color(0xFF12233F);

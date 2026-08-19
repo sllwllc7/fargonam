@@ -30,8 +30,9 @@ class AppTypography {
   /// Ekran sarlavhasi (o'rta) — 23px/w800/-.6px.
   static TextStyle get h2 => _figtree(size: 23, weight: FontWeight.w800, letterSpacing: -0.6);
 
-  /// Bo'lim/karta sarlavhasi — 21px/w700/-.3px (masalan hero "Market").
-  static TextStyle get title => _figtree(size: 21, weight: FontWeight.w700, letterSpacing: -0.3);
+  /// Ekran sarlavhasi (orqaga tugmasi yonida) — 21px/w700/-.4px. dc.html'da
+  /// Kategoriya/Kit/Checkout/Kuzatish/Bildirishnomalar sarlavhalarida ishlatiladi.
+  static TextStyle get title => _figtree(size: 21, weight: FontWeight.w700, letterSpacing: -0.4);
 
   /// Bo'lim yorlig'i — UPPERCASE, textSecondary. Matn `.toUpperCase()` bilan beriladi.
   static TextStyle get sectionLabel => _figtree(
@@ -89,10 +90,11 @@ class AppTypography {
   /// Katta tana matni — mahsulot tavsifi. 15px/w400/-.1px/height 1.5.
   static TextStyle get bodyLg => _figtree(size: 15, weight: FontWeight.w400, letterSpacing: -0.1, height: 1.5);
 
-  /// Narx — w800.
-  static TextStyle get price => _figtree(size: 18, weight: FontWeight.w800, letterSpacing: -0.4);
+  /// Narx (jami, PDP) — 18px/w800/-.3px.
+  static TextStyle get price => _figtree(size: 18, weight: FontWeight.w800, letterSpacing: -0.3);
 
-  static TextStyle get priceSm => _figtree(size: 14.5, weight: FontWeight.w800, letterSpacing: -0.2);
+  /// Narx (karta ichida) — 14.5px/w700/-.2px.
+  static TextStyle get priceSm => _figtree(size: 14.5, weight: FontWeight.w700, letterSpacing: -0.2);
 
   /// Kichik yozuvlar — vaqt, sub-matnlar. 12.5px/w400/textMuted/height 1.4.
   static TextStyle get caption =>

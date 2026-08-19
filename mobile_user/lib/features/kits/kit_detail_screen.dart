@@ -9,9 +9,6 @@ import '../../core/api_client.dart';
 import '../cart/cart_screen.dart' show cartProvider;
 import 'kit_providers.dart';
 
-const _chevronIconSvg =
-    '<svg viewBox="0 0 8 14"><path d="M7 1 1 7l6 6" stroke="#000" stroke-width="2" stroke-linecap="round" fill="none"/></svg>';
-
 /// dc.html'da har bir to'plam elementi o'z kategoriyasiga mos ikonka
 /// ishlatadi (`icon(catId)`), lekin `KitItem` modelida kategoriya/slug
 /// yo'q (5.0: mavjud model o'zgartirilmadi — PROGRESS.md → Backend
@@ -86,7 +83,7 @@ class _KitDetailScreenState extends ConsumerState<KitDetailScreen> {
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                       child: Row(
                         children: [
-                          _BackButton(onTap: () => Navigator.pop(context)),
+                          BackCircleButton(onTap: () => Navigator.pop(context)),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -180,41 +177,27 @@ class _KitDetailScreenState extends ConsumerState<KitDetailScreen> {
   }
 }
 
-class _AddKitButton extends StatefulWidget {
+class _AddKitButton extends StatelessWidget {
   const _AddKitButton({required this.adding, required this.total, required this.onTap});
   final bool adding;
   final int total;
   final VoidCallback? onTap;
 
   @override
-  State<_AddKitButton> createState() => _AddKitButtonState();
-}
-
-class _AddKitButtonState extends State<_AddKitButton> {
-  bool _pressed = false;
-
-  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _pressed ? 0.97 : 1.0,
-        duration: AppMotion.pressedDuration,
-        child: Container(
-          height: 52,
-          decoration: BoxDecoration(
-            gradient: AppGradients.cta,
-            borderRadius: BorderRadius.circular(AppRadius.button),
-            boxShadow: AppShadows.cta,
-          ),
-          alignment: Alignment.center,
-          child: widget.adding
-              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-              : Text('To\'plamni savatga qo\'shish · ${formatSom(widget.total)}', style: AppTypography.button, textAlign: TextAlign.center),
+    return PressableScale(
+      onTap: onTap ?? () {},
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          gradient: AppGradients.cta,
+          borderRadius: BorderRadius.circular(AppRadius.button),
+          boxShadow: AppShadows.cta,
         ),
+        alignment: Alignment.center,
+        child: adding
+            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+            : Text('To\'plamni savatga qo\'shish · ${formatSom(total)}', style: AppTypography.button, textAlign: TextAlign.center),
       ),
     );
   }
@@ -263,47 +246,6 @@ class _KitItemRow extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _BackButton extends StatefulWidget {
-  const _BackButton({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  State<_BackButton> createState() => _BackButtonState();
-}
-
-class _BackButtonState extends State<_BackButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: () {
-        HapticFeedback.lightImpact();
-        widget.onTap();
-      },
-      child: AnimatedScale(
-        scale: _pressed ? 0.92 : 1.0,
-        duration: AppMotion.pressedDuration,
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.border),
-            boxShadow: [BoxShadow(color: AppColors.border, blurRadius: 2, offset: const Offset(0, 1))],
-          ),
-          alignment: Alignment.center,
-          child: SvgPicture.string(_chevronIconSvg, width: 9, height: 15),
-        ),
       ),
     );
   }

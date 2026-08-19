@@ -14,6 +14,7 @@ export 'src/app_shadows.dart';
 export 'src/app_spacing.dart';
 export 'src/app_theme.dart';
 export 'src/app_typography.dart';
+export 'src/widgets/back_circle_button.dart';
 export 'src/widgets/cart_fab.dart';
 export 'src/widgets/error_retry.dart';
 export 'src/widgets/fade_up_item.dart';

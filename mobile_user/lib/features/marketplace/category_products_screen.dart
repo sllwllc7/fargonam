@@ -1,17 +1,14 @@
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/api_client.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_motion.dart';
-import '../../core/theme/app_radius.dart';
-import '../../core/theme/app_shadows.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../cart/cart_screen.dart' show cartProvider;
 import '../favorites/favorites_screen.dart' show favoritesProvider;
 import '../products/product_detail_screen.dart';
+import 'category_icons.dart';
 
 final categoryProductsProvider = FutureProvider.family<List<Map<String, dynamic>>, int>((ref, categoryId) async {
   final dio = ref.watch(dioProvider);
@@ -19,11 +16,25 @@ final categoryProductsProvider = FutureProvider.family<List<Map<String, dynamic>
   return (res.data['items'] as List).cast<Map<String, dynamic>>();
 });
 
+const _searchIconSvg =
+    '<svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6" stroke="#3F3F49" stroke-width="1.8" fill="none"/><path d="m14 14 4 4" stroke="#3F3F49" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const _filterIconSvg =
+    '<svg viewBox="0 0 16 16"><path d="M1 3h14M4 8h8M6.5 13h3" stroke="#000" stroke-width="1.7" stroke-linecap="round"/></svg>';
+const _favPath = 'M10 17 3.6 10.8a4 4 0 1 1 5.7-5.7L10 5.8l.7-.7a4 4 0 1 1 5.7 5.7Z';
+const _favIconOutline = '<svg viewBox="0 0 20 20"><path d="$_favPath" fill="none" stroke="#000" stroke-width="1.5"/></svg>';
+const _favIconFilled = '<svg viewBox="0 0 20 20"><path d="$_favPath" fill="#000" stroke="#000" stroke-width="1.5"/></svg>';
+
 /// Kategoriya ichi — HANDOFF.md 2-bo'lim, 4-band.
 class CategoryProductsScreen extends ConsumerStatefulWidget {
-  const CategoryProductsScreen({super.key, required this.categoryId, required this.categoryName});
+  const CategoryProductsScreen({
+    super.key,
+    required this.categoryId,
+    required this.categoryName,
+    required this.categorySlug,
+  });
   final int categoryId;
   final String categoryName;
+  final String categorySlug;
 
   @override
   ConsumerState<CategoryProductsScreen> createState() => _CategoryProductsScreenState();
@@ -37,6 +48,7 @@ class _CategoryProductsScreenState extends ConsumerState<CategoryProductsScreen>
     final productsAsync = ref.watch(categoryProductsProvider(widget.categoryId));
     final cartAsync = ref.watch(cartProvider);
     final favsAsync = ref.watch(favoritesProvider);
+    final tint = AppColors.categoryTints[widget.categoryId % AppColors.categoryTints.length];
 
     final cartProductIds = <int>{};
     if (cartAsync.hasValue) {
@@ -54,116 +66,133 @@ class _CategoryProductsScreenState extends ConsumerState<CategoryProductsScreen>
     }
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: productsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-          error: (e, _) => Center(child: Text('Yuklab bo\'lmadi: $e', style: AppTextStyles.caption)),
-          data: (allProducts) {
-            final products = allProducts.where((p) {
-              if (_query.isEmpty) return true;
-              final q = _query.toLowerCase();
-              return (p['name'] as String? ?? '').toLowerCase().contains(q) ||
-                  (p['brand'] as String? ?? '').toLowerCase().contains(q);
-            }).toList();
+        child: ScreenFadeIn(
+          child: productsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            error: (e, _) => Center(child: Text('Yuklab bo\'lmadi: $e', style: AppTypography.caption)),
+            data: (allProducts) {
+              final products = allProducts.where((p) {
+                if (_query.isEmpty) return true;
+                final q = _query.toLowerCase();
+                return (p['name'] as String? ?? '').toLowerCase().contains(q) ||
+                    (p['brand'] as String? ?? '').toLowerCase().contains(q);
+              }).toList();
 
-            return ListView(
-              padding: EdgeInsets.only(bottom: 96.h),
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          width: 36.w,
-                          height: 36.w,
-                          decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
-                          child: Icon(Icons.arrow_back_ios_new, size: 15.sp, color: AppColors.text),
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(widget.categoryName, style: AppTextStyles.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                            Text('${allProducts.length} ta mahsulot', style: AppTextStyles.caption.copyWith(fontSize: 12.5)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w),
-                          decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(12.r)),
-                          child: Row(
+              return ListView(
+                padding: EdgeInsets.only(bottom: AppSizes.tabBarHeight + AppSizes.tabBarBottomInset + 22),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: Row(
+                      children: [
+                        BackCircleButton(onTap: () => Navigator.pop(context)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.search, size: 14.sp, color: AppColors.textMuted),
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: TextField(
-                                  onChanged: (v) => setState(() => _query = v),
-                                  style: AppTextStyles.body.copyWith(fontSize: 14, color: AppColors.text),
-                                  decoration: InputDecoration.collapsed(
-                                    hintText: '${widget.categoryName} ichida qidirish',
-                                    hintStyle: AppTextStyles.body.copyWith(fontSize: 14, color: AppColors.textMuted),
-                                  ),
-                                ),
-                              ),
+                              Text(widget.categoryName, style: AppTypography.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text('${allProducts.length} ta mahsulot', style: AppTypography.caption),
                             ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (products.isEmpty)
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 56.h),
-                    child: Column(
-                      children: [
-                        Text('Mahsulot topilmadi', style: AppTextStyles.cardTitle),
-                        SizedBox(height: 5.h),
-                        Text('Qidiruvni o\'zgartirib ko\'ring', style: AppTextStyles.caption),
                       ],
                     ),
-                  )
-                else
+                  ),
                   Padding(
-                    padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
-                    child: GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: products.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12.w,
-                        mainAxisSpacing: 12.h,
-                        childAspectRatio: 0.66,
-                      ),
-                      itemBuilder: (context, i) => _ProductCard(
-                        product: products[i],
-                        inCart: cartProductIds.contains(products[i]['id']),
-                        isFav: favIds.contains(products[i]['id']),
-                      ),
+                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(AppRadius.input)),
+                            child: Row(
+                              children: [
+                                SvgPicture.string(_searchIconSvg, width: 14, height: 14),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    onChanged: (v) => setState(() => _query = v),
+                                    style: AppTypography.body.copyWith(fontSize: 14, height: null, color: AppColors.textPrimary),
+                                    decoration: InputDecoration.collapsed(
+                                      hintText: '${widget.categoryName} ichida qidirish',
+                                      hintStyle: AppTypography.body.copyWith(fontSize: 14, height: null, color: AppColors.textMuted),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        PressableScale(
+                          scale: 0.95,
+                          onTap: () {},
+                          child: Container(
+                            height: 40,
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(AppRadius.input),
+                              border: Border.all(color: AppColors.inputBorder),
+                            ),
+                            child: Row(
+                              children: [
+                                SvgPicture.string(_filterIconSvg, width: 13, height: 13),
+                                const SizedBox(width: 6),
+                                Text('Filtr', style: AppTypography.rowTitle.copyWith(fontSize: 13.5)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-              ],
-            );
-          },
+                  if (products.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 56, horizontal: 40),
+                      child: Column(
+                        children: [
+                          Text('Mahsulot topilmadi', style: AppTypography.cardTitle.copyWith(fontSize: 16)),
+                          const SizedBox(height: 5),
+                          Text('Qidiruvni o\'zgartirib ko\'ring', style: AppTypography.caption.copyWith(fontSize: 13)),
+                        ],
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: products.length,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.66,
+                        ),
+                        itemBuilder: (context, i) => FadeUpItem(
+                          delay: AppMotion.staggerStep * i,
+                          child: _ProductCard(
+                            product: products[i],
+                            slug: widget.categorySlug,
+                            categoryName: widget.categoryName,
+                            tint: tint,
+                            inCart: cartProductIds.contains(products[i]['id']),
+                            isFav: favIds.contains(products[i]['id']),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -171,8 +200,18 @@ class _CategoryProductsScreenState extends ConsumerState<CategoryProductsScreen>
 }
 
 class _ProductCard extends ConsumerStatefulWidget {
-  const _ProductCard({required this.product, required this.inCart, required this.isFav});
+  const _ProductCard({
+    required this.product,
+    required this.slug,
+    required this.categoryName,
+    required this.tint,
+    required this.inCart,
+    required this.isFav,
+  });
   final Map<String, dynamic> product;
+  final String slug;
+  final String categoryName;
+  final List<Color> tint;
   final bool inCart;
   final bool isFav;
 
@@ -206,16 +245,7 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
     if (minP == null) return '—';
     final lo = double.tryParse(minP.toString())?.toInt() ?? 0;
     final hi = double.tryParse((maxP ?? minP).toString())?.toInt() ?? lo;
-    String fmt(int n) {
-      final s = n.toString();
-      final buf = StringBuffer();
-      for (var i = 0; i < s.length; i++) {
-        if (i > 0 && (s.length - i) % 3 == 0) buf.write(' ');
-        buf.write(s[i]);
-      }
-      return buf.toString();
-    }
-    return lo == hi ? '${fmt(lo)} so\'m' : '${fmt(lo)} – ${fmt(hi)} so\'m';
+    return lo == hi ? formatSom(lo) : '${formatSom(lo)} – ${formatSom(hi)}';
   }
 
   @override
@@ -225,16 +255,16 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
     final out = totalStock <= 0;
     final variantCount = (p['variants'] as List?)?.length ?? 1;
 
-    return GestureDetector(
+    return PressableScale(
       onTap: () {
         HapticFeedback.lightImpact();
-        Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(productId: p['id'] as int)));
+        pushAppRoute(context, (_) => ProductDetailScreen(productId: p['id'] as int));
       },
       child: Container(
-        padding: EdgeInsets.all(10.w),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.card),
+          borderRadius: BorderRadius.circular(AppRadius.groupedCard),
           border: Border.all(color: AppColors.border),
           boxShadow: AppShadows.card,
         ),
@@ -246,8 +276,33 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
                 AspectRatio(
                   aspectRatio: 1,
                   child: Container(
-                    decoration: BoxDecoration(color: const Color(0xFFEDE9FE), borderRadius: BorderRadius.circular(12.r)),
-                    child: Icon(Icons.inventory_2_outlined, color: AppColors.primaryDark, size: 44.sp),
+                    decoration: BoxDecoration(color: widget.tint[0], borderRadius: BorderRadius.circular(AppRadius.input)),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.string(
+                          categorySvg(widget.slug),
+                          width: 52,
+                          height: 52,
+                          colorFilter: ColorFilter.mode(widget.tint[1], BlendMode.srcIn),
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          widget.categoryName.toLowerCase(),
+                          style: TextStyle(fontFamily: 'monospace', fontSize: 9, color: widget.tint[1].withValues(alpha: 0.65)),
+                        ),
+                        if (out)
+                          Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Container(
+                              margin: const EdgeInsets.all(6),
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(color: AppColors.textMuted, borderRadius: BorderRadius.circular(6)),
+                              child: Text('Tugagan', style: AppTypography.small.copyWith(color: Colors.white, fontSize: 10)),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
                 Positioned(
@@ -256,58 +311,52 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
                   child: GestureDetector(
                     onTap: _favBusy ? null : _toggleFav,
                     child: Container(
-                      width: 28.w,
-                      height: 28.w,
+                      width: 28,
+                      height: 28,
                       decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.85), shape: BoxShape.circle),
                       child: TweenAnimationBuilder<double>(
                         tween: Tween(begin: widget.isFav ? 0.6 : 1, end: 1),
                         duration: AppMotion.pop,
                         builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
-                        child: Icon(
-                          widget.isFav ? Icons.favorite : Icons.favorite_border,
-                          size: 14.sp,
-                          color: widget.isFav ? AppColors.textMuted : AppColors.textSecondary,
+                        child: SvgPicture.string(
+                          widget.isFav ? _favIconFilled : _favIconOutline,
+                          width: 14,
+                          height: 14,
+                          colorFilter: ColorFilter.mode(
+                            widget.isFav ? AppColors.danger : AppColors.textSecondary,
+                            BlendMode.srcIn,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                if (out)
-                  Positioned(
-                    bottom: 6,
-                    left: 6,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
-                      decoration: BoxDecoration(color: AppColors.textMuted, borderRadius: BorderRadius.circular(6.r)),
-                      child: Text('Tugagan', style: AppTextStyles.small.copyWith(color: Colors.white, fontSize: 10)),
-                    ),
-                  ),
               ],
             ),
-            SizedBox(height: 9.h),
-            Text(p['name'] as String? ?? '', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13.5), maxLines: 1, overflow: TextOverflow.ellipsis),
-            SizedBox(height: 2.h),
+            const SizedBox(height: 9),
+            Text(p['name'] as String? ?? '', style: AppTypography.cardTitleSm, maxLines: 1, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 2),
             Text(
               [p['brand'], if (variantCount > 1) '$variantCount variant'].where((s) => s != null && s.toString().isNotEmpty).join(' · '),
-              style: AppTextStyles.caption.copyWith(fontSize: 11.5),
+              style: AppTypography.caption.copyWith(fontSize: 11.5),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            SizedBox(height: 8.h),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
-                  child: Text(_priceLabel(), style: AppTextStyles.cardTitle.copyWith(fontSize: 14.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  child: Text(_priceLabel(), style: AppTypography.priceSm, maxLines: 1, overflow: TextOverflow.ellipsis),
                 ),
                 Container(
-                  width: 30.w,
-                  height: 30.w,
+                  width: 30,
+                  height: 30,
                   decoration: BoxDecoration(
-                    color: widget.inCart ? AppColors.textMuted : AppColors.text,
+                    color: widget.inCart ? AppColors.textMuted : AppColors.textPrimary,
                     shape: BoxShape.circle,
-                    boxShadow: [const BoxShadow(color: Color(0x2E191970), blurRadius: 8, offset: Offset(0, 3))],
+                    boxShadow: const [BoxShadow(color: Color(0x1F171327), blurRadius: 8, offset: Offset(0, 3))],
                   ),
-                  child: Icon(widget.inCart ? Icons.check : Icons.add, color: AppColors.bg, size: 15.sp),
+                  child: Icon(widget.inCart ? Icons.check : Icons.add, color: AppColors.background, size: 15),
                 ),
               ],
             ),
