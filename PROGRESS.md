@@ -167,6 +167,7 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | 1 | `AppRadius.card` 17→18, `AppTypography.h1` -.9→-.8 (haqiqiy qurilma skrinshotida topilgan Phase 1 xatolari) | `packages/fargonam_ui/lib/src/{app_radius,app_typography}.dart` | — | 0/0/0 | ✅ |
 | 3 | 2/17: Market (catalog) — to'liq qayta yozildi (dc.html aynan, 18 ta kategoriya SVG ikonkasi, "Savatda N ta bor" yashil badge) | `mobile_user/lib/features/marketplace/catalog_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 | 5-tuzatish | Ikonka (oq F), soxta buyurtma o'chirildi (dev DB), AI chiplar olib tashlandi, ism onboarding ekrani, orqaga tugmasi PopScope | `assets/icon/*`, `home_feed_screen.dart`, `ai_assistant_screen.dart`, `core/user_name_provider.dart`, `features/onboarding/name_screen.dart`, `profile_screen.dart`, `main.dart`, `shell/app_shell.dart`, `checkout/order_success_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ qurilmada tasdiqlandi (toza o'rnatish) |
+| 3 | 3/17: Sinf to'plami (kit detail) — to'liq qayta yozildi (dc.html aynan), `_addKit()` biznes-logikasi o'zgarishsiz | `mobile_user/lib/features/kits/kit_detail_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -319,10 +320,32 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   ("Solih" kiritildi → Home salomlashuvida va Profilda darhol ko'rindi), ikonka sof
   navy+oq "F".
 
+- [2026-08-19] **3/17: Sinf to'plami (kit detail)** ekrani dc.html'ning `KIT DETAIL`
+  bo'limiga moslab qayta yozildi. Eski `flutter_screenutil` (.w/.h/.r/.sp), Material
+  ikonkalar va mahalliy `_fmt()` (NBSP'siz, boshqa apostrof belgisi bilan — narx formati
+  qoidasiga zid ekan, aniqlandi) olib tashlandi: endi `fargonam_ui` tokenlari
+  (`AppGradients.cta`, `AppShadows.cta`, `AppTypography`, `AppRadius.card`=18/
+  `AppRadius.button`=12 — avval xato `17.r` edi), `flutter_svg` orqali aniq ikonkalar,
+  `formatSom` narx formati, `FadeUpItem`/`ScreenFadeIn` kirish animatsiyasi. Orqaga
+  tugmasi va "savatga qo'shish" endi `HapticFeedback.lightImpact()` (5.4 jadvali:
+  "savatga qo'shish" — light, avval noto'g'ri `mediumImpact` edi). `_addKit()`
+  biznes-logikasi (`/cart`ga har bir element uchun POST, `cartProvider` invalidatsiyasi,
+  xato holati) o'zgarishsiz saqlandi.
+  **Backend farqi**: dc.html har bir to'plam elementi uchun o'z kategoriyasiga mos ikonka
+  ishlatadi (`icon(catId)`/`{{it.bg}}`/`{{it.fg}}`), lekin `KitItem` modelida
+  (`kit_providers.dart`) kategoriya/slug maydoni yo'q — faqat `productName`/
+  `variantName`/`quantity`/`lineTotal`. 5.0 qoidasiga ko'ra model o'zgartirilmadi:
+  barcha elementlar uchun bitta neytral quti-SVG ikonkasi, to'plamning o'z (sinf
+  darajasiga bog'liq) tint rangida ishlatildi. Kelajakda backend `KitItem`ga
+  kategoriya/slug qo'shsa, bu ekran to'g'ridan-to'g'ri per-item ikonkaga o'tkaziladi.
+
 ### Backend farqlari
 - [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),
   garchi `products` jadvalida test mahsulotlari bor. Kategoriyasiz UI to'g'ri ishlaydi
   (bo'sh holat ko'rsatiladi), lekin haqiqiy ko'rinish uchun kategoriya ma'lumoti kerak.
+- [Sinf to'plami] `KitItem` modelida kategoriya/slug yo'q — dc.html'dagi per-item
+  kategoriya ikonkasi o'rniga bitta neytral ikonka ishlatildi (yuqoridagi Qarorlar
+  yozuviga qarang).
 (2-bosqich hali to'liq bajarilmadi — `buildData()` va mavjud model/repository to'liq
 solishtiruvi shu yerga keyingi seansda yoziladi.)
 
