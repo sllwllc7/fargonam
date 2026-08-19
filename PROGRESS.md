@@ -250,6 +250,24 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   Market/Kategoriyalar bo'sh ko'rinishi **kod xatosi emas** — `GET /categories` haqiqatan
   ham `[]` qaytaradi (dev bazada kategoriya yo'q). Bu backend/ma'lumot masalasi, mock
   yozib "tuzatilmaydi" (5.0).
+- [2026-08-19] Foydalanuvchi qurilmadagi skrinshotlarni ko'rib uchta narsani ko'rsatdi,
+  hammasi tuzatildi:
+  1. **Bosh sahifa hero kartasida to'rtburchak "chok"** — gradient overlay
+     `Positioned.fill` orqali `Stack`ning PADDING ICHIDAGI qismini qoplagan edi, rasm esa
+     `Container.decoration.image` orqali TO'LIQ kartani (padding tashqarisini ham)
+     qoplagan — natijada gradient rasmdan ~20px ichkarida to'xtab, ko'rinadigan
+     to'rtburchak chegara hosil qilgan. Tuzatildi: rasm+gradient ikkalasi ham
+     `ClipRRect > Stack > Positioned.fill` orqali xuddi shu (to'liq) maydonni qoplaydi,
+     matn/tugma alohida `Padding` qatlamida. Gradient burchagi ham 115°ga aniqlashtirildi
+     (avval ~135° taxminiy edi).
+  2. **fergana-gate.png ilova ikonkasi va splash'dan olib tashlandi** — foydalanuvchi:
+     "faqat Home'da foydalansa bo'ladi". Ikkalasi endi oddiy solid navy `#16294A`
+     (fotosuratsiz). `assets/icon/app_icon_foreground.png`/`splash_logo.png` o'chirildi,
+     `flutter_launcher_icons`/`flutter_native_splash` qayta ishga tushirildi.
+  3. **AI ekranida yozish maydoni ko'rinmasdi** — kod ichida input/yuborish funksiyasi
+     bor edi, lekin ekran o'zining pastki bo'shlig'ini suzuvchi tab bar balandligiga
+     moslamagan edi — input qatori tab bar OSTIDA (ko'rinmas holda) chizilardi. Pastki
+     `Padding`ga `AppSizes.tabBarHeight + tabBarBottomInset` qo'shildi.
 
 ### Backend farqlari
 - [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),

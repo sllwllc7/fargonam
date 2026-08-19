@@ -293,98 +293,106 @@ class _HeroMarketCardState extends State<_HeroMarketCard> {
         duration: AppMotion.pressedDuration,
         child: Container(
           margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-            image: const DecorationImage(
-              image: AssetImage('assets/images/fergana-gate.png'),
-              fit: BoxFit.cover,
-              alignment: Alignment(0, -0.4),
-            ),
-            boxShadow: const [BoxShadow(color: Color(0x4D101F38), blurRadius: 28, offset: Offset(0, 12))],
+          decoration: const BoxDecoration(
+            boxShadow: [BoxShadow(color: Color(0x4D101F38), blurRadius: 28, offset: Offset(0, 12))],
           ),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      stops: const [0.25, 0.62, 1],
-                      colors: [
-                        const Color(0xFF081223).withValues(alpha: 0.8),
-                        const Color(0xFF081223).withValues(alpha: 0.4),
-                        const Color(0xFF081223).withValues(alpha: 0.12),
-                      ],
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+            child: Stack(
+              children: [
+                // dc.html: background:url(...) center 30%/cover — butun kartani qoplaydi.
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/images/fergana-gate.png',
+                    fit: BoxFit.cover,
+                    alignment: const Alignment(0, -0.4),
+                  ),
+                ),
+                // dc.html: inset:0 gradient — rasm bilan bir xil to'liq maydonni qoplaydi
+                // (padding ICHIDA emas — shu joyda avval "chok" xatosi bor edi).
+                const Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment(-0.9, -0.42),
+                        end: Alignment(0.9, 0.42),
+                        stops: [0.25, 0.62, 1],
+                        colors: [
+                          Color(0xCC081223),
+                          Color(0x66081223),
+                          Color(0x1F081223),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Market', style: AppTypography.heroTitle),
-                            const SizedBox(height: 5),
-                            Text(
-                              'Maktab va ofis uchun kerakli barcha narsalar bir joyda',
-                              style: AppTypography.heroSubtitle.copyWith(color: Colors.white.withValues(alpha: 0.78)),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Market', style: AppTypography.heroTitle),
+                                const SizedBox(height: 5),
+                                Text(
+                                  'Maktab va ofis uchun kerakli barcha narsalar bir joyda',
+                                  style: AppTypography.heroSubtitle.copyWith(color: Colors.white.withValues(alpha: 0.78)),
+                                ),
+                              ],
                             ),
+                          ),
+                          Container(
+                            width: 54,
+                            height: 54,
+                            decoration: BoxDecoration(
+                              color: const Color(0x1FCCD0CF),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            alignment: Alignment.center,
+                            child: SvgPicture.string(_bagIconSvg, width: 27, height: 27),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 10),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.white, Color(0xFFEDF1F7)],
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                          border: Border.all(color: const Color(0x1F171327)),
+                          boxShadow: const [BoxShadow(color: Color(0x401E0F05), blurRadius: 8, offset: Offset(0, 3))],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                'Xarid qilishni boshlash',
+                                style: AppTypography.pillButton,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 7),
+                            SvgPicture.string(_chevronIconSvg, width: 7, height: 12),
                           ],
                         ),
                       ),
-                      Container(
-                        width: 54,
-                        height: 54,
-                        decoration: BoxDecoration(
-                          color: const Color(0x1FCCD0CF),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        alignment: Alignment.center,
-                        child: SvgPicture.string(_bagIconSvg, width: 27, height: 27),
-                      ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 10),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.white, Color(0xFFEDF1F7)],
-                      ),
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                      border: Border.all(color: const Color(0x1F171327)),
-                      boxShadow: const [BoxShadow(color: Color(0x401E0F05), blurRadius: 8, offset: Offset(0, 3))],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            'Xarid qilishni boshlash',
-                            style: AppTypography.pillButton,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 7),
-                        SvgPicture.string(_chevronIconSvg, width: 7, height: 12),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

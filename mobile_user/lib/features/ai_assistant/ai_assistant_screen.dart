@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 
 /// Fargonam AI assistent — HANDOFF.md 2-bo'lim, 12-band. Qoida asosidagi
@@ -163,7 +164,10 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h),
+              // Suzuvchi tab bar ekran ustida chiziladi (app_shell.dart) — pastdan
+              // shuncha bo'shliq qoldirilmasa, input maydoni tab bar ostida
+              // ko'rinmay qoladi.
+              padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h + AppSizes.tabBarHeight + AppSizes.tabBarBottomInset),
               child: Row(
                 children: [
                   Expanded(
