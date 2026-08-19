@@ -174,6 +174,7 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | 3 | 5/17: Mahsulot (product detail) — to'liq qayta yozildi (dc.html aynan, rasm karuseli soddalashtirilgan taqlid, stockInfo rangi tuzatildi) | `mobile_user/lib/features/products/product_detail_screen.dart` | 11/11 (2 tuzatildi: NBSP narx) | 0/0/0 | ✅ |
 | 3 | `QtyStepperButton` umumiy widget (Mahsulot+Savat, matn glif −/+) | `packages/fargonam_ui/lib/src/widgets/qty_stepper_button.dart` | — | 0/0/0 | ✅ |
 | 3 | 6/17: Savat (cart) — to'liq qayta yozildi (dc.html aynan, backdrop-blur footer, kategoriya ikonka) | `mobile_user/lib/features/cart/cart_screen.dart` | 11/11 (3 tuzatildi: NBSP+minus glif) | 0/0/0 | ✅ |
+| 3 | 7/17: Rasmiylashtirish (checkout) — to'liq qayta yozildi (dc.html aynan, pickup/manzil real funksiyasi saqlandi) | `mobile_user/lib/features/checkout/checkout_screen.dart` | 11/11 (2 tuzatildi: to'g'ri formatSom) | 0/0/0 | ✅ |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -405,6 +406,24 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   `QtyStepperButton` umumiy widget qilib chiqarildi (dc.html'da minus/plus MATN belgisi
   ishlatiladi, Material ikon emas — Mahsulot sahifasidagi xuddi shu pattern bilan bitta
   manba).
+
+- [2026-08-19] **7/17: Rasmiylashtirish (checkout)** ekrani dc.html'ning `CHECKOUT`
+  bo'limiga moslab qayta yozildi. dc.html'da faqat oddiy Manzil/Telefon/Izoh input'lari
+  bor, lekin real backend "Do'kondan olib ketish" (pickup+kod), saqlangan manzillar
+  ro'yxati, idempotency-key kabi ancha kengroq funksiyalarni qo'llab-quvvatladi — bu
+  ilgari (Phase 1'dan oldin) ham hujjatlashtirilgan qaror edi (fayl boshidagi izoh),
+  shu qarorga rioya qilinib FAQAT ko'rinish qatlami fargonam_ui tokenlariga o'tkazildi,
+  funksiya saqlandi. To'lov va Buyurtma xulosasi kartalari dc.html'dan aynan (SVG
+  ikonka, radius `groupedCard`, soya).
+  **Muhim topilma**: `mobile_user/lib/core/format.dart`dagi ESKI `formatSom()` funksiyasi
+  o'z izohida "NBSP" deb yozilgan bo'lsa-da, aslida ODDIY BO'SHLIQ ishlatar edi (NBSP
+  emas) — haqiqiy standart `fargonam_ui`dagi to'g'ri versiya (NBSP + `‘` U+2018 apostrof).
+  Checkout endi to'g'ri versiyani ishlatadi. Eski (noto'g'ri) funksiya hali
+  `orders_screen.dart`/`order_tracking_screen.dart`/`favorites_screen.dart`da qoladi —
+  bu ekranlar Phase 3'da qayta yozilganda tuzatiladi (keyingi navbatda).
+  Yangi qo'shildi: `AppTypography.formSectionLabel` (Checkout bo'lim yorliqlari — dc.html'da
+  Katalog bo'lim yorlig'idan farqli o'lcham/rang ekan, aniqlandi), `pushReplacementAppRoute`
+  (fargonam_ui, Muvaffaqiyat ekraniga o'tish uchun).
 
 ### Backend farqlari
 - [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),
