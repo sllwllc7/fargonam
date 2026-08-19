@@ -69,6 +69,7 @@ nginx/certs/
 keystores/
 *.jks
 *.keystore
+key.properties
 *.apk
 *.zip
 *.aab
