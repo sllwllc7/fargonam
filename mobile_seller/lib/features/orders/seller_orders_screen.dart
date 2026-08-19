@@ -1,10 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
-import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_client.dart';
@@ -38,69 +36,78 @@ class _SellerOrdersScreenState extends ConsumerState<SellerOrdersScreen> {
   Widget build(BuildContext context) {
     final ordersAsync = ref.watch(sellerOrdersProvider);
     return Scaffold(
-      backgroundColor: LegacyColors.bg,
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
-              child: Text('Buyurtmalar', style: LegacyTextStyles.h2.copyWith(color: LegacyColors.primaryDark)),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 8.h),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: LegacyColors.surfaceAlt,
-                  borderRadius: BorderRadius.circular(AppRadius.input),
+        child: ScreenFadeIn(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Buyurtmalar', style: AppTypography.h2),
                 ),
-                child: TextField(
-                  onChanged: (v) => setState(() => _search = v),
-                  style: LegacyTextStyles.body.copyWith(color: LegacyColors.text),
-                  decoration: InputDecoration(
-                    hintText: 'Kod, ism yoki telefon bo\'yicha qidirish',
-                    hintStyle: LegacyTextStyles.body.copyWith(color: LegacyColors.textMuted, fontSize: 14),
-                    prefixIcon: Icon(Icons.search, color: LegacyColors.textMuted, size: 20.sp),
-                    filled: true,
-                    fillColor: Colors.transparent,
-                    contentPadding: EdgeInsets.symmetric(vertical: 10.h),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.input),
-                      borderSide: BorderSide.none,
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                    border: Border.all(color: AppColors.inputBorder),
+                  ),
+                  child: TextField(
+                    onChanged: (v) => setState(() => _search = v),
+                    style: AppTypography.body.copyWith(color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'Kod, ism yoki telefon bo\'yicha qidirish',
+                      hintStyle: AppTypography.body.copyWith(color: AppColors.textMuted, fontSize: 14),
+                      prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+                      filled: true,
+                      fillColor: Colors.transparent,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.input),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              child: ordersAsync.when(
-                loading: () => const _OrdersSkeleton(),
-                error: (e, _) => ErrorRetryWidget(error: e, onRetry: () => ref.invalidate(sellerOrdersProvider)),
-                data: (orders) {
-                  if (orders.isEmpty) return const _EmptyOrdersState();
-                  final filtered = orders.where((o) => _matchesSearch(o, _search)).toList();
-                  if (filtered.isEmpty) {
-                    return Center(
-                      child: Text('Hech narsa topilmadi', style: LegacyTextStyles.body.copyWith(color: LegacyColors.textMuted)),
+              Expanded(
+                child: ordersAsync.when(
+                  loading: () => const _OrdersSkeleton(),
+                  error: (e, _) => ErrorRetryWidget(error: e, onRetry: () => ref.invalidate(sellerOrdersProvider)),
+                  data: (orders) {
+                    if (orders.isEmpty) return const _EmptyOrdersState();
+                    final filtered = orders.where((o) => _matchesSearch(o, _search)).toList();
+                    if (filtered.isEmpty) {
+                      return Center(
+                        child: Text('Hech narsa topilmadi', style: AppTypography.body.copyWith(color: AppColors.textMuted)),
+                      );
+                    }
+                    return RefreshIndicator(
+                      color: AppColors.primary,
+                      backgroundColor: AppColors.surface,
+                      onRefresh: () async {
+                        HapticFeedback.lightImpact();
+                        ref.invalidate(sellerOrdersProvider);
+                      },
+                      child: ListView.separated(
+                        padding: EdgeInsets.fromLTRB(20, 4, 20, AppSizes.tabBarHeight + AppSizes.tabBarBottomInset),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        itemBuilder: (context, i) => FadeUpItem(
+                          delay: AppMotion.staggerStep * i,
+                          child: _OrderCard(order: filtered[i]),
+                        ),
+                      ),
                     );
-                  }
-                  return RefreshIndicator(
-                    color: LegacyColors.primary,
-                    backgroundColor: LegacyColors.surface,
-                    onRefresh: () async {
-                      HapticFeedback.lightImpact();
-                      ref.invalidate(sellerOrdersProvider);
-                    },
-                    child: ListView.separated(
-                      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 20.h),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, _) => SizedBox(height: 10.h),
-                      itemBuilder: (context, i) => _OrderCard(order: filtered[i]),
-                    ),
-                  );
-                },
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -112,10 +119,10 @@ class _OrdersSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 20.h),
+      padding: EdgeInsets.fromLTRB(20, 4, 20, AppSizes.tabBarHeight + AppSizes.tabBarBottomInset),
       itemCount: 4,
-      separatorBuilder: (_, _) => SizedBox(height: 10.h),
-      itemBuilder: (_, _) => ShimmerBox(width: double.infinity, height: 160.h, borderRadius: AppRadius.card),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      itemBuilder: (_, _) => const ShimmerBox(width: double.infinity, height: 160, borderRadius: AppRadius.card),
     );
   }
 }
@@ -131,16 +138,16 @@ class _EmptyOrdersState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 96.w,
-              height: 96.w,
-              decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-              child: Icon(Icons.receipt_long, size: 42.sp, color: LegacyColors.textMuted),
+              width: 96,
+              height: 96,
+              decoration: const BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
+              child: const Icon(Icons.receipt_long, size: 42, color: AppColors.primary),
             ),
-            SizedBox(height: 20.h),
-            Text('Hali buyurtma kelmagan', style: LegacyTextStyles.cardTitle),
-            SizedBox(height: 6.h),
+            const SizedBox(height: 20),
+            Text('Hali buyurtma kelmagan', style: AppTypography.cardTitle),
+            const SizedBox(height: 6),
             Text('Buyurtmalar shu yerda paydo bo\'ladi',
-                style: LegacyTextStyles.body.copyWith(color: LegacyColors.textMuted)),
+                style: AppTypography.body.copyWith(color: AppColors.textMuted)),
           ],
         ),
       ),
@@ -183,12 +190,12 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         'cancelled': 'Bekor qilingan',
       };
   static const _statusColors = {
-    'pending': LegacyColors.textMuted,
-    'preparing': LegacyColors.warning,
-    'ready': LegacyColors.accent,
-    'shipped': LegacyColors.accent,
-    'delivered': LegacyColors.success,
-    'cancelled': LegacyColors.danger,
+    'pending': AppColors.textMuted,
+    'preparing': AppColors.warning,
+    'ready': AppColors.primary,
+    'shipped': AppColors.primary,
+    'delivered': AppColors.success,
+    'cancelled': AppColors.danger,
   };
 
   String? get _nextStatus {
@@ -233,7 +240,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       ref.invalidate(sellerOrdersProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Holat: ${_statusLabels[newStatus]}'), backgroundColor: LegacyColors.success),
+          SnackBar(content: Text('Holat: ${_statusLabels[newStatus]}'), backgroundColor: AppColors.success),
         );
       }
     } on DioException catch (e) {
@@ -242,7 +249,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.response?.data['detail']?.toString() ?? 'Xato'),
-            backgroundColor: LegacyColors.danger,
+            backgroundColor: AppColors.danger,
           ),
         );
       }
@@ -261,7 +268,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: LegacyColors.surface,
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: Text(_isPickup ? 'Topshirildi deb belgilansinmi?' : 'Yetkazildi deb belgilansinmi?'),
         content: const Text(
@@ -270,7 +277,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Bekor qilish')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: LegacyColors.primary),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Ha, tasdiqlayman'),
           ),
@@ -289,7 +296,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     final reason = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: LegacyColors.surface,
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: const Text('Buyurtmani bekor qilish'),
         content: Column(
@@ -298,9 +305,9 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
           children: [
             Text(
               'Bu amalni ortga qaytarib bo\'lmaydi. Zaxira avtomatik qaytariladi, xaridorga xabar boradi.',
-              style: LegacyTextStyles.caption,
+              style: AppTypography.caption,
             ),
-            SizedBox(height: 12.h),
+            const SizedBox(height: 12),
             TextField(
               controller: controller,
               autofocus: true,
@@ -315,7 +322,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Yopish')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: LegacyColors.danger),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () {
               final text = controller.text.trim();
               if (text.isEmpty) return;
@@ -334,16 +341,16 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
   @override
   Widget build(BuildContext context) {
     final items = (widget.order['items'] as List?) ?? [];
-    final color = _statusColors[_status] ?? LegacyColors.textMuted;
+    final color = _statusColors[_status] ?? AppColors.textMuted;
     final totalStr = widget.order['total']?.toString() ?? '0';
     final total = double.tryParse(totalStr) ?? 0;
 
     return Container(
-      padding: EdgeInsets.all(14.w),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: LegacyColors.surface,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: LegacyColors.border),
+        border: Border.all(color: AppColors.border),
         boxShadow: AppShadows.card,
       ),
       child: Column(
@@ -352,35 +359,35 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 4.h),
-                decoration: BoxDecoration(color: LegacyColors.surfaceAlt, borderRadius: BorderRadius.circular(8.r)),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(8)),
                 child: Text('#${widget.order['id']}',
-                    style: LegacyTextStyles.small.copyWith(color: LegacyColors.text, fontSize: 13)),
+                    style: AppTypography.small.copyWith(color: AppColors.textPrimary, fontSize: 13)),
               ),
               const Spacer(),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 4.h),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(_statusLabels[_status] ?? _status,
-                    style: LegacyTextStyles.small.copyWith(color: color, fontSize: 11.5)),
+                    style: AppTypography.small.copyWith(color: color, fontSize: 11.5)),
               ),
             ],
           ),
-          SizedBox(height: 10.h),
+          const SizedBox(height: 10),
           if (widget.order['customer_name'] != null || widget.order['customer_phone'] != null)
             Padding(
-              padding: EdgeInsets.only(bottom: 8.h),
+              padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
-                  Icon(Icons.person_outline, size: 15.sp, color: LegacyColors.textMuted),
-                  SizedBox(width: 6.w),
+                  const Icon(Icons.person_outline, size: 15, color: AppColors.textMuted),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       (widget.order['customer_name'] as String?) ?? '',
-                      style: LegacyTextStyles.bodyMedium.copyWith(color: LegacyColors.textSecondary, fontSize: 13),
+                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -388,15 +395,15 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   if (widget.order['customer_phone'] != null)
                     InkWell(
                       onTap: () => _callCustomer(widget.order['customer_phone'] as String),
-                      borderRadius: BorderRadius.circular(8.r),
+                      borderRadius: BorderRadius.circular(8),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                         child: Row(
                           children: [
-                            Icon(Icons.call, size: 14.sp, color: LegacyColors.success),
-                            SizedBox(width: 4.w),
+                            const Icon(Icons.call, size: 14, color: AppColors.success),
+                            const SizedBox(width: 4),
                             Text(widget.order['customer_phone'] as String,
-                                style: LegacyTextStyles.small.copyWith(color: LegacyColors.success, fontSize: 13)),
+                                style: AppTypography.small.copyWith(color: AppColors.success, fontSize: 13)),
                           ],
                         ),
                       ),
@@ -406,83 +413,83 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
             ),
           if (!_isPickup && (widget.order['delivery_address'] as String?)?.isNotEmpty == true)
             Padding(
-              padding: EdgeInsets.only(bottom: 10.h),
+              padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.location_on_outlined, size: 15.sp, color: LegacyColors.textMuted),
-                  SizedBox(width: 6.w),
+                  const Icon(Icons.location_on_outlined, size: 15, color: AppColors.textMuted),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(widget.order['delivery_address'] as String,
-                        style: LegacyTextStyles.body.copyWith(color: LegacyColors.textSecondary, fontSize: 13)),
+                        style: AppTypography.body.copyWith(color: AppColors.textSecondary, fontSize: 13)),
                   ),
                 ],
               ),
             ),
           if (_isPickup && widget.order['pickup_code'] != null)
             Padding(
-              padding: EdgeInsets.only(bottom: 10.h),
+              padding: const EdgeInsets.only(bottom: 10),
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 10.h),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: LegacyColors.success.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: LegacyColors.success.withValues(alpha: 0.35)),
+                  color: AppColors.success.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
                 ),
                 child: Center(
                   child: Text(
                     widget.order['pickup_code'] as String,
-                    style: LegacyTextStyles.h2.copyWith(color: LegacyColors.success, letterSpacing: 4, fontSize: 22),
+                    style: AppTypography.h2.copyWith(color: AppColors.success, letterSpacing: 4, fontSize: 22),
                   ),
                 ),
               ),
             ),
           for (final item in items)
             Padding(
-              padding: EdgeInsets.only(bottom: 6.h),
+              padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
                   Container(
                     width: 4,
                     height: 4,
-                    decoration: const BoxDecoration(color: LegacyColors.textMuted, shape: BoxShape.circle),
+                    decoration: const BoxDecoration(color: AppColors.textMuted, shape: BoxShape.circle),
                   ),
-                  SizedBox(width: 10.w),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       '${item['product_name'] ?? 'Mahsulot #${item['product_id']}'} × ${item['quantity']}',
-                      style: LegacyTextStyles.body.copyWith(fontSize: 13),
+                      style: AppTypography.body.copyWith(fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Text(
                     formatSom(double.tryParse(item['price_at_purchase']?.toString() ?? '0') ?? 0),
-                    style: LegacyTextStyles.caption.copyWith(fontSize: 12),
+                    style: AppTypography.caption.copyWith(fontSize: 12),
                   ),
                 ],
               ),
             ),
-          Divider(height: 22.h, color: LegacyColors.border),
+          const Divider(height: 22, color: AppColors.border),
           Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Jami', style: LegacyTextStyles.caption.copyWith(fontSize: 11)),
-                    SizedBox(height: 2.h),
-                    Text(formatSom(total), style: LegacyTextStyles.price.copyWith(fontSize: 17)),
+                    Text('Jami', style: AppTypography.caption.copyWith(fontSize: 11)),
+                    const SizedBox(height: 2),
+                    Text(formatSom(total), style: AppTypography.price.copyWith(fontSize: 17)),
                   ],
                 ),
               ),
               if (_canCancel)
                 Padding(
-                  padding: EdgeInsets.only(right: 8.w),
+                  padding: const EdgeInsets.only(right: 8),
                   child: TextButton(
                     onPressed: _updating ? null : _cancelWithReason,
-                    style: TextButton.styleFrom(foregroundColor: LegacyColors.danger),
+                    style: TextButton.styleFrom(foregroundColor: AppColors.danger),
                     child: const Text('Bajarib bo\'lmaydi', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
                   ),
                 ),
@@ -490,15 +497,15 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                 FilledButton(
                   onPressed: _updating ? null : () => _confirmAndAdvance(_nextStatus!),
                   style: FilledButton.styleFrom(
-                    backgroundColor: LegacyColors.sellerAccent,
+                    backgroundColor: AppColors.warning,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
                   ),
                   child: _updating
-                      ? SizedBox(
-                          width: 18.w,
-                          height: 18.w,
-                          child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
                       : Text(_nextLabel!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
                 ),

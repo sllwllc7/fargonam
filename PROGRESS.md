@@ -628,6 +628,46 @@ to'liq mos** bo'lgan holda, faqat ko'rsatiladigan matn darajasidagi kutilgan far
 11 ta sinfning HAMMASI uchun jami narx dc.html'ning o'z JS hisob-kitobi bilan qo'lda
 tekshirilib, aynan mos kelishi tasdiqlandi (yuqoridagi jadval).
 
+## LEGACY token shim'lari butunlay olib tashlandi (2026-08-19)
+
+`packages/fargonam_ui/lib/theme/legacy_tokens.dart` (avvalgi Qarorlar yozuviga qarang —
+`AppColorsDark`/`AppTextStylesDark`/`AppTextStyles` mobile_user uchun, `LegacyColors`/
+`LegacyTextStyles`/`LegacyGradients`/`LegacyShadows`/`LegacySizes` mobile_seller uchun)
+**fayl butunlay o'chirildi**. Bajarilgan ish:
+
+- **mobile_user** (31 fayl): `AppColorsDark`/`AppTextStylesDark`/`AppTextStyles`
+  to'g'ridan-to'g'ri `AppColors`/`AppTypography` bilan almashtirildi (mexanik, qiymat
+  o'zgarmadi — bular avvaldan bir xil qiymatga ishora qiluvchi aliaslar edi).
+  `core/theme/app_colors.dart`/`app_text_styles.dart` endi faqat `fargonam_ui`dan
+  eksport qiladi.
+- **mobile_seller** (14 fayl: `main.dart` + 13 ekran) — bu "Warm Violet" (`LegacyColors`
+  va h.k.) va mobile_seller'ning o'zining alohida, hech qachon qo'llanilmagan "Midnight
+  Indigo/Vanilla Cream" qorong'i tizimi (`core/theme.dart`, `MaterialApp`ning haqiqiy
+  temasi sifatida ISHLATILMAGAN edi — faqat parcha-parcha qo'lda uslublash uchun) —
+  ikkalasi ham real `fargonam_ui` (Indigo, mobile_user bilan bitta manba) tokenlariga
+  o'tkazildi. Shu bilan birga: `flutter_screenutil` olib tashlandi (endi oddiy logical
+  pixel, mobile_user bilan bir xil), `MaterialPageRoute` → `pushAppRoute`, qo'lda yozilgan
+  bottom-nav → umumiy `FloatingTabBar` widget (generallashtirildi — endi `items`
+  parametri qabul qiladi, mobile_user standart 5 tabi hali ham default qiymat).
+  `core/theme.dart` va `core/widgets.dart` (ikkalasi ham endi hech kim tomonidan
+  import qilinmaydi) o'chirildi.
+- Bajarish usuli: 8 ta parallel subagent (fayllarni mustaqil guruhlarga bo'lib), har
+  biri o'z fayllarida `flutter analyze` + LEGACY grep bilan o'zini tekshirdi, so'ng
+  yakuniy jamlab tekshiruv (`flutter analyze`/`test`/`build apk --debug` — ikkala ilova).
+
+**Tekshiruv**: `grep -rn "LEGACY" --include="*.dart" .` — **bo'sh** (kod darajasida
+to'liq tozalandi). Xom `grep -rn "LEGACY" .` (kengaytmasiz) hali ushbu faylning yuqoridagi
+tarixiy yozuvlarida (163-224-qatorlar atrofida, avvalgi Qarorlar) "LEGACY" so'zini
+uchratadi — bu CLAUDE.md'ning "PROGRESS.md ustiga yozilmaydi, faqat pastiga qo'shiladi"
+qoidasiga ko'ra ATAYLAB o'chirilmadi (o'sha yozuvlar o'sha vaqtda NIMA qilinganini
+tasdiqlaydigan tarixiy hujjat, hozirgi kod holatini emas). Kod o'zi (`.dart` fayllari)
+va endi mavjud bo'lmagan `legacy_tokens.dart`ning o'zi — ikkalasi ham butunlay toza.
+
+**DoD**: `flutter analyze` — 0/0/0 (`fargonam_ui`, `mobile_user`, `mobile_seller`
+uchun alohida). `flutter test` — mobile_user 11/11, mobile_seller 8/8 (`sku_builder`
+testlari — Cartesian SKU generatsiyasi mantig'iga tegilmadi). `flutter build apk
+--debug` — ikkalasi ham muvaffaqiyatli.
+
 ### APK
 
 ### APK

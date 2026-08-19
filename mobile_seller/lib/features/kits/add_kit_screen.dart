@@ -1,10 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
-import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../products/products_providers.dart';
 import 'kit_providers.dart';
@@ -140,14 +138,14 @@ class _AddKitScreenState extends ConsumerState<AddKitScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: LegacyColors.surface,
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: const Text('To\'plamni o\'chirish'),
         content: Text('"${widget.editingKit!.name}" ni o\'chirmoqchimisiz?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Yo\'q')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: LegacyColors.danger),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('O\'chirish'),
           ),
@@ -167,128 +165,131 @@ class _AddKitScreenState extends ConsumerState<AddKitScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LegacyColors.bg,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: LegacyColors.bg,
-        title: Text(_isEditing ? 'To\'plamni tahrirlash' : 'Yangi to\'plam', style: LegacyTextStyles.title),
+        backgroundColor: AppColors.background,
+        title: Text(_isEditing ? 'To\'plamni tahrirlash' : 'Yangi to\'plam', style: AppTypography.title),
         actions: [
           if (_isEditing)
             IconButton(
               icon: _deleting
-                  ? SizedBox(width: 18.w, height: 18.w, child: const CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.delete_outline, color: LegacyColors.danger),
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.delete_outline, color: AppColors.danger),
               onPressed: _deleting ? null : _delete,
             ),
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 32.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Sinf', style: LegacyTextStyles.cardTitleSm),
-              SizedBox(height: 8.h),
-              Wrap(
-                spacing: 8.w,
-                runSpacing: 8.h,
-                children: [
-                  for (var g = 1; g <= 11; g++)
-                    _GradeChip(
-                      grade: '$g',
-                      selected: _grade == '$g',
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() {
-                          _grade = '$g';
-                          if (_nameCtrl.text.trim().isEmpty || RegExp(r'^\d+-sinf').hasMatch(_nameCtrl.text.trim())) {
-                            _nameCtrl.text = '$g-sinf to\'plami';
-                          }
-                        });
-                      },
-                    ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              TextField(
-                controller: _nameCtrl,
-                decoration: const InputDecoration(labelText: 'Nomi'),
-                textCapitalization: TextCapitalization.sentences,
-              ),
-              SizedBox(height: 22.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Mahsulotlar', style: LegacyTextStyles.cardTitleSm),
-                  GestureDetector(
-                    onTap: _pickProduct,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                      decoration: BoxDecoration(
-                        color: LegacyColors.sellerAccentSoft,
-                        borderRadius: BorderRadius.circular(999.r),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.add, size: 16, color: LegacyColors.sellerAccent),
-                          SizedBox(width: 4.w),
-                          Text('Qo\'shish',
-                              style: LegacyTextStyles.small.copyWith(color: LegacyColors.sellerAccent, fontSize: 12.5)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10.h),
-              if (_items.isEmpty)
-                Container(
-                  padding: EdgeInsets.all(20.w),
-                  decoration: BoxDecoration(
-                    color: LegacyColors.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: LegacyColors.border),
-                  ),
-                  child: Center(child: Text('Hali mahsulot qo\'shilmagan', style: LegacyTextStyles.caption)),
-                )
-              else
-                for (var i = 0; i < _items.length; i++) _KitItemRow(item: _items[i], onRemove: () => setState(() => _items.removeAt(i))),
-              SizedBox(height: 16.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                decoration: BoxDecoration(
-                  color: LegacyColors.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: LegacyColors.border),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: ScreenFadeIn(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Sinf', style: AppTypography.cardTitleSm),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Text('Jami', style: LegacyTextStyles.cardTitleSm),
-                    Text(formatSom(_total), style: LegacyTextStyles.price.copyWith(fontSize: 17)),
+                    for (var g = 1; g <= 11; g++)
+                      _GradeChip(
+                        grade: '$g',
+                        selected: _grade == '$g',
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _grade = '$g';
+                            if (_nameCtrl.text.trim().isEmpty || RegExp(r'^\d+-sinf').hasMatch(_nameCtrl.text.trim())) {
+                              _nameCtrl.text = '$g-sinf to\'plami';
+                            }
+                          });
+                        },
+                      ),
                   ],
                 ),
-              ),
-              if (_error != null) ...[
-                SizedBox(height: 10.h),
-                Text(_error!, style: const TextStyle(color: LegacyColors.danger, fontSize: 13)),
-              ],
-              SizedBox(height: 20.h),
-              SizedBox(
-                height: 54.h,
-                child: FilledButton(
-                  onPressed: _loading ? null : _submit,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: LegacyColors.sellerAccent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
-                  ),
-                  child: _loading
-                      ? const SizedBox(
-                          height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                      : const Text('Saqlash', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Nomi'),
+                  textCapitalization: TextCapitalization.sentences,
                 ),
-              ),
-            ],
+                const SizedBox(height: 22),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Mahsulotlar', style: AppTypography.cardTitleSm),
+                    PressableScale(
+                      scale: 0.94,
+                      onTap: _pickProduct,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.warningSoft,
+                          borderRadius: BorderRadius.circular(AppRadius.chip),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.add, size: 16, color: AppColors.warning),
+                            const SizedBox(width: 4),
+                            Text('Qo\'shish',
+                                style: AppTypography.small.copyWith(color: AppColors.warning, fontSize: 12.5)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                if (_items.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Center(child: Text('Hali mahsulot qo\'shilmagan', style: AppTypography.caption)),
+                  )
+                else
+                  for (var i = 0; i < _items.length; i++) _KitItemRow(item: _items[i], onRemove: () => setState(() => _items.removeAt(i))),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Jami', style: AppTypography.cardTitleSm),
+                      Text(formatSom(_total), style: AppTypography.price.copyWith(fontSize: 17)),
+                    ],
+                  ),
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: 10),
+                  Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+                ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 54,
+                  child: FilledButton(
+                    onPressed: _loading ? null : _submit,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.warning,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
+                    ),
+                    child: _loading
+                        ? const SizedBox(
+                            height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.ctaText))
+                        : Text('Saqlash', style: AppTypography.button),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -304,18 +305,19 @@ class _GradeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PressableScale(
+      scale: 0.92,
       onTap: onTap,
       child: Container(
-        width: 42.w,
-        height: 42.w,
+        width: 42,
+        height: 42,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? LegacyColors.text : LegacyColors.surfaceAlt,
+          color: selected ? AppColors.textPrimary : AppColors.background,
           shape: BoxShape.circle,
         ),
         child: Text(grade,
-            style: LegacyTextStyles.cardTitleSm.copyWith(color: selected ? Colors.white : LegacyColors.text, fontSize: 15)),
+            style: AppTypography.cardTitleSm.copyWith(color: selected ? AppColors.surface : AppColors.textPrimary, fontSize: 15)),
       ),
     );
   }
@@ -329,12 +331,12 @@ class _KitItemRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 8.h),
-      padding: EdgeInsets.all(12.w),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: LegacyColors.surface,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.input),
-        border: Border.all(color: LegacyColors.border),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -342,15 +344,15 @@ class _KitItemRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.label, style: LegacyTextStyles.cardTitleSm.copyWith(fontSize: 13.5)),
-                SizedBox(height: 2.h),
-                Text(formatSom(item.price), style: LegacyTextStyles.caption),
+                Text(item.label, style: AppTypography.cardTitleSm.copyWith(fontSize: 13.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 2),
+                Text(formatSom(item.price), style: AppTypography.caption),
               ],
             ),
           ),
-          Text('×${item.qty}', style: LegacyTextStyles.cardTitleSm),
+          Text('×${item.qty}', style: AppTypography.cardTitleSm),
           IconButton(
-            icon: const Icon(Icons.close, size: 18, color: LegacyColors.textSecondary),
+            icon: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
             onPressed: onRemove,
           ),
         ],
@@ -370,27 +372,27 @@ class _ProductPickerSheet extends StatelessWidget {
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
         child: Container(
           decoration: BoxDecoration(
-            color: LegacyColors.surface,
+            color: AppColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: 10.h),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: LegacyColors.border, borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 10),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
               Padding(
-                padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 4.h),
-                child: Align(alignment: Alignment.centerLeft, child: Text('Mahsulot tanlang', style: LegacyTextStyles.cardTitle)),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                child: Align(alignment: Alignment.centerLeft, child: Text('Mahsulot tanlang', style: AppTypography.cardTitle)),
               ),
               Flexible(
                 child: products.isEmpty
                     ? Padding(
-                        padding: EdgeInsets.symmetric(vertical: 32.h),
-                        child: Center(child: Text('Avval mahsulot qo\'shing', style: LegacyTextStyles.caption)),
+                        padding: const EdgeInsets.symmetric(vertical: 32),
+                        child: Center(child: Text('Avval mahsulot qo\'shing', style: AppTypography.caption)),
                       )
                     : ListView(
                         shrinkWrap: true,
-                        padding: EdgeInsets.symmetric(vertical: 8.h),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                         children: [
                           for (final p in products)
                             for (final v in p.variants)
@@ -400,13 +402,13 @@ class _ProductPickerSheet extends StatelessWidget {
                                   (variantId: v.id, label: v.variantName == 'Standart' ? p.name : '${p.name} · ${v.variantName}', price: v.price),
                                 ),
                                 title: Text(v.variantName == 'Standart' ? p.name : '${p.name} · ${v.variantName}',
-                                    style: LegacyTextStyles.body.copyWith(fontSize: 14)),
-                                trailing: Text(formatSom(v.price), style: LegacyTextStyles.caption),
+                                    style: AppTypography.body.copyWith(fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                trailing: Text(formatSom(v.price), style: AppTypography.caption),
                               ),
                         ],
                       ),
               ),
-              SizedBox(height: 8.h),
+              const SizedBox(height: 8),
             ],
           ),
         ),

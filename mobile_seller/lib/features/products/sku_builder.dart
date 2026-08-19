@@ -1,8 +1,6 @@
 import 'package:fargonam_ui/fargonam_ui.dart';
-import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Bitta parametr (masalan "Varoq soni") + uning qiymatlari (chip: "12","36"...).
 class SkuAttribute {
@@ -80,16 +78,16 @@ class _AttributesEditorState extends State<AttributesEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Parametrlar', style: LegacyTextStyles.cardTitleSm),
-        SizedBox(height: 4.h),
+        Text('Parametrlar', style: AppTypography.cardTitleSm),
+        const SizedBox(height: 4),
         Text(
           'Masalan "Varoq soni" — qiymatlari kiritilgach SKU jadvali avtomatik yasaladi',
-          style: LegacyTextStyles.caption,
+          style: AppTypography.caption,
         ),
-        SizedBox(height: 10.h),
+        const SizedBox(height: 10),
         for (int i = 0; i < widget.attributes.length; i++)
           Padding(
-            padding: EdgeInsets.only(bottom: 10.h),
+            padding: const EdgeInsets.only(bottom: 10),
             child: _AttributeRow(
               attribute: widget.attributes[i],
               onChanged: () {
@@ -99,22 +97,22 @@ class _AttributesEditorState extends State<AttributesEditor> {
               onRemove: () => _removeAttribute(i),
             ),
           ),
-        GestureDetector(
+        PressableScale(
           onTap: _addAttribute,
           child: Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 12.h),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.input),
-              border: Border.all(color: LegacyColors.sellerAccent.withValues(alpha: 0.4), style: BorderStyle.solid),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.add, size: 18, color: LegacyColors.sellerAccent),
-                SizedBox(width: 6.w),
+                const Icon(Icons.add, size: 18, color: AppColors.primary),
+                const SizedBox(width: 6),
                 Text('Parametr qo\'shish',
-                    style: LegacyTextStyles.cardTitleSm.copyWith(color: LegacyColors.sellerAccent, fontSize: 14)),
+                    style: AppTypography.cardTitleSm.copyWith(color: AppColors.primary, fontSize: 14)),
               ],
             ),
           ),
@@ -158,9 +156,9 @@ class _AttributeRowState extends State<_AttributeRow> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(12.w),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: LegacyColors.surfaceAlt,
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(AppRadius.input),
       ),
       child: Column(
@@ -172,28 +170,28 @@ class _AttributeRowState extends State<_AttributeRow> {
                 child: TextField(
                   controller: _nameCtrl,
                   decoration: const InputDecoration.collapsed(hintText: 'Parametr nomi (masalan: Varoq soni)'),
-                  style: LegacyTextStyles.cardTitleSm.copyWith(fontSize: 14),
+                  style: AppTypography.cardTitleSm.copyWith(fontSize: 14),
                   onChanged: (v) {
                     widget.attribute.name = v;
                     widget.onChanged();
                   },
                 ),
               ),
-              GestureDetector(
+              PressableScale(
                 onTap: widget.onRemove,
-                child: Icon(Icons.close, size: 18.sp, color: LegacyColors.textMuted),
+                child: const Icon(Icons.close, size: 18, color: AppColors.textMuted),
               ),
             ],
           ),
-          SizedBox(height: 8.h),
+          const SizedBox(height: 8),
           Wrap(
-            spacing: 6.w,
-            runSpacing: 6.h,
+            spacing: 6,
+            runSpacing: 6,
             children: [
               for (final v in widget.attribute.values)
                 Chip(
-                  label: Text(v, style: LegacyTextStyles.small.copyWith(color: LegacyColors.text)),
-                  backgroundColor: const Color(0xFFEDE9FE),
+                  label: Text(v, style: AppTypography.small.copyWith(color: AppColors.textPrimary)),
+                  backgroundColor: AppColors.primaryLight,
                   deleteIcon: const Icon(Icons.close, size: 14),
                   onDeleted: () {
                     setState(() => widget.attribute.values.remove(v));
@@ -203,11 +201,11 @@ class _AttributeRowState extends State<_AttributeRow> {
                   visualDensity: VisualDensity.compact,
                 ),
               SizedBox(
-                width: 130.w,
+                width: 130,
                 child: TextField(
                   controller: _valueCtrl,
                   decoration: const InputDecoration.collapsed(hintText: 'Qiymat + Enter'),
-                  style: LegacyTextStyles.body.copyWith(fontSize: 13),
+                  style: AppTypography.body.copyWith(fontSize: 13),
                   onSubmitted: _addValue,
                 ),
               ),
@@ -229,24 +227,24 @@ class SkuTable extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('SKU jadvali', style: LegacyTextStyles.cardTitleSm),
-        SizedBox(height: 4.h),
-        Text('${rows.length} ta kombinatsiya — har biriga narx va zaxira kiriting', style: LegacyTextStyles.caption),
-        SizedBox(height: 10.h),
+        Text('SKU jadvali', style: AppTypography.cardTitleSm),
+        const SizedBox(height: 4),
+        Text('${rows.length} ta kombinatsiya — har biriga narx va zaxira kiriting', style: AppTypography.caption),
+        const SizedBox(height: 10),
         for (final row in rows)
           Container(
-            margin: EdgeInsets.only(bottom: 8.h),
-            padding: EdgeInsets.all(12.w),
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: LegacyColors.surface,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(AppRadius.input),
-              border: Border.all(color: LegacyColors.border),
+              border: Border.all(color: AppColors.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(row.label, style: LegacyTextStyles.cardTitleSm.copyWith(fontSize: 13.5)),
-                SizedBox(height: 8.h),
+                Text(row.label, style: AppTypography.cardTitleSm.copyWith(fontSize: 13.5)),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
@@ -256,9 +254,9 @@ class SkuTable extends StatelessWidget {
                         decoration: const InputDecoration(labelText: 'Narx (so\'m)', isDense: true),
                       ),
                     ),
-                    SizedBox(width: 10.w),
+                    const SizedBox(width: 10),
                     SizedBox(
-                      width: 96.w,
+                      width: 96,
                       child: TextField(
                         controller: row.stockCtrl,
                         keyboardType: TextInputType.number,

@@ -1,10 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme.dart';
-import '../../core/widgets.dart';
 import '../auth/auth_providers.dart';
 import '../orders/seller_orders_screen.dart';
 import '../products/products_screen.dart';
@@ -19,13 +18,13 @@ class MyShopScreen extends ConsumerWidget {
     final shopAsync = ref.watch(myShopProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Mening do\'konim'),
       ),
       body: shopAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.cream)),
+            child: CircularProgressIndicator(color: AppColors.primary)),
         error: (e, _) => ErrorRetryWidget(
             error: e, onRetry: () => ref.invalidate(myShopProvider)),
         data: (shop) {
@@ -52,17 +51,10 @@ class _ShopView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.cream.withValues(alpha: 0.1),
-                  AppColors.success.withValues(alpha: 0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                  color: AppColors.cream.withValues(alpha: 0.2)),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+              border: Border.all(color: AppColors.border),
+              boxShadow: AppShadows.card,
             ),
             child: Row(
               children: [
@@ -70,13 +62,12 @@ class _ShopView extends StatelessWidget {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.cream, AppColors.creamDim],
-                    ),
-                    borderRadius: BorderRadius.circular(18),
+                    gradient: AppGradients.cta,
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    boxShadow: AppShadows.cta,
                   ),
                   child: const Icon(Icons.store,
-                      color: AppColors.midnightIndigo, size: 32),
+                      color: AppColors.ctaText, size: 32),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -85,11 +76,8 @@ class _ShopView extends StatelessWidget {
                     children: [
                       Text(
                         shop.name,
-                        style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.3),
+                        style: AppTypography.cardTitle
+                            .copyWith(fontSize: 20, fontWeight: FontWeight.w800),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -97,17 +85,15 @@ class _ShopView extends StatelessWidget {
                       if (shop.description != null)
                         Text(
                           shop.description!,
-                          style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 13),
+                          style: AppTypography.caption
+                              .copyWith(color: AppColors.textSecondary),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       const SizedBox(height: 4),
                       Text('ID: #${shop.id}',
-                          style: const TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 11)),
+                          style: AppTypography.small
+                              .copyWith(color: AppColors.textMuted, fontSize: 11)),
                     ],
                   ),
                 ),
@@ -121,15 +107,11 @@ class _ShopView extends StatelessWidget {
           PressableScale(
             onTap: () {
               HapticFeedback.lightImpact();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const ProductsScreen()),
-              );
+              pushAppRoute(context, (_) => const ProductsScreen());
             },
             child: _ActionTile(
               icon: Icons.inventory_2,
-              color: AppColors.cream,
+              color: AppColors.primary,
               title: 'Mahsulotlar',
               subtitle: 'Mahsulotlarni boshqaring',
             ),
@@ -138,15 +120,11 @@ class _ShopView extends StatelessWidget {
           PressableScale(
             onTap: () {
               HapticFeedback.lightImpact();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const SellerOrdersScreen()),
-              );
+              pushAppRoute(context, (_) => const SellerOrdersScreen());
             },
             child: _ActionTile(
               icon: Icons.receipt_long,
-              color: AppColors.info,
+              color: AppColors.primaryMid,
               title: 'Buyurtmalar',
               subtitle: 'Kelgan buyurtmalar',
             ),
@@ -175,8 +153,8 @@ class _ActionTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.divider, width: 0.5),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -185,7 +163,7 @@ class _ActionTile extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppRadius.image),
             ),
             child: Icon(icon, color: color, size: 24),
           ),
@@ -194,20 +172,9 @@ class _ActionTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
+                Text(title, style: AppTypography.cardTitleSm),
                 const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                      color: AppColors.textMuted, fontSize: 12),
-                ),
+                Text(subtitle, style: AppTypography.caption),
               ],
             ),
           ),
@@ -233,20 +200,18 @@ class _KycBanner extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: AppColors.success.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.input),
             border: Border.all(
                 color: AppColors.success.withValues(alpha: 0.3)),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.verified, color: AppColors.success, size: 18),
-              SizedBox(width: 8),
+              const Icon(Icons.verified, color: AppColors.success, size: 18),
+              const SizedBox(width: 8),
               Text(
                 'Do\'koningiz tasdiqlangan',
-                style: TextStyle(
-                    color: AppColors.success,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600),
+                style: AppTypography.cardTitleSm
+                    .copyWith(fontSize: 13, color: AppColors.success),
               ),
             ],
           ),
@@ -255,22 +220,20 @@ class _KycBanner extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: AppColors.error.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.danger.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppRadius.input),
             border: Border.all(
-                color: AppColors.error.withValues(alpha: 0.3)),
+                color: AppColors.danger.withValues(alpha: 0.3)),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.cancel_outlined, color: AppColors.error, size: 18),
-              SizedBox(width: 8),
+              const Icon(Icons.cancel_outlined, color: AppColors.danger, size: 18),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Do\'koningiz rad etildi. Admin bilan bog\'laning.',
-                  style: TextStyle(
-                      color: AppColors.error,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600),
+                  style: AppTypography.cardTitleSm
+                      .copyWith(fontSize: 13, color: AppColors.danger),
                 ),
               ),
             ],
@@ -281,21 +244,19 @@ class _KycBanner extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: AppColors.warning.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.input),
             border: Border.all(
                 color: AppColors.warning.withValues(alpha: 0.3)),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.hourglass_empty, color: AppColors.warning, size: 18),
-              SizedBox(width: 8),
+              const Icon(Icons.hourglass_empty, color: AppColors.warning, size: 18),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Do\'koningiz admin tasdig\'ini kutmoqda',
-                  style: TextStyle(
-                      color: AppColors.warning,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600),
+                  style: AppTypography.cardTitleSm
+                      .copyWith(fontSize: 13, color: AppColors.warning),
                 ),
               ),
             ],
@@ -367,32 +328,24 @@ class _CreateShopFormState extends ConsumerState<_CreateShopForm> {
               width: 90,
               height: 90,
               decoration: BoxDecoration(
-                color: AppColors.cream.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(28),
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(AppRadius.cardLarge),
               ),
               child: const Icon(Icons.add_business,
-                  size: 44, color: AppColors.cream),
+                  size: 44, color: AppColors.primary),
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'Yangi do\'kon yarating',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.5,
-            ),
+            style: AppTypography.h2,
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Sizda hali do\'kon yo\'q. Birinchi do\'koningizni\nyaratib biznesni boshlang',
             textAlign: TextAlign.center,
-            style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                height: 1.5),
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 28),
           TextField(
@@ -418,18 +371,18 @@ class _CreateShopFormState extends ConsumerState<_CreateShopForm> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppColors.warningSoft,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.input),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.info_outline,
+                  const Icon(Icons.info_outline,
                       color: AppColors.warning, size: 18),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Sizning rolingiz "seller" emas. Admin bilan bog\'laning.',
-                      style: TextStyle(
-                          color: AppColors.warning, fontSize: 12),
+                      style: AppTypography.caption
+                          .copyWith(color: AppColors.warning),
                     ),
                   ),
                 ],
@@ -445,19 +398,18 @@ class _CreateShopFormState extends ConsumerState<_CreateShopForm> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.errorSoft,
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.dangerTint,
+                        borderRadius: BorderRadius.circular(AppRadius.input),
                       ),
                       child: Row(
                         children: [
                           const Icon(Icons.error_outline,
-                              color: AppColors.error, size: 18),
+                              color: AppColors.danger, size: 18),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(_error!,
-                                style: const TextStyle(
-                                    color: AppColors.error,
-                                    fontSize: 13)),
+                                style: AppTypography.caption
+                                    .copyWith(color: AppColors.danger)),
                           ),
                         ],
                       ),
@@ -466,25 +418,20 @@ class _CreateShopFormState extends ConsumerState<_CreateShopForm> {
           ),
           const SizedBox(height: 24),
           SizedBox(
-            height: 56,
+            height: 52,
             child: FilledButton(
               onPressed: _loading ? null : _submit,
-              style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18)),
-              ),
               child: _loading
                   ? const SizedBox(
                       height: 22,
                       width: 22,
                       child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          color: AppColors.midnightIndigo),
+                          color: AppColors.ctaText),
                     )
-                  : const Text(
+                  : Text(
                       'Do\'kon yaratish',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w800),
+                      style: AppTypography.button,
                     ),
             ),
           ),

@@ -1,14 +1,13 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../core/api_client.dart';
-import '../../core/theme.dart';
-import '../../core/widgets.dart';
 import '../../core/ws_service.dart';
 
 /// Kutayotgan so'rovlar
@@ -257,7 +256,7 @@ class _DriverScreenState extends ConsumerState<DriverScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  'Sayohat tugadi! ${formatPrice(double.tryParse(updated['fare'].toString()) ?? 0)}'),
+                  'Sayohat tugadi! ${formatSom(double.tryParse(updated['fare'].toString()) ?? 0)}'),
               backgroundColor: AppColors.success,
             ),
           );
@@ -281,7 +280,7 @@ class _DriverScreenState extends ConsumerState<DriverScreen> {
   Widget build(BuildContext context) {
     if (_checking) {
       return const Center(
-          child: CircularProgressIndicator(color: AppColors.cream));
+          child: CircularProgressIndicator(color: AppColors.primary));
     }
     if (!_hasProfile) {
       return _CreateProfileView(onCreated: _checkProfile);
@@ -295,14 +294,12 @@ class _DriverScreenState extends ConsumerState<DriverScreen> {
           padding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: _isOnline
-                ? AppColors.successSoft
-                : AppColors.surfaceHigh,
-            borderRadius: BorderRadius.circular(18),
+            color: _isOnline ? AppColors.successTint : AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.card),
             border: Border.all(
                 color: _isOnline
                     ? AppColors.success.withValues(alpha: 0.4)
-                    : AppColors.divider),
+                    : AppColors.border),
           ),
           child: Row(
             children: [
@@ -330,9 +327,8 @@ class _DriverScreenState extends ConsumerState<DriverScreen> {
               Expanded(
                 child: Text(
                   _isOnline ? 'Onlayn rejimda' : 'Oflayn rejimda',
-                  style: TextStyle(
+                  style: AppTypography.cardTitleSm.copyWith(
                     fontWeight: FontWeight.w800,
-                    fontSize: 14,
                     color: _isOnline
                         ? AppColors.success
                         : AppColors.textSecondary,
@@ -378,31 +374,22 @@ class _OfflineState extends StatelessWidget {
               width: 110,
               height: 110,
               decoration: BoxDecoration(
-                color: AppColors.surfaceHigh,
-                borderRadius: BorderRadius.circular(32),
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(AppRadius.cardLarge),
               ),
               child: const Icon(Icons.power_settings_new,
-                  size: 56, color: AppColors.textMuted),
+                  size: 56, color: AppColors.primary),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Oflayn rejimdasiz',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.5,
-              ),
+              style: AppTypography.h2.copyWith(fontSize: 20),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'So\'rovlarni olish uchun yuqoridagi\ntugma orqali onlayn bo\'ling',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                height: 1.5,
-              ),
+              style: AppTypography.body.copyWith(color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -479,32 +466,24 @@ class _CreateProfileViewState
               width: 90,
               height: 90,
               decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(28),
+                color: AppColors.warningSoft,
+                borderRadius: BorderRadius.circular(AppRadius.cardLarge),
               ),
               child: const Icon(Icons.local_taxi,
                   size: 48, color: AppColors.warning),
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'Mashina ma\'lumotlari',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.5,
-            ),
+            style: AppTypography.h2.copyWith(fontSize: 22),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Haydovchi bo\'lish uchun mashina\nma\'lumotlarini kiriting',
             textAlign: TextAlign.center,
-            style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                height: 1.5),
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 28),
           TextField(
@@ -545,19 +524,18 @@ class _CreateProfileViewState
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.errorSoft,
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.dangerTint,
+                        borderRadius: BorderRadius.circular(AppRadius.input),
                       ),
                       child: Row(
                         children: [
                           const Icon(Icons.error_outline,
-                              color: AppColors.error, size: 18),
+                              color: AppColors.danger, size: 18),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(_error!,
-                                style: const TextStyle(
-                                    color: AppColors.error,
-                                    fontSize: 13)),
+                                style: AppTypography.caption
+                                    .copyWith(color: AppColors.danger)),
                           ),
                         ],
                       ),
@@ -571,7 +549,7 @@ class _CreateProfileViewState
               onPressed: _loading ? null : _save,
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18)),
+                    borderRadius: BorderRadius.circular(AppRadius.cardLarge)),
               ),
               child: _loading
                   ? const SizedBox(
@@ -579,12 +557,11 @@ class _CreateProfileViewState
                       width: 22,
                       child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          color: AppColors.midnightIndigo),
+                          color: AppColors.ctaText),
                     )
-                  : const Text(
+                  : Text(
                       'Saqlash',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w800),
+                      style: AppTypography.button,
                     ),
             ),
           ),
@@ -604,14 +581,14 @@ class _AvailableRides extends ConsumerWidget {
     final ridesAsync = ref.watch(availableRidesProvider);
     return ridesAsync.when(
       loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.cream)),
+          child: CircularProgressIndicator(color: AppColors.primary)),
       error: (e, _) => ErrorRetryWidget(
           error: e, onRetry: () => ref.invalidate(availableRidesProvider)),
       data: (rides) {
         if (rides.isEmpty) return const _NoRidesState();
         return RefreshIndicator(
-          color: AppColors.cream,
-          backgroundColor: AppColors.surfaceHigh,
+          color: AppColors.primary,
+          backgroundColor: AppColors.surface,
           onRefresh: () async {
             HapticFeedback.lightImpact();
             ref.invalidate(availableRidesProvider);
@@ -628,9 +605,9 @@ class _AvailableRides extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                      color: AppColors.divider, width: 0.5),
+                  borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: AppShadows.card,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -651,12 +628,12 @@ class _AvailableRides extends ConsumerWidget {
                             Container(
                                 width: 1.5,
                                 height: 26,
-                                color: AppColors.divider),
+                                color: AppColors.border),
                             Container(
                               width: 10,
                               height: 10,
                               decoration: const BoxDecoration(
-                                color: AppColors.error,
+                                color: AppColors.danger,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -670,22 +647,16 @@ class _AvailableRides extends ConsumerWidget {
                             children: [
                               Text(
                                 '${r['pickup_address']}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                  fontSize: 14,
-                                ),
+                                style: AppTypography.cardTitleSm
+                                    .copyWith(fontWeight: FontWeight.w700),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 14),
                               Text(
                                 '${r['destination_address']}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                  fontSize: 14,
-                                ),
+                                style: AppTypography.cardTitleSm
+                                    .copyWith(fontWeight: FontWeight.w700),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -699,8 +670,8 @@ class _AvailableRides extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppColors.successSoft,
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.successTint,
+                        borderRadius: BorderRadius.circular(AppRadius.input),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -709,10 +680,9 @@ class _AvailableRides extends ConsumerWidget {
                               size: 18, color: AppColors.success),
                           const SizedBox(width: 6),
                           Text(
-                            formatPrice(fare),
-                            style: const TextStyle(
+                            formatSom(fare),
+                            style: AppTypography.priceSm.copyWith(
                               color: AppColors.success,
-                              fontWeight: FontWeight.w800,
                               fontSize: 15,
                             ),
                           ),
@@ -728,16 +698,14 @@ class _AvailableRides extends ConsumerWidget {
                             ? null
                             : () => onAccept(r['id'] as int),
                         icon: const Icon(Icons.check_circle_outline),
-                        label: const Text(
+                        label: Text(
                           'Qabul qilish',
-                          style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800),
+                          style: AppTypography.button,
                         ),
                         style: FilledButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius:
-                                  BorderRadius.circular(14)),
+                                  BorderRadius.circular(AppRadius.card)),
                         ),
                       ),
                     ),
@@ -767,27 +735,22 @@ class _NoRidesState extends StatelessWidget {
               width: 110,
               height: 110,
               decoration: BoxDecoration(
-                color: AppColors.surfaceHigh,
-                borderRadius: BorderRadius.circular(32),
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(AppRadius.cardLarge),
               ),
               child: const Icon(Icons.search,
-                  size: 56, color: AppColors.cream),
+                  size: 56, color: AppColors.primary),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Hozircha so\'rov yo\'q',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
+              style: AppTypography.h2.copyWith(fontSize: 20),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Yangi so\'rov kelganda darhol\nko\'rsatamiz',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: AppColors.textSecondary, fontSize: 14),
+              style: AppTypography.body.copyWith(color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -823,20 +786,16 @@ class _ActiveRideDriver extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.divider, width: 0.5),
+              borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+              border: Border.all(color: AppColors.border),
+              boxShadow: AppShadows.card,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'FAOL SAYOHAT',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textMuted,
-                    letterSpacing: 1.5,
-                  ),
+                  style: AppTypography.sectionLabel,
                 ),
                 const SizedBox(height: 14),
                 Row(
@@ -854,12 +813,12 @@ class _ActiveRideDriver extends StatelessWidget {
                         Container(
                             width: 2,
                             height: 28,
-                            color: AppColors.divider),
+                            color: AppColors.border),
                         Container(
                           width: 12,
                           height: 12,
                           decoration: const BoxDecoration(
-                              color: AppColors.error,
+                              color: AppColors.danger,
                               shape: BoxShape.circle),
                         ),
                       ],
@@ -871,22 +830,16 @@ class _ActiveRideDriver extends StatelessWidget {
                         children: [
                           Text(
                             ride['pickup_address'] as String,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
+                            style: AppTypography.cardTitle.copyWith(
+                                fontSize: 15, letterSpacing: 0),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 16),
                           Text(
                             ride['destination_address'] as String,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
+                            style: AppTypography.cardTitle.copyWith(
+                                fontSize: 15, letterSpacing: 0),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -901,16 +854,11 @@ class _ActiveRideDriver extends StatelessWidget {
                 Row(
                   children: [
                     const Icon(Icons.payments_outlined,
-                        color: AppColors.cream, size: 22),
+                        color: AppColors.primary, size: 22),
                     const SizedBox(width: 8),
                     Text(
-                      formatPrice(fare),
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.cream,
-                        letterSpacing: -0.5,
-                      ),
+                      formatSom(fare),
+                      style: AppTypography.price.copyWith(fontSize: 22),
                     ),
                   ],
                 ),
@@ -926,12 +874,11 @@ class _ActiveRideDriver extends StatelessWidget {
                 icon: Icon(_iconForStatus(nextStatus)),
                 label: Text(
                   nextLabel,
-                  style: const TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.w800),
+                  style: AppTypography.button.copyWith(fontSize: 17),
                 ),
                 style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18)),
+                      borderRadius: BorderRadius.circular(AppRadius.cardLarge)),
                 ),
               ),
             ),

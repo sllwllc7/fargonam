@@ -1,9 +1,7 @@
 import 'package:fargonam_ui/fargonam_ui.dart';
-import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/api_client.dart';
 import '../../core/config.dart';
@@ -21,53 +19,53 @@ class ProductsScreen extends ConsumerWidget {
 
     return shopAsync.when(
       loading: () => const Scaffold(
-        backgroundColor: LegacyColors.bg,
-        body: Center(child: CircularProgressIndicator(color: LegacyColors.primary)),
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       ),
       error: (e, _) => Scaffold(
-        backgroundColor: LegacyColors.bg,
+        backgroundColor: AppColors.background,
         appBar: _appBar('Market'),
         body: ErrorRetryWidget(error: e, onRetry: () => ref.invalidate(myShopProvider)),
       ),
       data: (shop) {
         if (shop == null) {
-          return Scaffold(backgroundColor: LegacyColors.bg, appBar: _appBar('Market'), body: const _NoShopState());
+          return Scaffold(backgroundColor: AppColors.background, appBar: _appBar('Market'), body: const _NoShopState());
         }
         if (shop.status != ShopStatus.approved) {
           return Scaffold(
-            backgroundColor: LegacyColors.bg,
+            backgroundColor: AppColors.background,
             appBar: _appBar('Market'),
             body: Center(
               child: Padding(
-                padding: EdgeInsets.all(28.w),
+                padding: EdgeInsets.all(28),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: EdgeInsets.all(20.w),
+                      padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: LegacyColors.warning.withValues(alpha: 0.12),
+                        color: AppColors.warning.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-                        border: Border.all(color: LegacyColors.warning.withValues(alpha: 0.3)),
+                        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
                       ),
                       child: Icon(
                         shop.status == ShopStatus.rejected ? Icons.cancel_outlined : Icons.hourglass_empty,
-                        color: shop.status == ShopStatus.rejected ? LegacyColors.danger : LegacyColors.warning,
-                        size: 44.sp,
+                        color: shop.status == ShopStatus.rejected ? AppColors.danger : AppColors.warning,
+                        size: 44,
                       ),
                     ),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 20),
                     Text(
                       shop.status == ShopStatus.rejected ? 'Do\'koningiz rad etilgan' : 'Do\'koningiz tasdiqlanmagan',
-                      style: LegacyTextStyles.cardTitle,
+                      style: AppTypography.cardTitle,
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 8),
                     Text(
                       shop.status == ShopStatus.rejected
                           ? 'Mahsulot yuklash uchun admin bilan bog\'laning: support@fargonam.uz'
                           : 'Mahsulot yuklash uchun admin tasdiqini kuting.',
-                      style: LegacyTextStyles.body.copyWith(color: LegacyColors.textSecondary),
+                      style: AppTypography.body.copyWith(color: AppColors.textSecondary),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -83,8 +81,8 @@ class ProductsScreen extends ConsumerWidget {
 }
 
 PreferredSizeWidget _appBar(String title) => AppBar(
-      backgroundColor: LegacyColors.bg,
-      title: Text(title, style: LegacyTextStyles.title),
+      backgroundColor: AppColors.background,
+      title: Text(title, style: AppTypography.title),
     );
 
 /// Umumiy nom bo'yicha guruh — masalan "Ruchka" ostidagi barcha mahsulot qatorlari.
@@ -100,8 +98,7 @@ class _ProductGroupsList extends ConsumerWidget {
 
   Future<void> _addProduct(BuildContext context, WidgetRef ref) async {
     HapticFeedback.lightImpact();
-    final created =
-        await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => AddProductScreen(shopId: shopId)));
+    final created = await pushAppRoute<bool>(context, (_) => AddProductScreen(shopId: shopId));
     if (created == true) ref.invalidate(shopProductsProvider(shopId));
   }
 
@@ -110,10 +107,10 @@ class _ProductGroupsList extends ConsumerWidget {
     final productsAsync = ref.watch(shopProductsProvider(shopId));
 
     return Scaffold(
-      backgroundColor: LegacyColors.bg,
+      backgroundColor: AppColors.background,
       appBar: _appBar('Market'),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: LegacyColors.sellerAccent,
+        backgroundColor: AppColors.warning,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
         onPressed: () => _addProduct(context, ref),
@@ -131,16 +128,16 @@ class _ProductGroupsList extends ConsumerWidget {
           final groups = byName.entries.map((e) => _ProductGroup(name: e.key, products: e.value)).toList()
             ..sort((a, b) => a.name.compareTo(b.name));
           return RefreshIndicator(
-            color: LegacyColors.primary,
-            backgroundColor: LegacyColors.surface,
+            color: AppColors.primary,
+            backgroundColor: AppColors.surface,
             onRefresh: () async {
               HapticFeedback.lightImpact();
               ref.invalidate(shopProductsProvider(shopId));
             },
             child: ListView.separated(
-              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 100.h),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, AppSizes.tabBarHeight + AppSizes.tabBarBottomInset),
               itemCount: groups.length,
-              separatorBuilder: (_, _) => SizedBox(height: 10.h),
+              separatorBuilder: (_, _) => SizedBox(height: 10),
               itemBuilder: (context, i) => _GroupTile(shopId: shopId, group: groups[i]),
             ),
           );
@@ -160,20 +157,17 @@ class _GroupTile extends StatelessWidget {
     final first = group.products.first;
     final imgUrl = first.imageUrl != null ? '${AppConfig.apiBaseUrl}${first.imageUrl}' : null;
 
-    return GestureDetector(
+    return PressableScale(
       onTap: () {
         HapticFeedback.lightImpact();
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => _ProductsList(shopId: shopId, groupName: group.name)),
-        );
+        pushAppRoute(context, (_) => _ProductsList(shopId: shopId, groupName: group.name));
       },
       child: Container(
-        padding: EdgeInsets.all(12.w),
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: LegacyColors.surface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: LegacyColors.border),
+          border: Border.all(color: AppColors.border),
           boxShadow: AppShadows.card,
         ),
         child: Row(
@@ -181,35 +175,35 @@ class _GroupTile extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(AppRadius.image),
               child: SizedBox(
-                width: 64.w,
-                height: 64.w,
+                width: 64,
+                height: 64,
                 child: imgUrl != null
                     ? Image.network(
                         imgUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => Container(
-                          color: const Color(0xFFEDE9FE),
-                          child: Icon(Icons.broken_image, color: LegacyColors.textMuted),
+                          color: AppColors.primaryLight,
+                          child: Icon(Icons.broken_image, color: AppColors.textMuted),
                         ),
                       )
-                    : Container(color: const Color(0xFFEDE9FE), child: Icon(Icons.image_outlined, color: LegacyColors.textMuted)),
+                    : Container(color: AppColors.primaryLight, child: Icon(Icons.image_outlined, color: AppColors.textMuted)),
               ),
             ),
-            SizedBox(width: 14.w),
+            SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(group.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: LegacyTextStyles.cardTitleSm),
-                  SizedBox(height: 5.h),
+                  Text(group.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: AppTypography.cardTitleSm),
+                  SizedBox(height: 5),
                   Text(group.products.length > 1 ? '${group.products.length} ta tur' : '1 ta tur',
-                      style: LegacyTextStyles.caption),
+                      style: AppTypography.caption),
                 ],
               ),
             ),
-            Icon(Icons.edit_outlined, size: 18.sp, color: LegacyColors.textSecondary),
-            SizedBox(width: 6.w),
-            Icon(Icons.chevron_right, color: LegacyColors.textMuted),
+            Icon(Icons.edit_outlined, size: 18, color: AppColors.textSecondary),
+            SizedBox(width: 6),
+            Icon(Icons.chevron_right, color: AppColors.textMuted),
           ],
         ),
       ),
@@ -223,21 +217,21 @@ class _NoShopState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32.w),
+        padding: EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 96.w,
-              height: 96.w,
-              decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-              child: Icon(Icons.storefront_outlined, size: 42.sp, color: LegacyColors.textMuted),
+              width: 96,
+              height: 96,
+              decoration: const BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
+              child: Icon(Icons.storefront_outlined, size: 42, color: AppColors.textMuted),
             ),
-            SizedBox(height: 20.h),
-            Text('Avval do\'kon yarating', style: LegacyTextStyles.cardTitle),
-            SizedBox(height: 8.h),
+            SizedBox(height: 20),
+            Text('Avval do\'kon yarating', style: AppTypography.cardTitle),
+            SizedBox(height: 8),
             Text('Bosh sahifada do\'kon yaratishingiz mumkin',
-                textAlign: TextAlign.center, style: LegacyTextStyles.body.copyWith(color: LegacyColors.textSecondary)),
+                textAlign: TextAlign.center, style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
           ],
         ),
       ),
@@ -252,8 +246,7 @@ class _ProductsList extends ConsumerWidget {
 
   Future<void> _addProduct(BuildContext context, WidgetRef ref) async {
     HapticFeedback.lightImpact();
-    final created =
-        await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => AddProductScreen(shopId: shopId)));
+    final created = await pushAppRoute<bool>(context, (_) => AddProductScreen(shopId: shopId));
     if (created == true) ref.invalidate(shopProductsProvider(shopId));
   }
 
@@ -262,10 +255,10 @@ class _ProductsList extends ConsumerWidget {
     final productsAsync = ref.watch(shopProductsProvider(shopId));
 
     return Scaffold(
-      backgroundColor: LegacyColors.bg,
+      backgroundColor: AppColors.background,
       appBar: _appBar(groupName ?? 'Mahsulotlar'),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: LegacyColors.sellerAccent,
+        backgroundColor: AppColors.warning,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
         onPressed: () => _addProduct(context, ref),
@@ -280,16 +273,16 @@ class _ProductsList extends ConsumerWidget {
               : allProducts.where((p) => p.name.trim().toLowerCase() == groupName!.trim().toLowerCase()).toList();
           if (products.isEmpty) return const _EmptyProductsState();
           return RefreshIndicator(
-            color: LegacyColors.primary,
-            backgroundColor: LegacyColors.surface,
+            color: AppColors.primary,
+            backgroundColor: AppColors.surface,
             onRefresh: () async {
               HapticFeedback.lightImpact();
               ref.invalidate(shopProductsProvider(shopId));
             },
             child: ListView.separated(
-              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 100.h),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 100),
               itemCount: products.length,
-              separatorBuilder: (_, _) => SizedBox(height: 10.h),
+              separatorBuilder: (_, _) => SizedBox(height: 10),
               itemBuilder: (context, i) => _ProductTile(product: products[i]),
             ),
           );
@@ -305,21 +298,21 @@ class _EmptyProductsState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32.w),
+        padding: EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 96.w,
-              height: 96.w,
-              decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-              child: Icon(Icons.inventory_2_outlined, size: 42.sp, color: LegacyColors.textMuted),
+              width: 96,
+              height: 96,
+              decoration: const BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
+              child: Icon(Icons.inventory_2_outlined, size: 42, color: AppColors.textMuted),
             ),
-            SizedBox(height: 20.h),
-            Text('Hali mahsulot yo\'q', style: LegacyTextStyles.cardTitle),
-            SizedBox(height: 8.h),
+            SizedBox(height: 20),
+            Text('Hali mahsulot yo\'q', style: AppTypography.cardTitle),
+            SizedBox(height: 8),
             Text('Pastdagi tugma bilan birinchi mahsulotingizni qo\'shing',
-                textAlign: TextAlign.center, style: LegacyTextStyles.body.copyWith(color: LegacyColors.textSecondary)),
+                textAlign: TextAlign.center, style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
           ],
         ),
       ),
@@ -332,23 +325,23 @@ class _ProductsSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(20),
       itemCount: 5,
-      separatorBuilder: (_, _) => SizedBox(height: 10.h),
+      separatorBuilder: (_, _) => SizedBox(height: 10),
       itemBuilder: (_, _) => Container(
-        padding: EdgeInsets.all(12.w),
-        decoration: BoxDecoration(color: LegacyColors.surface, borderRadius: BorderRadius.circular(AppRadius.card)),
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(AppRadius.card)),
         child: Row(
           children: [
-            ShimmerBox(width: 64.w, height: 64.w, borderRadius: AppRadius.image),
-            SizedBox(width: 14.w),
+            ShimmerBox(width: 64, height: 64, borderRadius: AppRadius.image),
+            SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ShimmerBox(width: 140.w, height: 14),
-                  SizedBox(height: 8.h),
-                  ShimmerBox(width: 100.w, height: 14),
+                  ShimmerBox(width: 140, height: 14),
+                  SizedBox(height: 8),
+                  ShimmerBox(width: 100, height: 14),
                 ],
               ),
             ),
@@ -368,21 +361,19 @@ class _ProductTile extends ConsumerStatefulWidget {
 }
 
 class _ProductTileState extends ConsumerState<_ProductTile> {
-  bool _pressed = false;
-
   Future<void> _delete() async {
     HapticFeedback.lightImpact();
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: LegacyColors.surface,
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: const Text('Mahsulotni o\'chirish'),
         content: Text('"${widget.product.name}" ni o\'chirmoqchimisiz?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Yo\'q')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: LegacyColors.danger),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('O\'chirish'),
           ),
@@ -397,7 +388,7 @@ class _ProductTileState extends ConsumerState<_ProductTile> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('O\'chirishda xato: $e'), backgroundColor: LegacyColors.danger),
+            SnackBar(content: Text('O\'chirishda xato: $e'), backgroundColor: AppColors.danger),
           );
         }
       }
@@ -406,10 +397,7 @@ class _ProductTileState extends ConsumerState<_ProductTile> {
 
   Future<void> _edit() async {
     HapticFeedback.lightImpact();
-    final edited = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => EditProductScreen(product: widget.product)),
-    );
+    final edited = await pushAppRoute<bool>(context, (_) => EditProductScreen(product: widget.product));
     if (edited == true) ref.invalidate(shopProductsProvider(widget.product.shopId));
   }
 
@@ -417,71 +405,65 @@ class _ProductTileState extends ConsumerState<_ProductTile> {
   Widget build(BuildContext context) {
     final p = widget.product;
     final imgUrl = p.imageUrl != null ? '${AppConfig.apiBaseUrl}${p.imageUrl}' : null;
-    final stockColor = p.stock > 0 ? LegacyColors.success : LegacyColors.danger;
+    final stockColor = p.stock > 0 ? AppColors.success : AppColors.danger;
 
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
+    return PressableScale(
+      scale: 0.98,
       onTap: _edit,
-      child: AnimatedScale(
-        scale: _pressed ? 0.98 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        child: Container(
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(
-            color: LegacyColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.card),
-            border: Border.all(color: LegacyColors.border),
-            boxShadow: AppShadows.card,
-          ),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.image),
-                child: SizedBox(
-                  width: 64.w,
-                  height: 64.w,
-                  child: imgUrl != null
-                      ? Image.network(
-                          imgUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) =>
-                              Container(color: const Color(0xFFEDE9FE), child: Icon(Icons.broken_image, color: LegacyColors.textMuted)),
-                        )
-                      : Container(color: const Color(0xFFEDE9FE), child: Icon(Icons.image_outlined, color: LegacyColors.textMuted)),
-                ),
+      child: Container(
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppShadows.card,
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.image),
+              child: SizedBox(
+                width: 64,
+                height: 64,
+                child: imgUrl != null
+                    ? Image.network(
+                        imgUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) =>
+                            Container(color: AppColors.primaryLight, child: Icon(Icons.broken_image, color: AppColors.textMuted)),
+                      )
+                    : Container(color: AppColors.primaryLight, child: Icon(Icons.image_outlined, color: AppColors.textMuted)),
               ),
-              SizedBox(width: 14.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(p.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: LegacyTextStyles.cardTitleSm),
-                    SizedBox(height: 6.h),
-                    Row(
-                      children: [
-                        Text(formatSom(double.tryParse(p.price) ?? 0), style: LegacyTextStyles.price.copyWith(fontSize: 14)),
-                        SizedBox(width: 10.w),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                          decoration:
-                              BoxDecoration(color: stockColor.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(6.r)),
-                          child: Text(p.stock > 0 ? 'Bor: ${p.stock}' : 'Tugagan',
-                              style: LegacyTextStyles.small.copyWith(color: stockColor, fontSize: 11)),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+            ),
+            SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(p.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: AppTypography.cardTitleSm),
+                  SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Text(formatSom(double.tryParse(p.price) ?? 0), style: AppTypography.price.copyWith(fontSize: 14)),
+                      SizedBox(width: 10),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration:
+                            BoxDecoration(color: stockColor.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(6)),
+                        child: Text(p.stock > 0 ? 'Bor: ${p.stock}' : 'Tugagan',
+                            style: AppTypography.small.copyWith(color: stockColor, fontSize: 11)),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              Icon(Icons.edit_outlined, size: 18.sp, color: LegacyColors.textSecondary),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: LegacyColors.danger, size: 22),
-                onPressed: _delete,
-              ),
-            ],
-          ),
+            ),
+            Icon(Icons.edit_outlined, size: 18, color: AppColors.textSecondary),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 22),
+              onPressed: _delete,
+            ),
+          ],
         ),
       ),
     );

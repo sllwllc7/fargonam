@@ -1,11 +1,11 @@
 import 'dart:async';
 
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/theme.dart';
 import 'auth_providers.dart';
 
 enum _Stage { initial, waiting, expired }
@@ -95,7 +95,7 @@ class _TelegramLoginScreenState extends ConsumerState<TelegramLoginScreen> {
   Widget build(BuildContext context) {
     final loading = ref.watch(authControllerProvider).loading;
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -150,66 +150,39 @@ class _InitialStage extends StatelessWidget {
             width: 84,
             height: 84,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColors.cream, AppColors.creamDim],
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.cream.withValues(alpha: 0.3),
-                  blurRadius: 28,
-                  offset: const Offset(0, 12),
-                ),
-              ],
+              gradient: AppGradients.cta,
+              borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+              boxShadow: AppShadows.cta,
             ),
-            child: const Icon(Icons.business_center,
-                size: 42, color: AppColors.midnightIndigo),
+            child: const Icon(Icons.business_center, size: 42, color: AppColors.ctaText),
           ),
         ),
         const SizedBox(height: 24),
-        const Text(
+        Text(
           'Fargonam Biznes',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
-            color: AppColors.textPrimary,
-          ),
+          style: AppTypography.h1,
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'Davom etish uchun Telegram orqali kiring',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 36),
         _ErrorBox(error: error),
         SizedBox(
-          height: 56,
+          height: 52,
           child: FilledButton.icon(
             onPressed: loading ? null : onSubmit,
-            icon: loading
-                ? const SizedBox.shrink()
-                : const Icon(Icons.telegram, size: 22),
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF229ED9),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18)),
-            ),
+            icon: loading ? const SizedBox.shrink() : const Icon(Icons.telegram, size: 22),
             label: loading
                 ? const SizedBox(
                     height: 22,
                     width: 22,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2.5, color: Colors.white),
+                    child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.ctaText),
                   )
-                : const Text('Telegram orqali kirish',
-                    style:
-                        TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                : Text('Telegram orqali kirish', style: AppTypography.button),
           ),
         ),
         const SizedBox(height: 32),
@@ -233,34 +206,25 @@ class _WaitingStage extends StatelessWidget {
           child: SizedBox(
             width: 64,
             height: 64,
-            child: CircularProgressIndicator(
-                strokeWidth: 3, color: AppColors.cream),
+            child: CircularProgressIndicator(strokeWidth: 3, color: AppColors.primary),
           ),
         ),
         const SizedBox(height: 28),
-        const Text(
+        Text(
           'Telegramda tasdiqlang',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-            color: AppColors.textPrimary,
-          ),
+          style: AppTypography.h2,
         ),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Ochilgan Telegram botida "Start" tugmasini bosing. Tasdiqlangach avtomatik kirasiz.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 28),
         TextButton(
           onPressed: onCancel,
-          child: const Text(
-            'Bekor qilish',
-            style: TextStyle(color: AppColors.textSecondary),
-          ),
+          child: Text('Bekor qilish', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
         ),
         const SizedBox(height: 24),
       ],
@@ -280,36 +244,26 @@ class _ExpiredStage extends StatelessWidget {
       children: [
         const SizedBox(height: 32),
         const Center(
-          child: Icon(Icons.timer_off_outlined,
-              size: 64, color: AppColors.textMuted),
+          child: Icon(Icons.timer_off_outlined, size: 64, color: AppColors.textMuted),
         ),
         const SizedBox(height: 24),
-        const Text(
+        Text(
           'Sessiya muddati tugadi',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
+          style: AppTypography.h2,
         ),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Qaytadan urinib ko\'ring',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 28),
         SizedBox(
-          height: 56,
+          height: 52,
           child: FilledButton(
             onPressed: onRetry,
-            style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18)),
-            ),
-            child: const Text('Qaytadan urinish',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+            child: Text('Qaytadan urinish', style: AppTypography.button),
           ),
         ),
         const SizedBox(height: 24),
@@ -330,18 +284,16 @@ class _ErrorBox extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.errorSoft,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+          color: AppColors.dangerTint,
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+            const Icon(Icons.error_outline, color: AppColors.danger, size: 20),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(error!,
-                  style: const TextStyle(
-                      color: AppColors.error, fontSize: 13)),
+              child: Text(error!, style: AppTypography.caption.copyWith(color: AppColors.danger)),
             ),
           ],
         ),

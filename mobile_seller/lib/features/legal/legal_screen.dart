@@ -1,7 +1,6 @@
 // Foydalanish shartlari va Maxfiylik siyosati ekrani — Biznes ilova.
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
-
-import '../../core/theme.dart';
 
 class LegalScreen extends StatelessWidget {
   const LegalScreen({super.key, this.initialTab = 0});
@@ -14,26 +13,47 @@ class LegalScreen extends StatelessWidget {
       length: 2,
       initialIndex: initialTab,
       child: Scaffold(
-        backgroundColor: AppColors.bg,
-        appBar: AppBar(
-          title: const Text('Qoidalar'),
-          backgroundColor: AppColors.bg,
-          surfaceTintColor: Colors.transparent,
-          bottom: TabBar(
-            tabs: const [
-              Tab(text: 'Foydalanish shartlari'),
-              Tab(text: 'Maxfiylik siyosati'),
-            ],
-            labelColor: AppColors.cream,
-            unselectedLabelColor: AppColors.textSecondary,
-            indicatorColor: AppColors.cream,
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: ScreenFadeIn(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: Row(
+                    children: [
+                      BackCircleButton(onTap: () => Navigator.maybePop(context)),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text('Qoidalar', style: AppTypography.title)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: TabBar(
+                    tabs: const [
+                      Tab(text: 'Foydalanish shartlari'),
+                      Tab(text: 'Maxfiylik siyosati'),
+                    ],
+                    labelColor: AppColors.primary,
+                    unselectedLabelColor: AppColors.textSecondary,
+                    indicatorColor: AppColors.primary,
+                    labelStyle: AppTypography.small.copyWith(fontSize: 13, color: AppColors.primary),
+                    unselectedLabelStyle: AppTypography.small.copyWith(fontSize: 13),
+                  ),
+                ),
+                const Expanded(
+                  child: TabBarView(
+                    children: [
+                      _TermsOfService(),
+                      _PrivacyPolicy(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        body: const TabBarView(
-          children: [
-            _TermsOfService(),
-            _PrivacyPolicy(),
-          ],
         ),
       ),
     );
@@ -155,15 +175,7 @@ class _LegalTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.w800,
-        color: AppColors.textPrimary,
-        letterSpacing: -0.3,
-      ),
-    );
+    return Text(text, style: AppTypography.h2.copyWith(fontSize: 22, letterSpacing: -0.3));
   }
 }
 
@@ -175,13 +187,7 @@ class _LegalMeta extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 4),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 12,
-          color: AppColors.textMuted,
-        ),
-      ),
+      child: Text(text, style: AppTypography.caption.copyWith(fontSize: 12)),
     );
   }
 }
@@ -198,23 +204,9 @@ class _LegalSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppColors.cream,
-            ),
-          ),
+          Text(title, style: AppTypography.rowTitle.copyWith(fontSize: 15, color: AppColors.primary)),
           const SizedBox(height: 6),
-          Text(
-            body,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.6,
-            ),
-          ),
+          Text(body, style: AppTypography.body.copyWith(color: AppColors.textSecondary, height: 1.6)),
         ],
       ),
     );

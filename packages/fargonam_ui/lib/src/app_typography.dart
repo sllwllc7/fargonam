@@ -113,9 +113,7 @@ class AppTypography {
   /// Tugma matni. 16px/w700/-.2px.
   static TextStyle get button => _figtree(size: 16, weight: FontWeight.w700, letterSpacing: -0.2, color: AppColors.ctaText);
 
-  /// Eski nom, `small` bilan bir xil — `AppTextStyles` (`theme/legacy_tokens.dart`)
-  /// bu klassga typedef qilingani uchun shu yerda turadi (typedef yangi a'zo
-  /// qo'sha olmaydi). mobile_user'ning bir nechta hali tuzatilmagan ekrani
-  /// ishlatadi, 3-bosqichda `small`ga to'liq o'tkaziladi.
+  /// Eski nom, `small` bilan bir xil — faqat ishlatilmaydigan
+  /// `marketplace_screen.dart`da qolgan, boshqa joyda kerak emas.
   static TextStyle get labelSm => small;
 }

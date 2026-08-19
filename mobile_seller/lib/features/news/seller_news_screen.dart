@@ -2,11 +2,9 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
-import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
@@ -76,7 +74,7 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
       ref.invalidate(_newsListProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('E\'lon joylandi'), backgroundColor: LegacyColors.success),
+          const SnackBar(content: Text('E\'lon joylandi'), backgroundColor: AppColors.success),
         );
       }
     } on DioException catch (e) {
@@ -91,100 +89,121 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
   Widget build(BuildContext context) {
     final newsAsync = ref.watch(_newsListProvider);
     return Scaffold(
-      backgroundColor: LegacyColors.bg,
-      appBar: AppBar(backgroundColor: LegacyColors.bg, title: Text('Yangiliklar', style: LegacyTextStyles.title)),
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 32.h),
-          children: [
-            Container(
-              padding: EdgeInsets.all(14.w),
-              decoration: BoxDecoration(
-                color: LegacyColors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.card),
-                border: Border.all(color: LegacyColors.border),
-                boxShadow: AppShadows.card,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('Yangi e\'lon', style: LegacyTextStyles.cardTitleSm),
-                  SizedBox(height: 10.h),
-                  TextField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Sarlavha')),
-                  SizedBox(height: 10.h),
-                  TextField(
-                    controller: _bodyCtrl,
-                    decoration: const InputDecoration(labelText: 'Matn'),
-                    maxLines: 4,
-                  ),
-                  SizedBox(height: 10.h),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      height: 90.h,
-                      decoration: BoxDecoration(
-                        color: LegacyColors.surfaceAlt,
-                        borderRadius: BorderRadius.circular(AppRadius.input),
-                      ),
-                      child: _image != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(AppRadius.input),
-                              child: Image.file(File(_image!.path), fit: BoxFit.cover, width: double.infinity),
-                            )
-                          : Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.image_outlined, size: 18.sp, color: LegacyColors.textMuted),
-                                  SizedBox(width: 6.w),
-                                  Text('Rasm qo\'shish (ixtiyoriy)', style: LegacyTextStyles.caption),
-                                ],
-                              ),
-                            ),
-                    ),
-                  ),
-                  if (_error != null) ...[
-                    SizedBox(height: 8.h),
-                    Text(_error!, style: const TextStyle(color: LegacyColors.danger, fontSize: 13)),
+        child: ScreenFadeIn(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Row(
+                  children: [
+                    BackCircleButton(onTap: () => Navigator.maybePop(context)),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text('Yangiliklar', style: AppTypography.title)),
                   ],
-                  SizedBox(height: 12.h),
-                  SizedBox(
-                    height: 48.h,
-                    child: FilledButton(
-                      onPressed: _posting ? null : _post,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: LegacyColors.sellerAccent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
-                      ),
-                      child: _posting
-                          ? const SizedBox(
-                              height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                          : const Text('E\'lon qilish', style: TextStyle(fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 22.h),
-            Text('SO\'NGGI YANGILIKLAR', style: LegacyTextStyles.sectionLabel),
-            SizedBox(height: 10.h),
-            newsAsync.when(
-              loading: () => Column(
-                children: List.generate(
-                  3,
-                  (_) => Padding(
-                    padding: EdgeInsets.only(bottom: 8.h),
-                    child: ShimmerBox(width: double.infinity, height: 60.h, borderRadius: AppRadius.card),
-                  ),
                 ),
               ),
-              error: (_, _) => Text('Yuklanmadi', style: LegacyTextStyles.caption),
-              data: (items) {
-                if (items.isEmpty) return Text('Hali yangilik yo\'q', style: LegacyTextStyles.caption);
-                return Column(children: [for (final n in items) _NewsTile(item: n)]);
-              },
-            ),
-          ],
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.card),
+                        border: Border.all(color: AppColors.border),
+                        boxShadow: AppShadows.card,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text('Yangi e\'lon', style: AppTypography.cardTitleSm),
+                          const SizedBox(height: 10),
+                          TextField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Sarlavha')),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: _bodyCtrl,
+                            decoration: const InputDecoration(labelText: 'Matn'),
+                            maxLines: 4,
+                          ),
+                          const SizedBox(height: 10),
+                          PressableScale(
+                            onTap: _pickImage,
+                            child: Container(
+                              height: 90,
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(AppRadius.input),
+                              ),
+                              child: _image != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(AppRadius.input),
+                                      child: Image.file(File(_image!.path), fit: BoxFit.cover, width: double.infinity),
+                                    )
+                                  : Center(
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.image_outlined, size: 18, color: AppColors.textMuted),
+                                          const SizedBox(width: 6),
+                                          Text('Rasm qo\'shish (ixtiyoriy)', style: AppTypography.caption),
+                                        ],
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          if (_error != null) ...[
+                            const SizedBox(height: 8),
+                            Text(_error!, style: AppTypography.caption.copyWith(color: AppColors.danger)),
+                          ],
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 48,
+                            child: FilledButton(
+                              onPressed: _posting ? null : _post,
+                              child: _posting
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.ctaText),
+                                    )
+                                  : const Text('E\'lon qilish'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    Text('SO\'NGGI YANGILIKLAR', style: AppTypography.sectionLabel),
+                    const SizedBox(height: 10),
+                    newsAsync.when(
+                      loading: () => Column(
+                        children: List.generate(
+                          3,
+                          (_) => const Padding(
+                            padding: EdgeInsets.only(bottom: 8),
+                            child: ShimmerBox(width: double.infinity, height: 60, borderRadius: AppRadius.card),
+                          ),
+                        ),
+                      ),
+                      error: (_, _) => Text('Yuklanmadi', style: AppTypography.caption),
+                      data: (items) {
+                        if (items.isEmpty) return Text('Hali yangilik yo\'q', style: AppTypography.caption);
+                        return Column(
+                          children: [
+                            for (final (i, n) in items.indexed)
+                              FadeUpItem(delay: AppMotion.staggerStep * i, child: _NewsTile(item: n)),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -199,29 +218,29 @@ class _NewsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final imgUrl = item['image_url'] != null ? '${AppConfig.apiBaseUrl}${item['image_url']}' : null;
     return Container(
-      margin: EdgeInsets.only(bottom: 8.h),
-      padding: EdgeInsets.all(12.w),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: LegacyColors.surface,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: LegacyColors.border),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
           if (imgUrl != null) ...[
             ClipRRect(
-              borderRadius: BorderRadius.circular(10.r),
-              child: Image.network(imgUrl, width: 44.w, height: 44.w, fit: BoxFit.cover),
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(imgUrl, width: 44, height: 44, fit: BoxFit.cover),
             ),
-            SizedBox(width: 10.w),
+            const SizedBox(width: 10),
           ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['title'] as String? ?? '', style: LegacyTextStyles.cardTitleSm.copyWith(fontSize: 13.5), maxLines: 1, overflow: TextOverflow.ellipsis),
-                SizedBox(height: 2.h),
-                Text(item['body'] as String? ?? '', style: LegacyTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(item['title'] as String? ?? '', style: AppTypography.cardTitleSm.copyWith(fontSize: 13.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 2),
+                Text(item['body'] as String? ?? '', style: AppTypography.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),

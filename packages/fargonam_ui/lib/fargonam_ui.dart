@@ -27,7 +27,3 @@ export 'src/widgets/qty_stepper_button.dart';
 export 'src/widgets/screen_fade_in.dart';
 export 'src/widgets/shimmer_box.dart';
 export 'src/widgets/toast.dart';
-
-// `theme/legacy_tokens.dart` ATAYLAB shu yerdan eksport qilinmaydi — faqat
-// mobile_seller va mobile_user'ning bir nechta hali tuzatilmagan fayli
-// to'g'ridan-to'g'ri import qiladi (izoh o'sha faylning boshida).

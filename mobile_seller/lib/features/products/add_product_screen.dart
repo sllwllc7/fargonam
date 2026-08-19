@@ -2,11 +2,9 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
-import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../shop/shop_providers.dart' show myShopProvider;
@@ -75,7 +73,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     final picker = ImagePicker();
     final img = await showModalBottomSheet<XFile?>(
       context: context,
-      backgroundColor: LegacyColors.surface,
+      backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.sheet))),
       builder: (ctx) => SafeArea(
         child: Wrap(children: [
@@ -190,26 +188,26 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LegacyColors.bg,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: LegacyColors.bg,
-        title: Text('Yangi mahsulot', style: LegacyTextStyles.title),
+        backgroundColor: AppColors.background,
+        title: Text('Yangi mahsulot', style: AppTypography.title),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 32.h),
+          padding: EdgeInsets.fromLTRB(20, 8, 20, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
-                  height: 180.h,
+                  height: 180,
                   decoration: BoxDecoration(
-                    color: LegacyColors.surface,
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(AppRadius.card),
                     border: Border.all(
-                      color: _pickedImage != null ? LegacyColors.sellerAccent : LegacyColors.border,
+                      color: _pickedImage != null ? AppColors.warning : AppColors.border,
                       width: _pickedImage != null ? 1.5 : 1,
                     ),
                   ),
@@ -243,33 +241,33 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                width: 56.w,
-                                height: 56.w,
-                                decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-                                child: Icon(Icons.add_a_photo_outlined, size: 26.sp, color: LegacyColors.text),
+                                width: 56,
+                                height: 56,
+                                decoration: const BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
+                                child: Icon(Icons.add_a_photo_outlined, size: 26, color: AppColors.textPrimary),
                               ),
-                              SizedBox(height: 10.h),
-                              Text('Mahsulot rasmini tanlang', style: LegacyTextStyles.cardTitleSm.copyWith(fontSize: 13.5)),
-                              SizedBox(height: 3.h),
-                              Text('Kamera yoki galereyadan', style: LegacyTextStyles.caption.copyWith(fontSize: 11.5)),
+                              SizedBox(height: 10),
+                              Text('Mahsulot rasmini tanlang', style: AppTypography.cardTitleSm.copyWith(fontSize: 13.5)),
+                              SizedBox(height: 3),
+                              Text('Kamera yoki galereyadan', style: AppTypography.caption.copyWith(fontSize: 11.5)),
                             ],
                           ),
                         ),
                 ),
               ),
-              SizedBox(height: 18.h),
+              SizedBox(height: 18),
               TextField(
                 controller: _nameCtrl,
                 decoration: const InputDecoration(labelText: 'Nomi'),
                 textCapitalization: TextCapitalization.sentences,
               ),
-              SizedBox(height: 12.h),
+              SizedBox(height: 12),
               TextField(
                 controller: _brandCtrl,
                 decoration: const InputDecoration(labelText: 'Brend (ixtiyoriy)'),
                 textCapitalization: TextCapitalization.words,
               ),
-              SizedBox(height: 12.h),
+              SizedBox(height: 12),
               InkWell(
                 borderRadius: BorderRadius.circular(AppRadius.input),
                 onTap: _pickCategory,
@@ -279,48 +277,48 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                     children: [
                       Expanded(
                         child: Text(_category?.name ?? 'Tanlanmagan',
-                            style: LegacyTextStyles.body.copyWith(
-                                color: _category != null ? LegacyColors.text : LegacyColors.textMuted)),
+                            style: AppTypography.body.copyWith(
+                                color: _category != null ? AppColors.textPrimary : AppColors.textMuted)),
                       ),
-                      Icon(Icons.expand_more, color: LegacyColors.textMuted, size: 20.sp),
+                      Icon(Icons.expand_more, color: AppColors.textMuted, size: 20),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 12.h),
+              SizedBox(height: 12),
               TextField(
                 controller: _descCtrl,
                 decoration: const InputDecoration(labelText: 'Tavsif (ixtiyoriy)'),
                 maxLines: 3,
               ),
-              SizedBox(height: 22.h),
+              SizedBox(height: 22),
               AttributesEditor(attributes: _attributes, onChanged: _onAttributesChanged),
-              SizedBox(height: 20.h),
+              SizedBox(height: 20),
               SkuTable(rows: _rows),
               if (_error != null) ...[
-                SizedBox(height: 8.h),
+                SizedBox(height: 8),
                 Container(
-                  padding: EdgeInsets.all(12.w),
+                  padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: LegacyColors.danger.withValues(alpha: 0.1),
+                    color: AppColors.danger.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppRadius.input),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: LegacyColors.danger, size: 18),
-                      SizedBox(width: 8.w),
-                      Expanded(child: Text(_error!, style: const TextStyle(color: LegacyColors.danger, fontSize: 13))),
+                      const Icon(Icons.error_outline, color: AppColors.danger, size: 18),
+                      SizedBox(width: 8),
+                      Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13))),
                     ],
                   ),
                 ),
               ],
-              SizedBox(height: 20.h),
+              SizedBox(height: 20),
               SizedBox(
-                height: 54.h,
+                height: 54,
                 child: FilledButton(
                   onPressed: _loading ? null : _submit,
                   style: FilledButton.styleFrom(
-                    backgroundColor: LegacyColors.sellerAccent,
+                    backgroundColor: AppColors.warning,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
                   ),
                   child: _loading

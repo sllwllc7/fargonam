@@ -33,7 +33,7 @@ class AppMotion {
   static const toastIn = Duration(milliseconds: 300);
   static const toastVisible = Duration(milliseconds: 2400);
 
-  /// LEGACY (mobile_user eski ekranlar, 3-bosqichgacha) — `standard`ning
-  /// `Curves`-asosidagi taxminiy muqobili.
+  /// `standard`ning `Curves`-asosidagi muqobili — `Cubic` qabul qilmaydigan
+  /// API'lar (masalan `TweenAnimationBuilder`ning ba'zi qurilishlari) uchun.
   static const screenInCurve = Curves.easeOutCubic;
 }
