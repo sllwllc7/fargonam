@@ -128,3 +128,77 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 - Xatolik/oflayn holatlari, skeleton loaderlar (qisman bor).
 - Haqiqiy mahsulot rasmlari (hozir ikonka-placeholder).
 - Gemini AI proxy (hozir qoida-asosidagi javob).
+
+---
+
+## mobile_user / mobile_seller — pubspec va lib tuzilishi (2026-08-19 tekshiruvi)
+
+- **State:** ikkalasida ham `flutter_riverpod`. Ekranlar `lib/features/<domen>/` ostida.
+- Ikkalasi ham `fargonam_ui: path: ../packages/fargonam_ui`ga allaqachon bog'langan edi.
+- `mobile_user/lib/core/theme/*.dart` — hammasi ingichka `export 'package:fargonam_ui/...'`
+  wrapper (haqiqiy kontent yo'q edi) — ya'ni barcha 17 ekran allaqachon fargonam_ui
+  tokenlariga bog'langan, faqat **qiymatlar** noto'g'ri edi ("Warm Violet"). Shu sabab
+  fargonam_ui'ning tokenlarini tuzatish 17 ekranning rang/shrift ko'rinishini ham
+  avtomatik to'g'riladi — struktura/layout esa hali eski (3-bosqich ishi).
+- `mobile_seller` ko'p ekranda `package:fargonam_ui`ni to'g'ridan-to'g'ri import qiladi
+  (wrapper'siz), lekin `main.dart` / `core/theme.dart`da BUTUNLAY BOSHQA, uchinchi bir
+  dizayn tizimi ("Fargonam Biznes" — midnightIndigo/vanillaCream, dark mode) ishlatiladi —
+  rol-tanlash, haydovchi va texnik-ishlar ekranlari shu qattiq-kodlangan palitrada. Bu
+  4-bosqichda hal qilinadi, hozircha tegilmadi.
+- Ikkalasida ham `flutter_screenutil` hali ko'p ekranda ishlatilmoqda (`.w/.h/.sp`) —
+  3-bosqichda ekran almashtirilganda olib tashlanadi; hozircha `main.dart`larda
+  `ScreenUtilInit` saqlanadi (aks holda mavjud ekranlar runtime xato beradi).
+
+---
+
+## Mobil UI qayta qurish (2026-08)
+
+| Bosqich | Ekran/Modul | Fayl | Testlar | Analyze | Holat |
+|---|---|---|---|---|---|
+| 1 | Dizayn tokenlari (rang, tipografika, motion, shadow, radius, spacing) | `packages/fargonam_ui/lib/src/*.dart` | — | 0/0/0 | ✅ |
+| 1 | Suzuvchi tab bar (spring `translateY(-24)`, `cubic-bezier(.3,1.6,.5,1)`) | `packages/fargonam_ui/lib/src/widgets/floating_tab_bar.dart` | 2/2 yashil | 0/0/0 | ✅ |
+| 1 | Savat FAB, Toast (umumiy widget, hali hech ekranga ulanmagan) | `packages/fargonam_ui/lib/src/widgets/{cart_fab,toast}.dart` | — | 0/0/0 | ✅ (3-bosqichda ekranlarga ulanadi) |
+| 1 | mobile_user shell — yangi tab bar ulandi | `mobile_user/lib/features/shell/app_shell.dart` | 8/8 mavjud test yashil | 0/0/0 | ✅ |
+| 1 | 5.4 platforma: haptika (tab bar), status bar, ScrollBehavior, MediaQuery bottom-inset (tab bar/FAB/toast) | `mobile_user/lib/main.dart`, `floating_tab_bar.dart`, `cart_fab.dart`, `toast.dart` | — | 0/0/0 | ✅ qisman — `PageRouteBuilder`/klaviatura ekran darajasida, 3-bosqichda |
+| 1 | 5.5 ilova nomi/ikonka/splash (faqat mobile_user — 5.5 seller uchun 4-bosqichda) | `mobile_user/pubspec.yaml`, `android/app/src/main/res/**` | — | — | ✅ |
+
+### Qarorlar
+- [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
+  palitra, Plus Jakarta Sans, spring animatsiyasiz tab bar) — CLAUDE.md 5.1/5.2/10 esa navy/
+  Figtree/spring haqida yozgan edi. → Qaror: foydalanuvchi tasdiqlagan holda to'g'ri fayl
+  (md5 `b3bc28ca50648663ea83630fb9de04ae`, `~/Downloads/Mobile app design request.zip`)
+  bilan almashtirildi, CLAUDE.md 0-bo'limiga fingerprint tekshiruvi qo'shildi. → Sabab:
+  `handoff/` va manba papka ikkalasi ham noto'g'ri nusxa bilan to'ldirilgan edi.
+- [2026-08-19] Savol: CLAUDE.md 5.1 ("Asosiy tugma" gradienti/radiusi) va 5.2 ("Karta soyasi")
+  qatorlaridagi ba'zi qiymatlar to'g'ri (endi tasdiqlangan) dc.html bilan mos kelmadi —
+  eski faylning rgba(25,25,112,..)/rgba(27,0,63,..) qiymatlari qolib ketgan edi. → Qaror:
+  foydalanuvchi tasdiqlagan holda dc.html'dagi aniq qiymatlarga (`#24406F→#12233F` 180°
+  radius12 CTA tugma; `rgba(23,19,39,..)` soya + solid `#E0E6EF` border) moslab CLAUDE.md
+  tuzatildi. → Sabab: ikkala bo'lim ham "dc.html'dan tasdiqlangan" deb yozilgan edi, lekin
+  eski (xato) fayldan transkripsiya qilingan ekan.
+- [2026-08-19] Savol: `packages/fargonam_ui` va `mobile_seller`ning ko'p ekrani eski "Warm
+  Violet"/uchinchi "Fargonam Biznes" tokenlariga (masalan `AppColors.sellerAccent`,
+  `AppTextStyles`, `AppColorsDark`, `AppShadows.primaryButton`) to'g'ridan-to'g'ri bog'langan
+  edi. → Qaror: yangi to'g'ri tokenlar bilan bir qatorda, aniq "LEGACY" deb izohlangan
+  moslik alias'lari (eski nom → eski qiymat) saqlandi — `mobile_seller` va mobile_user'ning
+  hali tuzatilmagan ekranlari o'zgarishsiz build bo'lishda davom etadi. → Sabab: 5.0/10-bo'lim
+  "ekranlar 3/4-bosqichda tuzatiladi, hozir emas" deb aniq belgilagan; legacy alias'lar shu
+  chegarani buzmasdan `flutter analyze`ni 0 xatoga saqlaydi. 4-bosqichda (seller) va
+  3-bosqich oxirida (user) bu LEGACY bloklar olib tashlanadi.
+- [2026-08-19] Savol: dc.html'da `fergana-gate.png`dan tashqari alohida logotip/marka
+  belgisi yo'q — 5.5 "ikonka fergana-gate.png asosida, splash navy+oq logotip" deydi, lekin
+  aniq logotip fayli ko'rsatilmagan. → Qaror: ikonka — fergana-gate.png kvadrat kesilib
+  navy fonga joylashtirildi (adaptive icon); splash — navy fon + oq "F" monogram (font orqali
+  generatsiya qilindi, alohida vektor asset yo'qligi sabab). `flutter_launcher_icons` /
+  `flutter_native_splash` dev-vositalari qo'shildi (runtime'ga kirmaydi). → Sabab: 9-bo'lim
+  ruxsat etilgan paketlar ro'yxati UI runtime qatlami haqida, build-vaqtidagi
+  ikonka-generator vositasi shu cheklovga kirmaydi.
+
+### Backend farqlari
+(2-bosqich hali bajarilmadi — `buildData()` va mavjud model/repository solishtiruvi shu
+yerga keyingi seansda yoziladi.)
+
+### APK
+user: `mobile_user/build/app/outputs/flutter-apk/app-debug.apk` (debug, muvaffaqiyatli)
+seller: `mobile_seller/build/app/outputs/flutter-apk/app-debug.apk` (debug, muvaffaqiyatli —
+faqat mavjud "Fargonam Biznes" ko'rinishida, dizayn 4-bosqichda almashadi)

@@ -1,4 +1,4 @@
-/// Foydalanish shartlari va Maxfiylik siyosati ekrani — Biznes ilova.
+// Foydalanish shartlari va Maxfiylik siyosati ekrani — Biznes ilova.
 import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';

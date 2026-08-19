@@ -1,5 +1,5 @@
 name: fargonam_ui
-description: "Fargonam umumiy dizayn tizimi — 'Indigo' (HANDOFF.md, 2026-08-19). mobile_user va mobile_seller shu paketdan foydalanadi."
+description: "Fargonam umumiy dizayn tizimi — handoff/Fargonam User App v2.dc.html (md5 b3bc28ca50648663ea83630fb9de04ae) dan tasdiqlangan. mobile_user va mobile_seller shu paketdan foydalanadi."
 publish_to: 'none'
 version: 1.0.0
 
@@ -10,8 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_screenutil: ^5.9.3
   google_fonts: ^6.2.1
+  flutter_svg: ^2.2.1
 
 dev_dependencies:
   flutter_test:

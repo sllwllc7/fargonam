@@ -169,7 +169,7 @@ Future<Product> createProduct(
   final dio = ref.read(dioProvider);
   final res = await dio.post('/products', data: {
     'shop_id': shopId,
-    if (categoryId != null) 'category_id': categoryId,
+    'category_id': ?categoryId,
     'name': name,
     if (brand != null && brand.isNotEmpty) 'brand': brand,
     if (description != null && description.isNotEmpty) 'description': description,
@@ -191,10 +191,10 @@ Future<void> updateProductBase(
 }) async {
   final dio = ref.read(dioProvider);
   await dio.patch('/products/$productId', data: {
-    if (name != null) 'name': name,
+    'name': ?name,
     'brand': brand,
     'description': description,
-    if (categoryId != null) 'category_id': categoryId,
+    'category_id': ?categoryId,
   });
   ref.invalidate(shopProductsProvider(shopId));
 }
@@ -230,10 +230,10 @@ Future<ProductVariant> updateProductVariant(
 }) async {
   final dio = ref.read(dioProvider);
   final res = await dio.patch('/products/$productId/variants/$variantId', data: {
-    if (variantName != null) 'variant_name': variantName,
-    if (price != null) 'price': price,
-    if (stock != null) 'stock': stock,
-    if (attributes != null) 'attributes': attributes,
+    'variant_name': ?variantName,
+    'price': ?price,
+    'stock': ?stock,
+    'attributes': ?attributes,
   });
   return ProductVariant.fromJson(res.data as Map<String, dynamic>);
 }

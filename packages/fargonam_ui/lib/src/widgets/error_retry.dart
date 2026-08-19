@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_colors.dart';
 import '../app_radius.dart';
-import '../app_text_styles.dart';
+import '../app_typography.dart';
 
 /// Internet yo'q yoki server xatosi uchun umumiy widget — light palitrada.
 class ErrorRetryWidget extends StatelessWidget {

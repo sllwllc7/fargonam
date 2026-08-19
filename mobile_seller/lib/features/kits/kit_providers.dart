@@ -88,7 +88,7 @@ Future<Kit> createKit(
   final res = await dio.post('/kits', data: {
     'shop_id': shopId,
     'name': name,
-    if (gradeLevel != null) 'grade_level': gradeLevel,
+    'grade_level': ?gradeLevel,
     if (description != null && description.isNotEmpty) 'description': description,
     'items': [for (final it in items) {'variant_id': it.variantId, 'quantity': it.quantity}],
   });
@@ -108,10 +108,10 @@ Future<void> updateKit(
 }) async {
   final dio = ref.read(dioProvider);
   await dio.put('/kits/$kitId', data: {
-    if (name != null) 'name': name,
-    if (gradeLevel != null) 'grade_level': gradeLevel,
-    if (description != null) 'description': description,
-    if (isActive != null) 'is_active': isActive,
+    'name': ?name,
+    'grade_level': ?gradeLevel,
+    'description': ?description,
+    'is_active': ?isActive,
     if (items != null) 'items': [for (final it in items) {'variant_id': it.variantId, 'quantity': it.quantity}],
   });
   ref.invalidate(shopKitsProvider(shopId));

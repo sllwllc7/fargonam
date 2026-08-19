@@ -1,8 +1,10 @@
+import 'package:fargonam_ui/fargonam_ui.dart' as ui;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -10,9 +12,6 @@ import 'core/app_config_service.dart';
 import 'core/navigator_key.dart';
 import 'core/push_service.dart';
 import 'core/theme/app_colors.dart';
-// Yangi Kutuku ThemeData — MaterialApp shuni ishlatadi. Ikkalasida ham
-// `AppTheme`/`AppColors` nomi bor bo'lgani uchun prefiks bilan import qilingan.
-import 'core/theme/app_theme.dart' as kutuku;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'features/auth/auth_providers.dart';
@@ -39,6 +38,13 @@ void main() async {
   // Rasm keshi — 200 MB, 1000 ta rasm
   PaintingBinding.instance.imageCache.maximumSizeBytes = 200 * 1024 * 1024;
   PaintingBinding.instance.imageCache.maximumSize = 1000;
+  // 5.4: status bar shaffof, ikonkalar dark (fon och rangda — #EEF1F6).
+  // Navy sarlavhali ekranlar o'zining AnnotatedRegion bilan ustidan bosadi.
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+  ));
   runApp(
     ScreenUtilInit(
       designSize: const Size(375, 812),
@@ -89,12 +95,27 @@ class FargonamApp extends ConsumerWidget {
       title: 'Fargonam',
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
-      theme: kutuku.AppTheme.lightTheme,
-      darkTheme: kutuku.AppTheme.darkTheme,
+      theme: ui.AppTheme.lightTheme,
+      // Prototipda dark-mode yo'q — darkTheme lightTheme bilan bir xil
+      // (5.5, 7-bo'lim). Sozlamalardagi almashtirgich hozircha
+      // qoladi, lekin ko'rinishga ta'sir qilmaydi.
+      darkTheme: ui.AppTheme.darkTheme,
       themeMode: themeMode,
+      scrollBehavior: const _AppScrollBehavior(),
       home: const _Root(),
     );
   }
+}
+
+/// 5.4: Android overscroll ko'k porlashi o'chiriladi, `ClampingScrollPhysics`.
+class _AppScrollBehavior extends MaterialScrollBehavior {
+  const _AppScrollBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) => child;
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) => const ClampingScrollPhysics();
 }
 
 class _Root extends ConsumerStatefulWidget {

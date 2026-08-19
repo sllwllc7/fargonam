@@ -1,64 +1,88 @@
 import 'package:flutter/material.dart';
 
-/// Marketplace UI dizayn tokenlari — "Warm Violet" (HANDOFF.md, 2026-08-19
-/// qayta ko'rilgan versiya — krem fon, oq kartalar, binafsha CTA, apelsin aksent).
-///
-/// `Fargonam User App v2.dc.html` prototipidan olingan qiymatlar. Ikkala ilova
-/// (`mobile_user`, `mobile_seller`) shu bitta manbadan foydalanadi.
+/// Fargonam dizayn tokenlari — `handoff/Fargonam User App v2.dc.html`
+/// (md5 b3bc28ca50648663ea83630fb9de04ae) dan tasdiqlangan qiymatlar.
+/// `mobile_user` va `mobile_seller` shu bitta manbadan foydalanadi.
 class AppColors {
-  static const bg = Color(0xFFF8F7F3); // iliq krem — ekran foni
-  static const surface = Color(0xFFFFFFFF); // kartalar, tab bar
-  static const primary = Color(0xFF6D28D9); // gradient boshi — asosiy tugmalar, FAB
-  static const primaryDark = Color(0xFF5B21B6); // gradient oxiri / solid CTA / brend
-  static const text = Color(0xFF171327); // asosiy matn
-  static const textSecondary = Color(0xFF77738A); // ikkilamchi matn
-  static const textMuted = Color(0xFFA29EAF); // placeholder, vaqt, badge
-  static const border = Color(0xFFE8E5E0); // karta chegaralari (1px, solid)
-  static const borderStrong = Color(0xFFE0DCD4); // outlined pill/chip/input chegarasi
-  static const accent = Color(0xFFF59E0B); // apelsin — savat FAB, badge, "+" tugma
-  static const success = Color(0xFF16A34A);
-  static const successSoft = Color(0xFFDCFCE7);
-  static const warning = Color(0xFFB45309);
-  static const warningSoft = Color(0xFFFEF3C7);
-  static const danger = Color(0xFFDC2626);
-  static const dangerSoft = Color(0xFFFEE2E2);
+  static const background = Color(0xFFEEF1F6);
+  static const surface = Color(0xFFFFFFFF);
 
-  /// Seller App'ga xos — faqat QO'SHISH/TAHRIRLASH (CRUD) amallari uchun.
-  /// Endi asosiy `accent` (apelsin) bilan bir xil — HANDOFF'ning yangilangan
-  /// versiyasida apelsin butun ilova uchun rasmiy aksent bo'ldi.
+  static const primary = Color(0xFF16294A);
+  static const primaryDark = Color(0xFF0F1E38);
+  static const primaryMid = Color(0xFF2A4A7F);
+  static const primaryLight = Color(0xFFE3ECFA);
+
+  static const tabBar = Color(0xFF0F1E33);
+
+  static const success = Color(0xFF16A34A);
+  static const successTint = Color(0xFFDCFCE7);
+  static const danger = Color(0xFFDC2626);
+  static const dangerTint = Color(0xFFFEE2E2);
+
+  static const textPrimary = Color(0xFF000000);
+  static const textSecondary = Color(0xFF1C1C22);
+  static const textMuted = Color(0xFF3F3F49);
+
+  static const border = Color(0xFFE0E6EF);
+
+  /// CTA tugma gradienti (savatga qo'shish, checkout va h.k.) — `#24406F → #12233F`.
+  static const ctaStart = Color(0xFF24406F);
+  static const ctaEnd = Color(0xFF12233F);
+  static const ctaText = Color(0xFFEEF1F6);
+
+  /// Tab bar bo'rtma va Savat FAB gradienti — `#2A4A7F → #16294A (55%) → #0F1E38`.
+  static const bubbleStart = primaryMid;
+  static const bubbleMid = primary;
+  static const bubbleEnd = primaryDark;
+
+  static const tabLabelActive = Color(0xFF6FA0E8);
+  static const tabLabelInactive = Color(0xFF8DA2C0);
+  static const tabIconActive = tabBar;
+  static const tabIconInactive = border;
+
+  /// Kategoriya ikonka fon/old plan juftliklari — dc.html `const T = [...]`.
+  static const categoryTints = <List<Color>>[
+    [Color(0xFFE3ECFA), Color(0xFF14243F)],
+    [Color(0xFFE3ECFA), Color(0xFF16294A)],
+    [Color(0xFFDCFCE7), Color(0xFF16A34A)],
+    [Color(0xFFE5EEF9), Color(0xFF2F5FB3)],
+    [Color(0xFFDDEAF8), Color(0xFF2F5FB3)],
+    [Color(0xFFE7EDF6), Color(0xFF3A6EA5)],
+  ];
+
+  // ───────────────────────── LEGACY (mobile_seller) ─────────────────────────
+  // mobile_seller hali eski "Warm Violet" qiymatlariga ko'plab ekranlarda
+  // to'g'ridan-to'g'ri bog'langan (10-bo'lim, 4-bosqich shu ekranlarni
+  // tuzatadi). Bu tokenlar shu bosqichgacha mobile_seller'ni vizual
+  // o'zgarishsiz build qilib turish uchun saqlanadi — mobile_user ULARDAN
+  // FOYDALANMAYDI.
+  static const bg = Color(0xFFF8F7F3);
+  static const text = Color(0xFF171327);
+  static const error = danger;
+  static const accent = Color(0xFFF59E0B);
+  static const warning = Color(0xFFB45309);
+  static const surfaceAlt = bg;
   static const sellerAccent = accent;
   static const sellerAccentSoft = Color(0xFFFDE9CC);
+  static const successSoft = successTint;
+  static const dangerSoft = dangerTint;
+  static const warningSoft = Color(0xFFFEF3C7);
+  static const borderStrong = Color(0xFFE0DCD4);
 
-  // Eski nomlar bilan moslik (theme.dart / boshqa fayllar shu tokenlarni kutadi)
-  static const background = bg;
-  static const surfaceAlt = bg; // dc.html: input/bottom-fade foni ekran foni bilan bir xil
-  static const textPrimary = text;
-  static const error = danger;
+  /// LEGACY — dc.html'da tasdiqlanmagan, faqat eski kod moslik uchun.
   static const rating = Color(0xFFFFC120);
-  static const primaryLight = Color(0xFFEDE9FE);
-
-  /// Kategoriya ikonka fonlari — HANDOFF.md T[] massivi (tint, foreground juftlik).
-  static const categoryTints = <List<Color>>[
-    [Color(0xFFEDE9FE), Color(0xFF5B21B6)],
-    [Color(0xFFFEF3C7), Color(0xFFB45309)],
-    [Color(0xFFDCFCE7), Color(0xFF16A34A)],
-    [Color(0xFFFFE8D9), Color(0xFFC2571B)],
-    [Color(0xFFE0F2FE), Color(0xFF0369A1)],
-    [Color(0xFFFCE7F3), Color(0xFFBE3D7F)],
-  ];
 }
 
-/// Prototipda dark-mode yo'q — "Tungi rejim" Sozlamalar'da "Tez orada" sifatida
-/// ko'rsatiladi. Shu klass faqat mavjud `ThemeData.dark` referenslari buzilmasligi
-/// uchun light bilan bir xil qiymatlarni saqlaydi.
+/// LEGACY — prototipda dark-mode yo'q (7-bo'lim). `ThemeData.dark`
+/// referenslari buzilmasligi uchun `AppColors` bilan bir xil qiymatlar.
 class AppColorsDark {
   static const primary = AppColors.primary;
   static const primaryLight = AppColors.primaryLight;
-  static const background = AppColors.bg;
+  static const background = AppColors.background;
   static const surface = AppColors.surface;
   static const surfaceAlt = AppColors.surfaceAlt;
   static const border = AppColors.border;
-  static const textPrimary = AppColors.text;
+  static const textPrimary = AppColors.textPrimary;
   static const textSecondary = AppColors.textSecondary;
   static const success = AppColors.success;
   static const rating = AppColors.rating;

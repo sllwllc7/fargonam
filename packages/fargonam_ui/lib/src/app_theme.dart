@@ -3,32 +3,34 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_spacing.dart';
-import 'app_text_styles.dart';
+import 'app_typography.dart';
 
-/// HANDOFF.md ("Indigo", 2026-08-19) tokenlaridan yig'ilgan `ThemeData`.
+/// dc.html tokenlaridan yig'ilgan `ThemeData`. Tab bar Material
+/// `NavigationBar` orqali emas — `FloatingTabBar` widget orqali chiziladi
+/// (6-bo'lim: Material 3 default'lari taqiqlangan), shuning uchun bu yerda
+/// `navigationBarTheme` yo'q.
 ///
-/// Prototipda dark-mode yo'q — `darkTheme` `lightTheme` bilan bir xil (Sozlamalar
-/// ekranida "Tungi rejim" "Tez orada" sifatida ko'rsatiladi, ishlamaydi).
+/// Prototipda dark-mode yo'q — `darkTheme` `lightTheme` bilan bir xil.
 class AppTheme {
   static ThemeData get lightTheme => ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        scaffoldBackgroundColor: AppColors.bg,
+        scaffoldBackgroundColor: AppColors.background,
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.primary,
           brightness: Brightness.light,
           primary: AppColors.primary,
-          surface: AppColors.bg,
+          surface: AppColors.background,
           error: AppColors.danger,
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: AppColors.bg,
-          foregroundColor: AppColors.text,
+          backgroundColor: AppColors.background,
+          foregroundColor: AppColors.textPrimary,
           elevation: 0,
           scrolledUnderElevation: 0,
           surfaceTintColor: Colors.transparent,
           centerTitle: false,
-          titleTextStyle: AppTextStyles.title,
+          titleTextStyle: AppTypography.title,
         ),
         cardTheme: CardThemeData(
           color: AppColors.surface,
@@ -40,25 +42,25 @@ class AppTheme {
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.ctaStart,
+            foregroundColor: AppColors.ctaText,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-            textStyle: AppTextStyles.button,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            textStyle: AppTypography.button,
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.text,
+            foregroundColor: AppColors.textPrimary,
             side: const BorderSide(color: AppColors.border),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: AppColors.surfaceAlt,
-          hintStyle: AppTextStyles.body.copyWith(color: AppColors.textMuted),
+          fillColor: AppColors.surface,
+          hintStyle: AppTypography.body.copyWith(color: AppColors.textMuted),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.input),
             borderSide: BorderSide.none,
@@ -71,25 +73,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(AppRadius.input),
             borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-        ),
-        navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: AppColors.surface,
-          indicatorColor: AppColors.primary.withValues(alpha: 0.1),
-          elevation: 0,
-          height: AppSizes.bottomNav,
-          labelTextStyle: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return AppTextStyles.small.copyWith(color: AppColors.text);
-            }
-            return AppTextStyles.small.copyWith(color: AppColors.textSecondary);
-          }),
-          iconTheme: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return const IconThemeData(color: AppColors.text, size: 22);
-            }
-            return const IconThemeData(color: AppColors.textSecondary, size: 22);
-          }),
+          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
         ),
         dividerTheme: const DividerThemeData(color: AppColors.border),
         bottomSheetTheme: BottomSheetThemeData(
@@ -100,18 +84,18 @@ class AppTheme {
         ),
         snackBarTheme: SnackBarThemeData(
           backgroundColor: AppColors.primaryDark,
-          contentTextStyle: AppTextStyles.body.copyWith(color: Colors.white),
+          contentTextStyle: AppTypography.body.copyWith(color: Colors.white),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
           behavior: SnackBarBehavior.floating,
         ),
         progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.primary),
         textTheme: TextTheme(
-          headlineLarge: AppTextStyles.h1,
-          headlineMedium: AppTextStyles.h2,
-          titleLarge: AppTextStyles.title,
-          bodyLarge: AppTextStyles.body,
-          bodyMedium: AppTextStyles.body,
-          bodySmall: AppTextStyles.caption,
+          headlineLarge: AppTypography.h1,
+          headlineMedium: AppTypography.h2,
+          titleLarge: AppTypography.title,
+          bodyLarge: AppTypography.body,
+          bodyMedium: AppTypography.body,
+          bodySmall: AppTypography.caption,
         ),
       );
 

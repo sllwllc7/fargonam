@@ -66,7 +66,7 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
       await ref.read(dioProvider).post('/news', data: {
         'title': _titleCtrl.text.trim(),
         'body': _bodyCtrl.text.trim(),
-        if (imageUrl != null) 'image_url': imageUrl,
+        'image_url': ?imageUrl,
       });
       HapticFeedback.lightImpact();
       _titleCtrl.clear();

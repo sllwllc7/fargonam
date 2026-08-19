@@ -81,13 +81,18 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
           ListTile(
             leading: const Icon(Icons.photo_camera_outlined),
             title: const Text('Kamera'),
-            onTap: () async => Navigator.pop(ctx, await picker.pickImage(source: ImageSource.camera, imageQuality: 85)),
+            onTap: () async {
+              final file = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+              if (ctx.mounted) Navigator.pop(ctx, file);
+            },
           ),
           ListTile(
             leading: const Icon(Icons.photo_library_outlined),
             title: const Text('Galereya'),
-            onTap: () async =>
-                Navigator.pop(ctx, await picker.pickImage(source: ImageSource.gallery, imageQuality: 85)),
+            onTap: () async {
+              final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+              if (ctx.mounted) Navigator.pop(ctx, file);
+            },
           ),
         ]),
       ),
