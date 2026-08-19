@@ -162,6 +162,8 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | 1 | 5.4 platforma: haptika (tab bar), status bar, ScrollBehavior, MediaQuery bottom-inset (tab bar/FAB/toast) | `mobile_user/lib/main.dart`, `floating_tab_bar.dart`, `cart_fab.dart`, `toast.dart` | — | 0/0/0 | ✅ qisman — `PageRouteBuilder`/klaviatura ekran darajasida, 3-bosqichda |
 | 1 | 5.5 ilova nomi/ikonka/splash — ikonka va splash bitta asset (fergana-gate.png) (faqat mobile_user — seller uchun 4-bosqichda) | `mobile_user/pubspec.yaml`, `android/app/src/main/res/**` | — | — | ✅ |
 | 1 | LEGACY tokenlar bitta faylga yig'ildi, barrel'dan chiqarildi | `packages/fargonam_ui/lib/theme/legacy_tokens.dart` | — | 0/0/0 | ✅ |
+| 3 | `AppPageRoute`/`pushAppRoute` (320ms screenIn), `ScreenFadeIn`, `FadeUpItem` (stagger) — 5.4/5.2 umumiy vosita | `packages/fargonam_ui/lib/src/app_page_route.dart`, `widgets/{screen_fade_in,fade_up_item}.dart` | — | 0/0/0 | ✅ |
+| 3 | 1/17: Bosh sahifa (home) — to'liq qayta yozildi (dc.html aynan) | `mobile_user/lib/features/home/home_feed_screen.dart` | 11/11 yashil (3 yangi: render, FAB yo'q/bor+son) | 0/0/0 | ✅ |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -221,6 +223,16 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   kvadrat kesilgan, oq emas, rasmning o'zi). Matn, spinner, ilova nomi yo'q.
   `assets/icon/splash_logo.png` (F monogram) o'chirildi, `flutter_native_splash` qayta
   ishga tushirildi.
+- [2026-08-19] 3-bosqich haqiqatda boshlandi (foydalanuvchi: "boshidan qil" — 1-bosqich
+  faqat poydevor edi, ekranlar hali eski ko'rinishda edi, shuning uchun ilova dizaynga
+  mos ko'rinmayotgan edi). Bosh sahifa qayta yozilganda 13-bo'lim ro'yxati bo'yicha uchta
+  kamchilik topildi va tuzatildi: (1) haptika — navigatsiya tugmalari `selectionClick`
+  emas `lightImpact` bo'lishi kerak edi (5.4), (2) `Navigator.push`+`MaterialPageRoute`
+  ishlatilgan edi — 6-bo'lim taqiqlagan, endi hamma joyda `pushAppRoute`, (3) ekran/karta
+  kirish animatsiyalari (`screenIn`, `fadeUp`+stagger) 1-bosqichda token sifatida
+  yozilgan-u, hech qayerda qo'llanilmagan edi — endi `ScreenFadeIn`/`FadeUpItem` orqali
+  qo'llanadi. Bu uch tuzatish umumiy vosita sifatida qilingani uchun qolgan 16 ekranga
+  ham avtomatik qo'llanadi.
 
 ### Backend farqlari
 (2-bosqich hali bajarilmadi — `buildData()` va mavjud model/repository solishtiruvi shu

@@ -33,13 +33,46 @@ class AppTypography {
   /// Bo'lim/karta sarlavhasi — 21px/w700/-.3px (masalan hero "Market").
   static TextStyle get title => _figtree(size: 21, weight: FontWeight.w700, letterSpacing: -0.3);
 
-  /// Bo'lim yorlig'i — UPPERCASE, textMuted. Matn `.toUpperCase()` bilan beriladi.
+  /// Bo'lim yorlig'i — UPPERCASE, textSecondary. Matn `.toUpperCase()` bilan beriladi.
   static TextStyle get sectionLabel => _figtree(
         size: 11.5,
         weight: FontWeight.w800,
         letterSpacing: 1.2,
-        color: AppColors.textMuted,
+        color: AppColors.textSecondary,
       );
+
+  /// Kichik UPPERCASE yorliq (masalan bosh sahifa salomlashuvi) — textMuted.
+  /// Matn `.toUpperCase()` bilan beriladi.
+  static TextStyle get eyebrow =>
+      _figtree(size: 12, weight: FontWeight.w700, letterSpacing: 1.2, color: AppColors.textMuted);
+
+  /// Brend nomi — faqat Bosh sahifa salomlashuvida. 27px/w800/-.9px.
+  static TextStyle get brandTitle => _figtree(size: 27, weight: FontWeight.w800, letterSpacing: -0.9);
+
+  /// Hero karta sarlavhasi (to'q fon ustida, oq matn). 21px/w800/-.3px.
+  static TextStyle get heroTitle =>
+      _figtree(size: 21, weight: FontWeight.w800, letterSpacing: -0.3, color: Colors.white);
+
+  /// Hero karta tavsifi (to'q fon ustida, oq matn). 13px/w400/height1.45.
+  static TextStyle get heroSubtitle =>
+      _figtree(size: 13, weight: FontWeight.w400, letterSpacing: 0, height: 1.45, color: Colors.white);
+
+  /// Oq pill tugma matni (hero CTA). 13.5px/w700.
+  static TextStyle get pillButton => _figtree(size: 13.5, weight: FontWeight.w700, letterSpacing: 0);
+
+  /// Ro'yxat qatori sarlavhasi (faol buyurtma, yetkazib berish va h.k). 14.5px/w700.
+  static TextStyle get rowTitle => _figtree(size: 14.5, weight: FontWeight.w700, letterSpacing: 0);
+
+  /// Yangiliklar/xabar kartasi sarlavhasi. 14.5px/w700/-.1px/height1.3.
+  static TextStyle get newsTitle =>
+      _figtree(size: 14.5, weight: FontWeight.w700, letterSpacing: -0.1, height: 1.3);
+
+  /// Vaqt belgisi (masalan "Bugun", "3 kun oldin") — textSecondary. 11px/w400.
+  static TextStyle get timeLabel =>
+      _figtree(size: 11, weight: FontWeight.w400, letterSpacing: 0, color: AppColors.textSecondary);
+
+  /// Kichik pill-badge matni. 11px/w700.
+  static TextStyle get badgeText => _figtree(size: 11, weight: FontWeight.w700, letterSpacing: 0);
 
   /// Karta sarlavhasi (katta) — mahsulot nomi PDP'da. 16.5px/w700/-.2px.
   static TextStyle get cardTitle => _figtree(size: 16.5, weight: FontWeight.w700, letterSpacing: -0.2);
