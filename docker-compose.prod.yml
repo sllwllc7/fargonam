@@ -68,6 +68,11 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY:-}
       S3_BUCKET: fargonam
       S3_PUBLIC_URL: ${S3_PUBLIC_URL:-/s3}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      TELEGRAM_USE_POLLING: "false"
+      ADMIN_TELEGRAM_IDS: ${ADMIN_TELEGRAM_IDS:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -75,6 +80,22 @@ services:
         condition: service_healthy
     volumes:
       - uploads:/app/uploads
+
+  telegram_bot:
+    build:
+      context: ./telegram_bot
+      dockerfile: Dockerfile
+    container_name: fargonam_telegram_bot
+    restart: unless-stopped
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN kerak}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      BACKEND_INTERNAL_URL: http://backend:8000
+      APK_DIR: /apks
+    volumes:
+      - ./nginx/downloads:/apks:ro
+    depends_on:
+      - backend
 
   nginx:
     image: nginx:alpine
