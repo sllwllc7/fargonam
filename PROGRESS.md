@@ -698,3 +698,58 @@ ko'rinishini qo'lda tekshirish keyingi navbatda.
 user: `mobile_user/build/app/outputs/flutter-apk/app-debug.apk` (debug, muvaffaqiyatli)
 seller: `mobile_seller/build/app/outputs/flutter-apk/app-debug.apk` (debug, muvaffaqiyatli —
 faqat mavjud "Fargonam Biznes" ko'rinishida, dizayn 4-bosqichda almashadi)
+
+## Production Deploy (2026-08-19/20)
+
+Server: `189.74.97.28`, domenlar `fargonam.uz` (APK yuklab olish sahifasi) va
+`api.fargonam.uz` (backend), Ubuntu 22.04, Docker Compose orqali (`docker-compose.prod.yml`).
+
+### Qarorlar
+
+- Root parol/foydalanuvchi bootstrap, `fail2ban` (`backend = systemd` — bu Ubuntu
+  22.04'da `/var/log/auth.log` yo'q, rsyslog ishlamaydi), `ufw` (22/80/443 ochiq,
+  qolgani yopiq) — standart xavfsizlik bootstrap, muqobil yo'q edi.
+- Katalog seed qilishdan oldin `backend/scripts/bootstrap_shop.py` yozildi — production
+  bazasi bo'sh bo'lgani uchun `seed_catalog.py`ning qattiq kodlangan `SHOP_ID=1`
+  mos do'kon topa olmadi (`ForeignKeyViolationError`). Yangi skript bitta rasmiy
+  "Fargonam" do'konini (owner user + `ShopStatus.approved`) yaratadi — bu doim MVP-1
+  talabiga mos (yagona monodo'kon, tashqi sotuvchilar yo'q).
+- nginx ikki bosqichda deploy qilindi: avval faqat HTTP+ACME-challenge konfiguratsiya
+  (hali mavjud bo'lmagan sertifikat fayllariga murojaat qilmasligi uchun), keyin
+  to'liq HTTPS. `api.fargonam.uz` va `fargonam.uz` bitta sertifikatda (`--cert-name
+  api.fargonam.uz`, ikkala domen SAN sifatida).
+- Flutter 3.41.6-stable (Dart 3.11.4) tanlandi — 3.38.0 (Dart 3.10.0) pubspec talabini
+  qanoatlantirmadi, lokal dev mashinada allaqachon ishlagan versiya tanlandi (Flutter'ning
+  o'zi taklif qilgan 3.47.0 emas — tekshirilmagan versiyaga ishonib qolmaslik uchun).
+- Gradle 8.14 distributivi GitHub Fastly CDN orqali serverdan yuklab bo'lmadi (TCP hang,
+  0 bayt, takrorlanuvchi) — lokal mashinada keshda bor edi, `scp` bilan to'g'ridan-to'g'ri
+  ko'chirildi (MD5 tasdiqlangan).
+- **"Java home supplied is invalid" xatosi** — sabab: `mobile_user/android/gradle.properties`
+  va `mobile_seller/android/gradle.properties` (repo fayllari) `org.gradle.java.home=
+  /usr/lib/jvm/java-21-openjdk` deb qattiq kodlangan (izoh: Yandex Maps SDK Java 21 talab
+  qiladi). Serverda faqat Java 17 bor edi. **Kodga tegilmadi** — bu haqiqiy loyiha talabi
+  (izohda tushuntirilgan), shuning uchun serverga `openjdk-21-jdk` o'rnatildi va
+  `/usr/lib/jvm/java-21-openjdk` → `java-21-openjdk-amd64` symlink qo'shildi (paket
+  `-amd64` qo'shimchasi bilan o'rnatadi, repo fayli esa qo'shimchasiz yo'lni kutadi).
+- Keystore parollari PKCS12 talabiga ko'ra storePassword=keyPassword qilib generatsiya
+  qilindi (`keytool` alohida `-keypass`ni jim tashlab yuboradi).
+
+### D-blok: Telegram APK-tarqatish boti
+
+- Alohida `telegram_bot/` xizmati (`docker-compose.prod.yml`), python-telegram-bot,
+  polling. Auth uchun ishlatiladigan bot bilan BIR XIL `TELEGRAM_BOT_TOKEN` ishlatiladi
+  (foydalanuvchi shunday berdi) — Telegram bitta tokenga faqat bitta yetkazish usulini
+  (webhook YOKI polling) ruxsat beradi, shuning uchun bu bot yagona poller: oddiy
+  "/start"/tugmalar/"/versiya"ni o'zi javob beradi, "/start <session_id>" (login
+  deep-link) kelsa `backend`ning mavjud `/auth/telegram/webhook/{secret}` route'iga
+  ichki HTTP orqali uzatadi. Backend kodi o'zgartirilmadi.
+- Yo'l-yo'lakay topildi: `docker-compose.prod.yml`dagi `backend` xizmatiga
+  `TELEGRAM_*`/`ADMIN_TELEGRAM_IDS` env'lar umuman ulanmagan edi — Telegram login
+  production'da hali umuman ishlamas edi. Tuzatildi (backend'ga shu env'lar qo'shildi,
+  `TELEGRAM_BOT_USERNAME` `getMe` orqali aniqlandi: `fargonam_bot`, yangi
+  `TELEGRAM_WEBHOOK_SECRET` generatsiya qilindi).
+- **HAL QILINMAGAN**: bot deploy qilindi, lekin Telegram `getUpdates` 409 Conflict
+  qaytarmoqda — konteynerni to'liq to'xtatib to'g'ridan-to'g'ri `curl getUpdates` bilan
+  tekshirilganda ham xuddi shu xato chiqdi va `getWebhookInfo` webhook yo'qligini
+  tasdiqladi. Demak shu bot tokeni bilan **serverdan tashqarida boshqa faol poller bor**
+  — bu server/kod muammosi emas, tashqi omil. Foydalanuvchiga xabar berildi.
