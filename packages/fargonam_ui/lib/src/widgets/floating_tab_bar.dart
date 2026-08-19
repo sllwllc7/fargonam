@@ -14,18 +14,20 @@ import '../app_typography.dart';
 /// `translateY(-24px)` bilan spring egri chiziq (`cubic-bezier(.3,1.6,.5,1)`)
 /// bo'yicha ko'tariladi, atrofida bar rangida 5px halqa hosil bo'ladi.
 class FloatingTabBar extends StatelessWidget {
-  const FloatingTabBar({super.key, required this.activeIndex, required this.onTap});
+  const FloatingTabBar({super.key, required this.activeIndex, required this.onTap, List<FloatingTabItem>? items})
+      : items = items ?? _defaultItems;
 
-  /// 0 Market, 1 Taxi, 2 Asosiy, 3 AI, 4 Profil.
+  /// 0 Market, 1 Taxi, 2 Asosiy, 3 AI, 4 Profil (`items` berilmasa).
   final int activeIndex;
   final ValueChanged<int> onTap;
+  final List<FloatingTabItem> items;
 
-  static const _items = [
-    _TabItem(icon: _TabIcons.market, label: 'Market'),
-    _TabItem(icon: _TabIcons.taxi, label: 'Taxi'),
-    _TabItem(icon: _TabIcons.home, label: 'Asosiy'),
-    _TabItem(icon: _TabIcons.ai, label: 'AI'),
-    _TabItem(icon: _TabIcons.profile, label: 'Profil'),
+  static const _defaultItems = [
+    FloatingTabItem(icon: TabIcons.market, label: 'Market'),
+    FloatingTabItem(icon: TabIcons.taxi, label: 'Taxi'),
+    FloatingTabItem(icon: TabIcons.home, label: 'Asosiy'),
+    FloatingTabItem(icon: TabIcons.ai, label: 'AI'),
+    FloatingTabItem(icon: TabIcons.profile, label: 'Profil'),
   ];
 
   @override
@@ -48,10 +50,10 @@ class FloatingTabBar extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            for (var i = 0; i < _items.length; i++)
+            for (var i = 0; i < items.length; i++)
               Expanded(
                 child: _TabButton(
-                  item: _items[i],
+                  item: items[i],
                   active: activeIndex == i,
                   onTap: () {
                     if (activeIndex != i) HapticFeedback.lightImpact();
@@ -68,7 +70,7 @@ class FloatingTabBar extends StatelessWidget {
 
 class _TabButton extends StatefulWidget {
   const _TabButton({required this.item, required this.active, required this.onTap});
-  final _TabItem item;
+  final FloatingTabItem item;
   final bool active;
   final VoidCallback onTap;
 
@@ -147,14 +149,16 @@ class _TabButtonState extends State<_TabButton> {
   }
 }
 
-class _TabItem {
-  const _TabItem({required this.icon, required this.label});
+/// `FloatingTabBar`ning bitta tabi — ikonka (SVG string) + yorliq.
+class FloatingTabItem {
+  const FloatingTabItem({required this.icon, required this.label});
   final String icon;
   final String label;
 }
 
-/// dc.html `tabIcons` obyektidagi SVG `path d` qiymatlaridan ko'chirilgan.
-class _TabIcons {
+/// dc.html `tabIcons` obyektidagi SVG `path d` qiymatlaridan ko'chirilgan
+/// (mobile_user uchun). mobile_seller o'z ikonkalarini beradi.
+class TabIcons {
   static const home =
       '<svg viewBox="0 0 24 24"><path d="M4.5 10.2 12 4l7.5 6.2M6 8.8V19a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 19V8.8M10 20.5v-5.5a2 2 0 0 1 4 0v5.5" stroke="#000" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round" fill="none"/></svg>';
   static const market =
