@@ -7,7 +7,7 @@
     <!-- Push notification (FCM) — Android 13+ talab qiladi -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
-        android:label="mobile_seller"
+        android:label="Fargonam Biznes"
         android:usesCleartextTraffic="true"
         android:allowBackup="false"
         android:name="${applicationName}"
