@@ -32,3 +32,9 @@ class AppPageRoute<T> extends PageRouteBuilder<T> {
 Future<T?> pushAppRoute<T>(BuildContext context, WidgetBuilder builder) {
   return Navigator.push<T>(context, AppPageRoute<T>(builder: builder));
 }
+
+/// `pushAppRoute`ning `pushReplacement` varianti — masalan Checkout'dan
+/// Muvaffaqiyat ekraniga o'tishda (orqaga bosilganda Checkout'ga qaytmasin).
+Future<T?> pushReplacementAppRoute<T, TO>(BuildContext context, WidgetBuilder builder, {TO? result}) {
+  return Navigator.pushReplacement<T, TO>(context, AppPageRoute<T>(builder: builder), result: result);
+}

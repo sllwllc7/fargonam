@@ -42,6 +42,12 @@ class AppTypography {
         color: AppColors.textSecondary,
       );
 
+  /// Forma bo'lim yorlig'i (Rasmiylashtirish: "Yetkazib berish"/"To'lov"/
+  /// "Buyurtma") — UPPERCASE, textMuted, `sectionLabel`dan farqli
+  /// o'lcham/rang. Matn `.toUpperCase()` bilan beriladi.
+  static TextStyle get formSectionLabel =>
+      _figtree(size: 12, weight: FontWeight.w700, letterSpacing: 0.4, color: AppColors.textMuted);
+
   /// Kichik UPPERCASE yorliq (masalan bosh sahifa salomlashuvi) — textMuted.
   /// Matn `.toUpperCase()` bilan beriladi.
   static TextStyle get eyebrow =>

@@ -31,9 +31,9 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('Buyurtma berish · 2 500 so\'m'), findsOneWidget);
+    expect(find.text('Buyurtma berish · 2 500 so‘m'), findsOneWidget);
 
-    await tester.tap(find.text('Buyurtma berish · 2 500 so\'m'));
+    await tester.tap(find.text('Buyurtma berish · 2 500 so‘m'));
     await tester.pump(); // SnackBar animatsiyasi boshlanishi uchun bitta freym
 
     expect(find.text('Manzilni kiriting'), findsOneWidget);
