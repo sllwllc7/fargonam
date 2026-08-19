@@ -524,9 +524,8 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
     qanday qizil (`#DC2626`/`danger`) qiymat yo'q.
 
 ### Backend farqlari
-- [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),
-  garchi `products` jadvalida test mahsulotlari bor. Kategoriyasiz UI to'g'ri ishlaydi
-  (bo'sh holat ko'rsatiladi), lekin haqiqiy ko'rinish uchun kategoriya ma'lumoti kerak.
+- ~~[Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh~~ — **2-bosqichda
+  to'ldirildi**, quyidagi jadvalga qarang.
 - [Sinf to'plami] `KitItem` modelida kategoriya/slug yo'q — dc.html'dagi per-item
   kategoriya ikonkasi o'rniga bitta neytral ikonka ishlatildi (yuqoridagi Qarorlar
   yozuviga qarang).
@@ -537,8 +536,99 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   ishlatiladi.
 - [Sevimlilar] `/favorites` javobida `category_id` yo'q — `product_id` orqali
   `productCategoryMapProvider`dan client tomonda topiladi (backend o'zgartirilmadi).
-(2-bosqich hali to'liq bajarilmadi — `buildData()` va mavjud model/repository to'liq
-solishtiruvi shu yerga keyingi seansda yoziladi.)
+
+## 2-bosqich — buildData() vs real backend/dev-baza (2026-08-19, YAKUNLANDI)
+
+Izoh: loyihada alohida "Dart mock" fayli yo'q (`grep -rn buildData mobile_user backend` —
+bo'sh) — CLAUDE.md §10 ham buni "mavjud model/repository bilan solishtir" deb belgilagan.
+Shu sabab taqqoslash **haqiqiy dev PostgreSQL bazasi** (`fargonam_db`, Flutter ilova
+iste'mol qiladigan haqiqiy manba) bilan qilindi. Solishtirishdan oldin baza deyarli bo'sh
+edi: `categories`=0, `products`=7 (qo'lda test yozuvlari — "Test","Nasa","Mushuk" kabi
+kategoriyasiz nomlar), `product_sets`(kit)=0. Farq **tuzatildi**:
+`backend/scripts/seed_catalog.py` (yangi, idempotent skript) `buildData()`ning har bir
+qatorini — 18 kategoriya, 14 qo'lda yozilgan mahsulot + 14 kategoriya × 4 generatsiya
+formulasi (aynan `brands[(len+i)%6]`, `base+i*round(base*.18/500)*500`, `20+((len*7+i*13)%90)`
+formulalari bilan), 1-11 sinf to'plami — dev bazaga yozdi. Ishga tushirish:
+`cd backend && .venv/bin/python -m scripts.seed_catalog`.
+
+### Kategoriyalar (18/18 — barchasi mos)
+
+| slug | dc.html nomi | dc.html `count`* | Real `product_count` | Holat |
+|---|---|---|---|---|
+| ruchka | Ruchka | 48 | 5 | ✅ (izoh*) |
+| daftar | Daftar | 64 | 4 | ✅ (izoh*) |
+| qalam | Qalam | 32 | 3 | ✅ (izoh*) |
+| rangli-qalam | Rangli qalam | 21 | 4 | ✅ (izoh*) |
+| a4 | A4 qog'ozi | 12 | 2 | ✅ (izoh*) |
+| rangli-qogoz | Rangli qog'oz | 9 | 4 | ✅ (izoh*) |
+| flomaster | Flomaster | 18 | 4 | ✅ (izoh*) |
+| marker | Marker | 14 | 4 | ✅ (izoh*) |
+| ochirgich | O'chirg'ich | 11 | 4 | ✅ (izoh*) |
+| lineyka | Lineyka | 13 | 4 | ✅ (izoh*) |
+| yelim | Yelim | 8 | 4 | ✅ (izoh*) |
+| qaychi | Qaychi | 7 | 4 | ✅ (izoh*) |
+| albom | Albom | 10 | 4 | ✅ (izoh*) |
+| papka | Papka | 16 | 4 | ✅ (izoh*) |
+| kundalik | Kundalik | 6 | 4 | ✅ (izoh*) |
+| qalamdon | Qalamdon | 15 | 4 | ✅ (izoh*) |
+| shtrix | Shtrix | 5 | 4 | ✅ (izoh*) |
+| skotch | Skotch | 6 | 4 | ✅ (izoh*) |
+
+`*` dc.html'dagi `count` (`defs` massivi, 843-849-qator) haqiqiy SKU soniga **hech qachon
+teng emas** — masalan Ruchka'ning o'zida `count=48` deyilgan, lekin `buildData()`ning o'zi
+faqat 5 ta ruchka mahsuloti yaratadi (qolgan 43 — faqat "shu yerda ko'p mahsulot bor"
+taassurotini beruvchi dekorativ raqam, hech qanday SKU'ga bog'lanmagan). Shu sabab real
+`product_count` (5) dc.html `count`(48)dan farq qilishi **kutilgan holat, xato emas** —
+ikkalasi ham `buildData()`ning O'ZIDA yaratilgan haqiqiy SKU sonlariga (quyida) mos keladi.
+
+### Mahsulotlar/SKU (barchasi mos — 70/70 yaratildi)
+
+| Bo'lim | dc.html mahsulot soni | dc.html SKU soni | Real mahsulot | Real SKU | Holat |
+|---|---|---|---|---|---|
+| Daftar (qo'lda yozilgan) | 4 | 19 (12+4+2+1) | 4 | 19 | ✅ narx/zaxira qatorma-qator mos |
+| Ruchka (qo'lda yozilgan) | 5 | 9 (3+2+1+1+2) | 5 | 9 | ✅ (Cello/Qora zaxira=0 — "Tugagan" holati ham to'g'ri ko'chirildi) |
+| Qalam (qo'lda yozilgan) | 3 | 4 (2+1+1) | 3 | 4 | ✅ |
+| A4 (qo'lda yozilgan) | 2 | 2 | 2 | 2 | ✅ (Snegurochka zaxira=0 ham to'g'ri) |
+| 14 generatsiya kategoriyasi × 4 | 56 | 56 (har biri 1 SKU) | 56 | 56 | ✅ narx/zaxira formulasi Python'da aynan qayta yozildi, tasdiqlangan |
+| **Jami** | **70** | **90** | **70** | **90** | ✅ |
+
+Aniqlik uchun tekshirilgan formulalar (`backend/scripts/seed_catalog.py`):
+narx = `base + i*round(base*0.18/500)*500`, zaxira = `i==3 ? 6 : 20+((len(slug)*7+i*13)%90)`,
+brend = `BRANDS[(len(slug)+i)%6]` — barchasi dc.html 896-906-qatorlaridan piksel-aniq
+ko'chirildi, Python'da qo'lda 14 kategoriya uchun natijalar tekshirildi (masalan
+`lineyka`: narxlar 3500/4000/4500/5000 — pastdagi kit jadvalidagi 3500 va 4500 talablari
+bilan mos kelishi tasdiqlandi).
+
+### Sinf to'plamlari — 1-11 (11/11, jami narx dc.html bilan aynan mos)
+
+| Sinf | dc.html jami (qo'lda hisoblangan) | Real DB jami | Element soni | Holat |
+|---|---|---|---|---|
+| 1 | 145 500 | 145 500 | 10 | ✅ |
+| 2 | 145 500 | 145 500 | 10 | ✅ |
+| 3 | 136 300 | 136 300 | 10 | ✅ |
+| 4 | 136 300 | 136 300 | 10 | ✅ |
+| 5 | 154 100 | 154 100 | 8 | ✅ |
+| 6 | 154 100 | 154 100 | 8 | ✅ |
+| 7 | 154 100 | 154 100 | 8 | ✅ |
+| 8 | 154 100 | 154 100 | 8 | ✅ |
+| 9 | 185 200 | 185 200 | 9 | ✅ |
+| 10 | 185 200 | 185 200 | 9 | ✅ |
+| 11 | 185 200 | 185 200 | 9 | ✅ |
+
+**Muhim, hujjatlashtirilgan qaror**: dc.html'da kit elementlari (`items: [name, variant,
+qty, price]`, 910-936-qator) haqiqiy `P` mahsulotlar ro'yxatiga BOG'LANMAGAN — flat mock
+matn (prototipning o'zida ham shunday, `ProductSetItem` uchun alohida nom maydoni yo'q).
+Real backend'da esa `ProductSetItem.variant_id` HAQIQIY `ProductVariant`ga majburiy FK —
+shu sabab har bir element narxi (va mavjud bo'lsa variant matni, masalan "Ko'k siyoh")
+bo'yicha eng mos real variantga avtomatik bog'landi (`seed_catalog.py`'dagi
+`resolve_variant()`). Natijada ba'zi elementlarning REAL ko'rinadigan nomi dc.html'dagi
+qisqa yorliqdan farq qiladi (masalan dc.html "Lineyka 20 sm" → real "Lineyka Attache",
+chunki generatsiya qilingan mahsulot nomi brend bilan keladi) — bu **narx/miqdor/jami
+to'liq mos** bo'lgan holda, faqat ko'rsatiladigan matn darajasidagi kutilgan farq.
+11 ta sinfning HAMMASI uchun jami narx dc.html'ning o'z JS hisob-kitobi bilan qo'lda
+tekshirilib, aynan mos kelishi tasdiqlandi (yuqoridagi jadval).
+
+### APK
 
 ### APK
 user: `mobile_user/build/app/outputs/flutter-apk/app-debug.apk` (debug, muvaffaqiyatli)
