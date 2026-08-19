@@ -168,6 +168,8 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | 3 | 2/17: Market (catalog) — to'liq qayta yozildi (dc.html aynan, 18 ta kategoriya SVG ikonkasi, "Savatda N ta bor" yashil badge) | `mobile_user/lib/features/marketplace/catalog_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 | 5-tuzatish | Ikonka (oq F), soxta buyurtma o'chirildi (dev DB), AI chiplar olib tashlandi, ism onboarding ekrani, orqaga tugmasi PopScope | `assets/icon/*`, `home_feed_screen.dart`, `ai_assistant_screen.dart`, `core/user_name_provider.dart`, `features/onboarding/name_screen.dart`, `profile_screen.dart`, `main.dart`, `shell/app_shell.dart`, `checkout/order_success_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ qurilmada tasdiqlandi (toza o'rnatish) |
 | 3 | 3/17: Sinf to'plami (kit detail) — to'liq qayta yozildi (dc.html aynan), `_addKit()` biznes-logikasi o'zgarishsiz | `mobile_user/lib/features/kits/kit_detail_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 3 | `BackCircleButton` umumiy widget (5 dc.html ekranida bir xil orqaga tugmasi) | `packages/fargonam_ui/lib/src/widgets/back_circle_button.dart` | — | 0/0/0 | ✅ |
+| 3 | 4/17: Kategoriya (category detail) — to'liq qayta yozildi (dc.html aynan, kategoriya ikonka+imgLabel, Filtr) | `mobile_user/lib/features/marketplace/category_products_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -338,6 +340,25 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   barcha elementlar uchun bitta neytral quti-SVG ikonkasi, to'plamning o'z (sinf
   darajasiga bog'liq) tint rangida ishlatildi. Kelajakda backend `KitItem`ga
   kategoriya/slug qo'shsa, bu ekran to'g'ridan-to'g'ri per-item ikonkaga o'tkaziladi.
+
+- [2026-08-19] **4/17: Kategoriya (category detail)** ekrani dc.html'ning `CATEGORY DETAIL`
+  bo'limiga moslab qayta yozildi. `BackCircleButton` (yangi umumiy fargonam_ui widget) va
+  `PressableScale` orqali qurildi — kit_detail_screen.dart ham shu bilan qayta ishlatildi
+  (avval ikkalasida alohida qo'lda yozilgan bosilganda-kichraytiruvchi kod bor edi).
+  Kategoriya ikonka lug'ati (`_categoryIconPaths`/`_categorySvg`) avval faqat
+  `catalog_screen.dart` ichida edi — endi `category_icons.dart`ga ko'chirildi, ikkala ekran
+  bitta manbadan foydalanadi. dc.html'dagi monospace "imgLabel" (masalan "ruchka") — bu
+  chinakam ilova hodisasi (haqiqiy mahsulot rasmlari hali yo'q, shu vaqtinchalik o'rniga
+  ikonka+belgi ko'rsatiladi, `imgLabel: cc.name.toLowerCase()` manba kodida tasdiqlangan) —
+  qoldirildi, o'chirilmadi.
+  **Token tuzatishlari** (haqiqiy dc.html qiymatlari real ekran qurishda solishtirilganda
+  topildi, faqat shu 2 ta joyda ishlatilgani uchun xavfsiz tuzatildi):
+  `AppTypography.title` letterSpacing -.3→-.4 (dc.html'da Kategoriya/Kit/Checkout/Kuzatish/
+  Bildirishnomalar sarlavhalari barchasi -.4; faqat Bosh sahifa hero "Market" -.3/w800 —
+  bu alohida `heroTitle` tokeniga tegishli, aralashmaydi); `AppTypography.price` -.4→-.3;
+  `AppTypography.priceSm` w800→w700 (dc.html'da barcha 14.5px matnlar w700, w800 emas).
+  Yangi token: `AppColors.inputBorder` (`#D5DDE9`) — Filtr tugmasi + AI input/chip uchun
+  (dc.html'da 3 marta uchraydi, AI ekrani to'liq qayta yozilganda ham shu ishlatiladi).
 
 ### Backend farqlari
 - [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),
