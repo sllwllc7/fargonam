@@ -166,6 +166,7 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | 3 | 1/17: Bosh sahifa (home) — to'liq qayta yozildi (dc.html aynan) | `mobile_user/lib/features/home/home_feed_screen.dart` | 11/11 yashil (3 yangi: render, FAB yo'q/bor+son) | 0/0/0 | ✅ |
 | 1 | `AppRadius.card` 17→18, `AppTypography.h1` -.9→-.8 (haqiqiy qurilma skrinshotida topilgan Phase 1 xatolari) | `packages/fargonam_ui/lib/src/{app_radius,app_typography}.dart` | — | 0/0/0 | ✅ |
 | 3 | 2/17: Market (catalog) — to'liq qayta yozildi (dc.html aynan, 18 ta kategoriya SVG ikonkasi, "Savatda N ta bor" yashil badge) | `mobile_user/lib/features/marketplace/catalog_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 5-tuzatish | Ikonka (oq F), soxta buyurtma o'chirildi (dev DB), AI chiplar olib tashlandi, ism onboarding ekrani, orqaga tugmasi PopScope | `assets/icon/*`, `home_feed_screen.dart`, `ai_assistant_screen.dart`, `core/user_name_provider.dart`, `features/onboarding/name_screen.dart`, `profile_screen.dart`, `main.dart`, `shell/app_shell.dart`, `checkout/order_success_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ qurilmada tasdiqlandi (toza o'rnatish) |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -268,6 +269,55 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
      bor edi, lekin ekran o'zining pastki bo'shlig'ini suzuvchi tab bar balandligiga
      moslamagan edi — input qatori tab bar OSTIDA (ko'rinmas holda) chizilardi. Pastki
      `Padding`ga `AppSizes.tabBarHeight + tabBarBottomInset` qo'shildi.
+
+- [2026-08-19] Foydalanuvchi "5 ta tuzatish" so'rovi — hammasi CLAUDE.md doirasida bajarildi:
+  1. **Ilova ikonkasi**: fergana-gate.png butunlay olib tashlandi (avvalgi navlash
+     bo'yicha faqat splash'dan olingan edi, ikonkada hali qolgan edi). Endi ikonka: sof
+     navy `#16294A` fon + markazda oq "F" (kenglikning ~48%). Figtree fayli lokal/tarmoqda
+     topilmadi — `Adwaita-Sans-ExtraBold` bilan generatsiya qilindi (ikonka bitta marta
+     yaratiladigan static asset, ilova ichidagi haqiqiy matn hamon Figtree). Adaptive
+     icon: foreground=oq "F" (shaffof fon), background=navy. Splash o'zgarishsiz (sof
+     navy, rasmsiz).
+     Tekshiruv: `grep -rn fergana-gate mobile_user mobile_seller` → faqat
+     `home_feed_screen.dart` (Home hero karta).
+  2. **Home'dagi "FN-4" buyurtma**: kod tekshirildi — bu HARDCODE EMAS, `myOrdersProvider`
+     orqali haqiqiy `/orders` so'rovidan kelayotgan edi (kod allaqachon
+     `if (activeOrder != null)` bilan to'g'ri shartli). Muammo — dev bazada `Dev Buyer`
+     (telegram_id -1001, DEBUG bypass sentinel) hisobida eski test buyurtmasi (id=4)
+     qolib ketgan edi. Kod o'zgartirilmadi — o'sha bitta test buyurtma va uning
+     `order_items`'lari to'g'ridan-to'g'ri (dev) bazadan o'chirildi (`DELETE FROM
+     order_items/orders WHERE id=4`). Boshqa foydalanuvchi ma'lumotlari (notifications,
+     cart_items, favorites, saved_addresses) o'sha hisob uchun allaqachon bo'sh edi.
+     Tekshiruv: `grep -rn "'FN-" mobile_user` → hammasi `${order['id']}` generatori,
+     hech qanday qattiq raqam yo'q.
+  3. **AI namuna savol chiplari** — `_QuickChip` butunlay olib tashlandi (chaqiruvchisi
+     bilan birga, ishlatilmay qolgan klass ham o'chirildi). Header/onlayn nuqta/xabar
+     pufakchalari/typing/input+yuborish o'zgarishsiz. **Prototipdan chetlashish**: dc.html
+     `AI CHAT` bo'limida bu chiplar bor — ular endi ko'rinmaydi (foydalanuvchi aniq
+     so'rovi bilan).
+  4. **Profil ismi**: `shared_preferences` ALLAQACHON pubspec.yaml'da bor edi (onboarding/
+     tungi-rejim flag'lari uchun) — "qo'shish" shart bo'lmadi, faqat yangi foydalanish
+     (`core/user_name_provider.dart`, `AsyncNotifier<String?>`). Yangi ekran:
+     `features/onboarding/name_screen.dart` — "Tanishib olaylik" / "Ismingiz" input /
+     "Davom etish" (mavjud `AppButton`/`AppInput` orqali, yangi uslub yozilmadi). Auth'dan
+     keyin, ism saqlanmagan bo'lsa, `AppShell`dan oldin ko'rsatiladi (`main.dart`).
+     Profil avatar kartasida ism + "Ismni tahrirlash" (bosilganda `NameScreen`
+     `initialName` bilan qayta ochiladi). Home salomlashuvi: "Assalomu alaykum, {ism} 👋"
+     — **prototipdan chetlashish** (dc.html'da ism yo'q, faqat "Assalomu alaykum 👋").
+     Telefon raqami ko'rsatilmasdi (avvalgi kod ham `user.phone ?? ''` — soxta raqam
+     hech qachon bo'lmagan, faqat "Foydalanuvchi" degan soxta ISM edi, endi yo'q).
+  5. **Mantiqiy tozalash** — tekshirilib, hammasi allaqachon to'g'ri ekan (o'zgarishsiz):
+     zaxira/stepper qoidalari (`product_detail_screen.dart`), bir xil SKU dedup (backend
+     `POST /cart` — `existing.quantity += payload.quantity`), narx formati (barcha real
+     ekranlar `formatSom` ishlatadi; faqat **ishlatilmaydigan** `marketplace_screen.dart`
+     — hech qayerdan chaqirilmaydi, ExplorE emas, tegilmadi). Yangi tuzatilgan: orqaga
+     tugmasi — `AppShell`ga `PopScope` qo'shildi (Asosiy tabda bo'lmasa shu tabga
+     o'tkazadi, ilovadan chiqarmaydi); `OrderSuccessScreen`ga `PopScope` qo'shildi
+     (orqaga bosilsa Checkout'ga emas, Bosh sahifaga qaytadi).
+  **Qurilmada tasdiqlandi** (foydalanuvchi ilovani to'liq o'chirib qayta o'rnatdi,
+  haqiqiy Telegram orqali kirdi): Home'da buyurtma yo'q, ism so'rovi chiqdi va ishladi
+  ("Solih" kiritildi → Home salomlashuvida va Profilda darhol ko'rindi), ikonka sof
+  navy+oq "F".
 
 ### Backend farqlari
 - [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),

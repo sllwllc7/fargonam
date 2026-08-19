@@ -12,12 +12,14 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/user_name_provider.dart';
 import '../addresses/addresses_screen.dart';
 import '../auth/auth_providers.dart';
 import '../cart/cart_screen.dart';
 import '../favorites/favorites_screen.dart';
 import '../notifications/notifications_providers.dart';
 import '../notifications/notifications_screen.dart';
+import '../onboarding/name_screen.dart';
 import '../orders/orders_screen.dart';
 import 'settings_screen.dart';
 
@@ -48,6 +50,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final avatarUrl = user.avatarUrl != null ? '${AppConfig.apiBaseUrl}${user.avatarUrl}' : null;
     final unreadAsync = ref.watch(unreadCountProvider);
     final unread = unreadAsync.maybeWhen(data: (n) => n, orElse: () => 0);
+    final displayName = ref.watch(userNameProvider).value;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -81,10 +84,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ? Image.network(avatarUrl, fit: BoxFit.cover, width: 54.w, height: 54.w)
                             : Center(
                                 child: Text(
-                                  (() {
-                                    final s = user.fullName ?? user.phone ?? '';
-                                    return s.isEmpty ? '?' : String.fromCharCode(s.runes.first).toUpperCase();
-                                  })(),
+                                  (displayName == null || displayName.isEmpty) ? '?' : String.fromCharCode(displayName.runes.first).toUpperCase(),
                                   style: AppTextStyles.h2.copyWith(color: AppColors.primaryDark, fontSize: 20),
                                 ),
                               ),
@@ -93,13 +93,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   SizedBox(width: 14.w),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(user.fullName ?? 'Foydalanuvchi', style: AppTextStyles.cardTitle.copyWith(fontSize: 16.5)),
-                        SizedBox(height: 2.h),
-                        Text(user.phone ?? '', style: AppTextStyles.caption.copyWith(fontSize: 13)),
-                      ],
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => NameScreen(initialName: displayName, onDone: () => Navigator.pop(context))),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(displayName ?? '', style: AppTextStyles.cardTitle.copyWith(fontSize: 16.5)),
+                          SizedBox(height: 2.h),
+                          Text('Ismni tahrirlash', style: AppTextStyles.caption.copyWith(fontSize: 13)),
+                        ],
+                      ),
                     ),
                   ),
                 ],

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/api_client.dart';
+import '../../core/user_name_provider.dart';
 import '../cart/cart_screen.dart' show CartScreen, cartProvider;
 import '../notifications/notifications_providers.dart';
 import '../notifications/notifications_screen.dart';
@@ -50,6 +51,7 @@ class HomeFeedScreen extends ConsumerWidget {
     final unreadAsync = ref.watch(unreadCountProvider);
     final ordersAsync = ref.watch(myOrdersProvider);
     final newsAsync = ref.watch(newsProvider);
+    final displayName = ref.watch(userNameProvider).value;
 
     final cartCount = cartAsync.maybeWhen(
       data: (items) => items.fold<int>(0, (s, it) => s + ((it['quantity'] as int?) ?? 1)),
@@ -86,7 +88,10 @@ class HomeFeedScreen extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Assalomu alaykum 👋'.toUpperCase(), style: AppTypography.eyebrow),
+                              Text(
+                                (displayName == null ? 'Assalomu alaykum 👋' : 'Assalomu alaykum, $displayName 👋').toUpperCase(),
+                                style: AppTypography.eyebrow,
+                              ),
                               const SizedBox(height: 2),
                               Text('Fargonam', style: AppTypography.brandTitle),
                             ],

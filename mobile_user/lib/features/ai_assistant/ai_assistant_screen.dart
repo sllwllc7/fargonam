@@ -144,22 +144,10 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
               child: ListView.builder(
                 controller: _scrollCtrl,
                 padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
-                itemCount: _messages.length + (_typing ? 1 : 0) + (_messages.length <= 1 ? 1 : 0),
+                itemCount: _messages.length + (_typing ? 1 : 0),
                 itemBuilder: (context, i) {
                   if (i < _messages.length) return _MessageBubble(message: _messages[i]);
-                  if (_typing && i == _messages.length) return const _TypingBubble();
-                  return Padding(
-                    padding: EdgeInsets.only(top: 6.h),
-                    child: Wrap(
-                      spacing: 8.w,
-                      runSpacing: 8.h,
-                      children: [
-                        _QuickChip(label: '1-sinf uchun nima kerak?', onTap: () => _send('1-sinf uchun nima kerak?')),
-                        _QuickChip(label: 'Qaysi ruchka yaxshi?', onTap: () => _send('Qaysi ruchka yaxshi?')),
-                        _QuickChip(label: 'Buyurtmam qayerda?', onTap: () => _send('Buyurtmam qayerda?')),
-                      ],
-                    ),
-                  );
+                  return const _TypingBubble();
                 },
               ),
             ),
@@ -300,23 +288,3 @@ class _TypingBubbleState extends State<_TypingBubble> with SingleTickerProviderS
   }
 }
 
-class _QuickChip extends StatelessWidget {
-  const _QuickChip({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(999.r), border: Border.all(color: AppColors.borderStrong)),
-        child: Text(label, style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13, color: AppColors.text)),
-      ),
-    );
-  }
-}

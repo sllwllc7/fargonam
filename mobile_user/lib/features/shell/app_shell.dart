@@ -103,13 +103,22 @@ class AppShellState extends ConsumerState<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      // Orqaga tugmasi ilovadan chiqarib yubormasin: Asosiy tabda bo'lmasa
+      // shu tabga o'tkazadi, Asosiy tabda bo'lsa hech narsa qilmaydi.
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_index != 2) setState(() => _index = 2);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.bg,
       body: Stack(
         children: [
           IndexedStack(index: _index, children: _pages),
           ui.FloatingTabBar(activeIndex: _index, onTap: (i) => setState(() => _index = i)),
         ],
+      ),
       ),
     );
   }

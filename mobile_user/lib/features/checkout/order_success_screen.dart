@@ -15,9 +15,20 @@ class OrderSuccessScreen extends StatelessWidget {
   const OrderSuccessScreen({super.key, required this.order});
   final Map<String, dynamic> order;
 
+  void _backToHome(BuildContext context) {
+    appShellKey.currentState?.switchTab(2);
+    Navigator.popUntil(context, (route) => route.isFirst);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      // Orqaga tugmasi Checkout'ga qaytmasin — buyurtma allaqachon berilgan.
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _backToHome(context);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Center(
@@ -69,8 +80,7 @@ class OrderSuccessScreen extends StatelessWidget {
                 GestureDetector(
                   onTap: () {
                     HapticFeedback.selectionClick();
-                    appShellKey.currentState?.switchTab(2);
-                    Navigator.popUntil(context, (route) => route.isFirst);
+                    _backToHome(context);
                   },
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 10.h),
@@ -81,6 +91,7 @@ class OrderSuccessScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

@@ -12,10 +12,12 @@ import 'core/app_config_service.dart';
 import 'core/navigator_key.dart';
 import 'core/push_service.dart';
 import 'core/theme/app_colors.dart';
+import 'core/user_name_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'features/auth/auth_providers.dart';
 import 'features/auth/telegram_login_screen.dart';
+import 'features/onboarding/name_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/shell/app_shell.dart';
 import 'features/splash/splash_screen.dart';
@@ -219,7 +221,18 @@ class _RootState extends ConsumerState<_Root> with WidgetsBindingObserver {
     if (!_authChecked) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final user = ref.watch(authControllerProvider).user;
     if (user == null) return const TelegramLoginScreen();
-    return AppShell(key: appShellKey);
+
+    final nameAsync = ref.watch(userNameProvider);
+    return nameAsync.when(
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (_, _) => AppShell(key: appShellKey),
+      data: (name) {
+        if (name == null) {
+          return NameScreen(onDone: () => setState(() {}));
+        }
+        return AppShell(key: appShellKey);
+      },
+    );
   }
 }
 
