@@ -85,10 +85,10 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   bool _isPaused = false;
 
   // Dizayn ranglari (AppColors'dan)
-  static const _surfaceBg = AppColorsDark.background;
-  static const _surfaceBright = AppColorsDark.surfaceAlt;
-  static const _primaryFixed = AppColorsDark.primary;
-  static final _primaryFixedDim = AppColorsDark.primary.withValues(alpha: 0.7);
+  static const _surfaceBg = AppColors.background;
+  static const _surfaceBright = AppColors.surfaceAlt;
+  static const _primaryFixed = AppColors.primary;
+  static final _primaryFixedDim = AppColors.primary.withValues(alpha: 0.7);
 
   // Story davomiyligi (sekundda)
   static const _storyDuration = Duration(seconds: 6);
@@ -470,8 +470,8 @@ class _StoryBackgroundState extends State<_StoryBackground> {
   Widget build(BuildContext context) {
     if (widget.story.isVideo) {
       if (_ctrl == null || !_ctrl!.value.isInitialized) {
-        return Container(color: AppColorsDark.background,
-          child: const Center(child: CircularProgressIndicator(color: AppColorsDark.primary)));
+        return Container(color: AppColors.background,
+          child: const Center(child: CircularProgressIndicator(color: AppColors.primary)));
       }
       return SizedBox.expand(
         child: FittedBox(
@@ -523,7 +523,7 @@ class _StoryProgressBars extends StatelessWidget {
                         value: 1.0,
                         backgroundColor: Color(0x33FFFFFF),
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(AppColorsDark.primary),
+                            AlwaysStoppedAnimation<Color>(AppColors.primary),
                       )
                     : i == current
                         // Hozirgi story — animatsiyali
@@ -533,7 +533,7 @@ class _StoryProgressBars extends StatelessWidget {
                               value: controller.value,
                               backgroundColor: const Color(0x33FFFFFF),
                               valueColor: const AlwaysStoppedAnimation<Color>(
-                                  AppColorsDark.primary),
+                                  AppColors.primary),
                             ),
                           )
                         // Keyingi story'lar — bo'sh
@@ -564,7 +564,7 @@ class _StoryTitle extends StatelessWidget {
       style: const TextStyle(
         fontSize: 32,
         fontWeight: FontWeight.w900,
-        color: AppColorsDark.primary,
+        color: AppColors.primary,
         height: 1.15,
         letterSpacing: -1,
       ),
@@ -588,12 +588,12 @@ class _CtaButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColorsDark.primary, AppColorsDark.primary.withValues(alpha: 0.7)],
+            colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)],
           ),
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: AppColorsDark.background.withValues(alpha: 0.8),
+              color: AppColors.background.withValues(alpha: 0.8),
               blurRadius: 40,
               offset: const Offset(0, 20),
             ),
@@ -636,7 +636,7 @@ class _ShareButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(30),
           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
-        child: const Icon(Icons.share, color: AppColorsDark.primary),
+        child: const Icon(Icons.share, color: AppColors.primary),
       ),
     );
   }
@@ -656,10 +656,10 @@ class _HeaderButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColorsDark.surfaceAlt.withValues(alpha: 0.7),
+          color: AppColors.surfaceAlt.withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(30),
         ),
-        child: Icon(icon, color: AppColorsDark.primary, size: 20),
+        child: Icon(icon, color: AppColors.primary, size: 20),
       ),
     );
   }

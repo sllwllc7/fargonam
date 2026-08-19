@@ -156,13 +156,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColorsDark.background : AppColors.background;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
-    final caption = isDark ? AppTextStylesDark.caption : AppTextStyles.caption;
-    final error = isDark ? AppColorsDark.error : AppColors.error;
+    final background = isDark ? AppColors.background : AppColors.background;
+    final surface = isDark ? AppColors.surface : AppColors.surface;
+    final primary = isDark ? AppColors.primary : AppColors.primary;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.textSecondary;
+    final caption = isDark ? AppTypography.caption : AppTypography.caption;
+    final error = isDark ? AppColors.error : AppColors.error;
 
     final query = ref.watch(searchQueryProvider);
     final filter = ref.watch(searchFilterProvider);
@@ -260,7 +260,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         SizedBox(height: AppSpacing.md),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                          child: Divider(height: 1, color: isDark ? AppColorsDark.border : AppColors.border),
+                          child: Divider(height: 1, color: isDark ? AppColors.border : AppColors.border),
                         ),
                       ],
                     );
@@ -341,10 +341,10 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColorsDark.background : AppColors.background;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final title = isDark ? AppTextStylesDark.title : AppTextStyles.title;
+    final background = isDark ? AppColors.background : AppColors.background;
+    final surface = isDark ? AppColors.surface : AppColors.surface;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final title = isDark ? AppTypography.title : AppTypography.title;
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -472,11 +472,11 @@ class _RecentSearches extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
-    final error = isDark ? AppColorsDark.error : AppColors.error;
-    final title = isDark ? AppTextStylesDark.title : AppTextStyles.title;
+    final surface = isDark ? AppColors.surface : AppColors.surface;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.textSecondary;
+    final error = isDark ? AppColors.error : AppColors.error;
+    final title = isDark ? AppTypography.title : AppTypography.title;
 
     if (searches.isEmpty) {
       return AppEmptyState(
@@ -534,9 +534,9 @@ class _ShopSearchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
+    final primary = isDark ? AppColors.primary : AppColors.primary;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.textSecondary;
 
     return ListTile(
       contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
@@ -569,10 +569,10 @@ class _ProductSearchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
+    final surface = isDark ? AppColors.surface : AppColors.surface;
+    final primary = isDark ? AppColors.primary : AppColors.primary;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.textSecondary;
 
     final imgUrl = product['image_url'] as String?;
     final fullImg = imgUrl != null ? '${AppConfig.apiBaseUrl}$imgUrl' : null;

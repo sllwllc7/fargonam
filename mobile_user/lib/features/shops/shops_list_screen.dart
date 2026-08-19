@@ -15,10 +15,10 @@ class ShopsListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final shopsAsync = ref.watch(shopsProvider);
     return Scaffold(
-      backgroundColor: AppColorsDark.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Do\'konlar'),
-        backgroundColor: AppColorsDark.background,
+        backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
       ),
       body: shopsAsync.when(
@@ -37,27 +37,27 @@ class ShopsListScreen extends ConsumerWidget {
                       width: 110,
                       height: 110,
                       decoration: BoxDecoration(
-                        color: AppColorsDark.surfaceAlt,
+                        color: AppColors.surfaceAlt,
                         borderRadius: BorderRadius.circular(32),
                       ),
                       child: Icon(Icons.store,
                           size: 56,
-                          color: AppColorsDark.primary.withValues(alpha: 0.4)),
+                          color: AppColors.primary.withValues(alpha: 0.4)),
                     ),
                     const SizedBox(height: 20),
                     const Text('Do\'konlar yo\'q',
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: AppColorsDark.textPrimary)),
+                            color: AppColors.textPrimary)),
                   ],
                 ),
               ),
             );
           }
           return RefreshIndicator(
-            color: AppColorsDark.primary,
-            backgroundColor: AppColorsDark.surfaceAlt,
+            color: AppColors.primary,
+            backgroundColor: AppColors.surfaceAlt,
             onRefresh: () async {
               HapticFeedback.lightImpact();
               ref.invalidate(shopsProvider);
@@ -117,12 +117,12 @@ class _ShopGridCardState extends State<_ShopGridCard> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppColorsDark.surface,
-                AppColorsDark.surfaceAlt,
+                AppColors.surface,
+                AppColors.surfaceAlt,
               ],
             ),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColorsDark.border, width: 0.5),
+            border: Border.all(color: AppColors.border, width: 0.5),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,21 +133,21 @@ class _ShopGridCardState extends State<_ShopGridCard> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppColorsDark.primary,
-                      AppColorsDark.primary.withValues(alpha: 0.7),
+                      AppColors.primary,
+                      AppColors.primary.withValues(alpha: 0.7),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColorsDark.primary.withValues(alpha: 0.25),
+                      color: AppColors.primary.withValues(alpha: 0.25),
                       blurRadius: 14,
                       offset: const Offset(0, 6),
                     ),
                   ],
                 ),
                 child: const Icon(Icons.store,
-                    color: AppColorsDark.background, size: 28),
+                    color: AppColors.background, size: 28),
               ),
               const Spacer(),
               Text(
@@ -157,7 +157,7 @@ class _ShopGridCardState extends State<_ShopGridCard> {
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: AppColorsDark.textPrimary,
+                  color: AppColors.textPrimary,
                   letterSpacing: -0.3,
                 ),
               ),
@@ -170,7 +170,7 @@ class _ShopGridCardState extends State<_ShopGridCard> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                       fontSize: 12,
-                      color: AppColorsDark.textSecondary.withValues(alpha: 0.7)),
+                      color: AppColors.textSecondary.withValues(alpha: 0.7)),
                 ),
               ],
             ],

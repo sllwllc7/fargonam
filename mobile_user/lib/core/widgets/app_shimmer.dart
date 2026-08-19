@@ -38,8 +38,8 @@ class _AppShimmerState extends State<AppShimmer> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final base = isDark ? AppColorsDark.surface : AppColors.surface;
-    final highlight = isDark ? AppColorsDark.surfaceAlt : AppColors.surfaceAlt;
+    final base = isDark ? AppColors.surface : AppColors.surface;
+    final highlight = isDark ? AppColors.surfaceAlt : AppColors.surfaceAlt;
     final radius = widget.borderRadius ?? AppRadius.card;
 
     return AnimatedBuilder(

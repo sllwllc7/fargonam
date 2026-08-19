@@ -82,9 +82,9 @@ class _MarkerIcons {
 
   static Future<void> ensureLoaded() async {
     pickup ??= await _circleMarker(
-        color: AppColorsDark.success, icon: Icons.my_location);
+        color: AppColors.success, icon: Icons.my_location);
     destination ??= await _circleMarker(
-        color: AppColorsDark.error, icon: Icons.location_on);
+        color: AppColors.error, icon: Icons.location_on);
     driver ??= await _circleMarker(
         color: const Color(0xFFC77B1E), icon: Icons.local_taxi);
   }
@@ -184,10 +184,10 @@ class _TaxiScreenState extends ConsumerState<TaxiScreen> {
   Widget build(BuildContext context) {
     final rideAsync = ref.watch(activeRideProvider);
     return Scaffold(
-      backgroundColor: AppColorsDark.background,
+      backgroundColor: AppColors.background,
       body: rideAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColorsDark.success)),
+            child: CircularProgressIndicator(color: AppColors.success)),
         error: (e, _) => ErrorRetryWidget(
           error: e,
           onRetry: () => ref.invalidate(activeRideProvider),
@@ -238,12 +238,12 @@ class _TaxiScreenState extends ConsumerState<TaxiScreen> {
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: AppColorsDark.surface,
+          backgroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24)),
           title: const Row(
             children: [
-              Icon(Icons.celebration, color: AppColorsDark.success),
+              Icon(Icons.celebration, color: AppColors.success),
               SizedBox(width: 10),
               Text('Sayohat tugadi!'),
             ],
@@ -252,7 +252,7 @@ class _TaxiScreenState extends ConsumerState<TaxiScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text('Haydovchini baholang:',
-                  style: TextStyle(color: AppColorsDark.textSecondary)),
+                  style: TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -304,7 +304,7 @@ class _TaxiScreenState extends ConsumerState<TaxiScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('Rahmat! Bahoyingiz saqlandi'),
-                backgroundColor: AppColorsDark.success,
+                backgroundColor: AppColors.success,
                 duration: Duration(milliseconds: 1600)),
           );
         }
@@ -544,7 +544,7 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                 .map(_toPoint)
                 .toList(),
           ),
-          strokeColor: AppColorsDark.background,
+          strokeColor: AppColors.background,
           strokeWidth: 5,
           outlineColor: Colors.white,
           outlineWidth: 2,
@@ -594,8 +594,8 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColorsDark.background.withValues(alpha: 0.95),
-                  AppColorsDark.background.withValues(alpha: 0),
+                  AppColors.background.withValues(alpha: 0.95),
+                  AppColors.background.withValues(alpha: 0),
                 ],
               ),
             ),
@@ -612,12 +612,12 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: AppColorsDark.success,
+                    color: AppColors.success,
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
                         color:
-                            AppColorsDark.success.withValues(alpha: 0.35),
+                            AppColors.success.withValues(alpha: 0.35),
                         blurRadius: 16,
                         offset: const Offset(0, 6),
                       ),
@@ -635,14 +635,14 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: AppColorsDark.textPrimary,
+                        color: AppColors.textPrimary,
                         letterSpacing: -0.5,
                       ),
                     ),
                     Text(
                       'Tez va qulay sayohat',
                       style: TextStyle(
-                          fontSize: 12, color: AppColorsDark.textSecondary.withValues(alpha: 0.7)),
+                          fontSize: 12, color: AppColors.textSecondary.withValues(alpha: 0.7)),
                     ),
                   ],
                 ),
@@ -650,7 +650,7 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                 _CircleIconButton(
                   icon: Icons.gps_fixed,
                   color: _gpsState == GpsState.ok
-                      ? AppColorsDark.success
+                      ? AppColors.success
                       : const Color(0xFFC77B1E),
                   onTap: _loadLocation,
                   loading: _gpsState == GpsState.loading,
@@ -684,7 +684,7 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
           snapSizes: const [0.18, 0.42, 0.85],
           builder: (context, scrollCtrl) => Container(
             decoration: BoxDecoration(
-              color: AppColorsDark.surface,
+              color: AppColors.surface,
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(28)),
               boxShadow: [
@@ -706,7 +706,7 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                     width: 44,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: AppColorsDark.border,
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
@@ -721,7 +721,7 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
-                          color: AppColorsDark.textPrimary,
+                          color: AppColors.textPrimary,
                           letterSpacing: -0.5,
                         ),
                       ),
@@ -744,7 +744,7 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: AppColorsDark.surfaceAlt,
+                          color: AppColors.surfaceAlt,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Column(
@@ -753,7 +753,7 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                               controller: _pickupCtrl,
                               hint: 'Qayerdan (olish manzili)',
                               icon: Icons.radio_button_checked,
-                              iconColor: AppColorsDark.success,
+                              iconColor: AppColors.success,
                               nearLocation: _myLocation,
                               onSelected: (s) {
                                 HapticFeedback.selectionClick();
@@ -782,7 +782,7 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                                   Container(
                                     width: 1,
                                     height: 16,
-                                    color: AppColorsDark.border,
+                                    color: AppColors.border,
                                   ),
                                   const Spacer(),
                                   GestureDetector(
@@ -797,13 +797,13 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                                         width: 32,
                                         height: 32,
                                         decoration: BoxDecoration(
-                                          color: AppColorsDark.surfaceAlt,
+                                          color: AppColors.surfaceAlt,
                                           borderRadius:
                                               BorderRadius.circular(10),
                                         ),
                                         child: const Icon(Icons.swap_vert,
                                             color:
-                                                AppColorsDark.textSecondary,
+                                                AppColors.textSecondary,
                                             size: 18),
                                       ),
                                     ),
@@ -815,7 +815,7 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                               controller: _destCtrl,
                               hint: 'Qayerga (borish manzili)',
                               icon: Icons.location_on,
-                              iconColor: AppColorsDark.error,
+                              iconColor: AppColors.error,
                               nearLocation: _myLocation,
                               onSelected: (s) {
                                 HapticFeedback.selectionClick();
@@ -873,19 +873,19 @@ class _RequestRideViewState extends ConsumerState<_RequestRideView>
                                 child: Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: AppColorsDark.error.withValues(alpha: 0.15),
+                                    color: AppColors.error.withValues(alpha: 0.15),
                                     borderRadius:
                                         BorderRadius.circular(12),
                                   ),
                                   child: Row(
                                     children: [
                                       const Icon(Icons.error_outline,
-                                          color: AppColorsDark.error, size: 18),
+                                          color: AppColors.error, size: 18),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(_error!,
                                             style: const TextStyle(
-                                                color: AppColorsDark.error,
+                                                color: AppColors.error,
                                                 fontSize: 13)),
                                       ),
                                     ],
@@ -999,20 +999,20 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColorsDark.surface,
+        backgroundColor: AppColors.surface,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Sayohatni bekor qilish?'),
         content: const Text(
             'Haqiqatan ham bu sayohatni bekor qilmoqchimisiz?',
-            style: TextStyle(color: AppColorsDark.textSecondary)),
+            style: TextStyle(color: AppColors.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Yo\'q'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColorsDark.error),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Ha, bekor qilish'),
           ),
@@ -1130,7 +1130,7 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
               _toPoint(destPoint),
             ],
           ),
-          strokeColor: AppColorsDark.background,
+          strokeColor: AppColors.background,
           strokeWidth: 4,
           outlineColor: Colors.white,
           outlineWidth: 2,
@@ -1164,9 +1164,9 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColorsDark.surface.withValues(alpha: 0.96),
+                color: AppColors.surface.withValues(alpha: 0.96),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColorsDark.border),
+                border: Border.all(color: AppColors.border),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.25),
@@ -1199,7 +1199,7 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
                         Text(
                           statusInfo.subtitle,
                           style: TextStyle(
-                              fontSize: 12, color: AppColorsDark.textSecondary.withValues(alpha: 0.7)),
+                              fontSize: 12, color: AppColors.textSecondary.withValues(alpha: 0.7)),
                         ),
                       ],
                     ),
@@ -1226,7 +1226,7 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
           child: SafeArea(
             child: _CircleIconButton(
               icon: Icons.center_focus_strong,
-              color: AppColorsDark.primary,
+              color: AppColors.primary,
               onTap: () => _fitAll(pickupPoint, destPoint, driverPoint),
             ),
           ),
@@ -1239,7 +1239,7 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
           right: 0,
           child: Container(
             decoration: BoxDecoration(
-              color: AppColorsDark.surface,
+              color: AppColors.surface,
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(28)),
               boxShadow: [
@@ -1262,7 +1262,7 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
                       width: 44,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: AppColorsDark.border,
+                        color: AppColors.border,
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
@@ -1277,7 +1277,7 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColorsDark.surfaceAlt,
+                          color: AppColors.surfaceAlt,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Column(
@@ -1288,7 +1288,7 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
                                   width: 50,
                                   height: 50,
                                   decoration: BoxDecoration(
-                                    color: AppColorsDark.success,
+                                    color: AppColors.success,
                                     borderRadius:
                                         BorderRadius.circular(16),
                                   ),
@@ -1306,7 +1306,7 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w700,
-                                          color: AppColorsDark.textPrimary,
+                                          color: AppColors.textPrimary,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -1317,7 +1317,7 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
                                         style: const TextStyle(
                                             fontSize: 13,
                                             color:
-                                                AppColorsDark.textSecondary),
+                                                AppColors.textSecondary),
                                       ),
                                     ],
                                   ),
@@ -1329,16 +1329,16 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
                                       width: 44,
                                       height: 44,
                                       decoration: BoxDecoration(
-                                        color: AppColorsDark.success.withValues(alpha: 0.15),
+                                        color: AppColors.success.withValues(alpha: 0.15),
                                         borderRadius:
                                             BorderRadius.circular(14),
                                         border: Border.all(
-                                          color: AppColorsDark.success
+                                          color: AppColors.success
                                               .withValues(alpha: 0.4),
                                         ),
                                       ),
                                       child: const Icon(Icons.phone,
-                                          color: AppColorsDark.success,
+                                          color: AppColors.success,
                                           size: 20),
                                     ),
                                   ),
@@ -1351,7 +1351,7 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: AppColorsDark.surface,
+                                  color: AppColors.surface,
                                   borderRadius:
                                       BorderRadius.circular(14),
                                 ),
@@ -1361,7 +1361,7 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
                                     style: const TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w800,
-                                      color: AppColorsDark.success,
+                                      color: AppColors.success,
                                       letterSpacing: -0.5,
                                     ),
                                   ),
@@ -1380,17 +1380,17 @@ class _ActiveRideViewState extends ConsumerState<_ActiveRideView>
                         child: Container(
                           height: 52,
                           decoration: BoxDecoration(
-                            color: AppColorsDark.error.withValues(alpha: 0.15),
+                            color: AppColors.error.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                                color: AppColorsDark.error
+                                color: AppColors.error
                                     .withValues(alpha: 0.3)),
                           ),
                           child: const Center(
                             child: Text(
                               'Bekor qilish',
                               style: TextStyle(
-                                color: AppColorsDark.error,
+                                color: AppColors.error,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -1503,9 +1503,9 @@ class _CircleIconButton extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: AppColorsDark.surfaceAlt,
+          color: AppColors.surfaceAlt,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColorsDark.border),
+          border: Border.all(color: AppColors.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.25),
@@ -1569,7 +1569,7 @@ class _GpsBanner extends StatelessWidget {
                 const Text(
                   'Manzilni qo\'lda kiriting yoki ruxsat bering',
                   style: TextStyle(
-                      color: AppColorsDark.textSecondary, fontSize: 11),
+                      color: AppColors.textSecondary, fontSize: 11),
                 ),
               ],
             ),
@@ -1586,7 +1586,7 @@ class _GpsBanner extends StatelessWidget {
               child: const Text(
                 'Qayta',
                 style: TextStyle(
-                  color: AppColorsDark.background,
+                  color: AppColors.background,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
@@ -1635,13 +1635,13 @@ class _TariffSelector extends StatelessWidget {
                   horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppColorsDark.success.withValues(alpha: 0.15)
-                    : AppColorsDark.surfaceAlt,
+                    ? AppColors.success.withValues(alpha: 0.15)
+                    : AppColors.surfaceAlt,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
-                      ? AppColorsDark.success
-                      : AppColorsDark.border,
+                      ? AppColors.success
+                      : AppColors.border,
                   width: isSelected ? 1.5 : 0.5,
                 ),
               ),
@@ -1650,8 +1650,8 @@ class _TariffSelector extends StatelessWidget {
                 children: [
                   Icon(t.icon,
                       color: isSelected
-                          ? AppColorsDark.success
-                          : AppColorsDark.textSecondary,
+                          ? AppColors.success
+                          : AppColors.textSecondary,
                       size: 20),
                   const SizedBox(height: 6),
                   Text(
@@ -1660,8 +1660,8 @@ class _TariffSelector extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: isSelected
-                          ? AppColorsDark.textPrimary
-                          : AppColorsDark.textSecondary,
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
                     ),
                   ),
                   const Spacer(),
@@ -1674,15 +1674,15 @@ class _TariffSelector extends StatelessWidget {
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: isSelected
-                            ? AppColorsDark.success
-                            : AppColorsDark.textSecondary.withValues(alpha: 0.7),
+                            ? AppColors.success
+                            : AppColors.textSecondary.withValues(alpha: 0.7),
                       ),
                     )
                   else
                     Text(
                       t.subtitle,
                       style: TextStyle(
-                          fontSize: 10, color: AppColorsDark.textSecondary.withValues(alpha: 0.7)),
+                          fontSize: 10, color: AppColors.textSecondary.withValues(alpha: 0.7)),
                     ),
                 ],
               ),
@@ -1719,20 +1719,20 @@ class _FareCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 16, vertical: 18),
               decoration: BoxDecoration(
-                color: AppColorsDark.surfaceAlt,
+                color: AppColors.surfaceAlt,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColorsDark.border),
+                border: Border.all(color: AppColors.border),
               ),
               child: const Row(
                 children: [
                   Icon(Icons.touch_app,
-                      color: AppColorsDark.textSecondary, size: 22),
+                      color: AppColors.textSecondary, size: 22),
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Manzilni tanlang yoki xaritada bosing',
                       style: TextStyle(
-                          color: AppColorsDark.textSecondary, fontSize: 13),
+                          color: AppColors.textSecondary, fontSize: 13),
                     ),
                   ),
                 ],
@@ -1743,9 +1743,9 @@ class _FareCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColorsDark.surfaceAlt,
+                color: AppColors.surfaceAlt,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColorsDark.border),
+                border: Border.all(color: AppColors.border),
               ),
               child: Row(
                 children: [
@@ -1757,11 +1757,11 @@ class _FareCard extends StatelessWidget {
                       value: distanceKm != null
                           ? '${distanceKm!.toStringAsFixed(1)} km'
                           : '-- km',
-                      color: AppColorsDark.primary,
+                      color: AppColors.primary,
                     ),
                   const SizedBox(width: 14),
                   Container(
-                      width: 1, height: 28, color: AppColorsDark.border),
+                      width: 1, height: 28, color: AppColors.border),
                   const SizedBox(width: 14),
                   if (estimating && durationMin == null)
                     const ShimmerBox(width: 50, height: 16)
@@ -1771,7 +1771,7 @@ class _FareCard extends StatelessWidget {
                       value: durationMin != null
                           ? '$durationMin min'
                           : '-- min',
-                      color: AppColorsDark.success,
+                      color: AppColors.success,
                     ),
                   const Spacer(),
                   if (estimating && fare == null)
@@ -1781,7 +1781,7 @@ class _FareCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppColorsDark.success.withValues(alpha: 0.15),
+                        color: AppColors.success.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -1791,7 +1791,7 @@ class _FareCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: AppColorsDark.success,
+                          color: AppColors.success,
                         ),
                       ),
                     ),
@@ -1827,13 +1827,13 @@ class _PrimaryActionButton extends StatelessWidget {
         curve: Curves.easeOut,
         height: 56,
         decoration: BoxDecoration(
-          color: disabled ? AppColorsDark.surfaceAlt : AppColorsDark.success,
+          color: disabled ? AppColors.surfaceAlt : AppColors.success,
           borderRadius: BorderRadius.circular(18),
           boxShadow: disabled
               ? null
               : [
                   BoxShadow(
-                    color: AppColorsDark.success.withValues(alpha: 0.35),
+                    color: AppColors.success.withValues(alpha: 0.35),
                     blurRadius: 22,
                     offset: const Offset(0, 10),
                   ),
@@ -1852,7 +1852,7 @@ class _PrimaryActionButton extends StatelessWidget {
                   children: [
                     Icon(icon,
                         color: disabled
-                            ? AppColorsDark.textSecondary.withValues(alpha: 0.7)
+                            ? AppColors.textSecondary.withValues(alpha: 0.7)
                             : Colors.white,
                         size: 22),
                     const SizedBox(width: 10),
@@ -1860,7 +1860,7 @@ class _PrimaryActionButton extends StatelessWidget {
                       label,
                       style: TextStyle(
                         color: disabled
-                            ? AppColorsDark.textSecondary.withValues(alpha: 0.7)
+                            ? AppColors.textSecondary.withValues(alpha: 0.7)
                             : Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -1918,7 +1918,7 @@ class _RouteInfo extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColorsDark.surfaceAlt,
+        color: AppColors.surfaceAlt,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -1929,16 +1929,16 @@ class _RouteInfo extends StatelessWidget {
                 width: 10,
                 height: 10,
                 decoration: const BoxDecoration(
-                  color: AppColorsDark.success,
+                  color: AppColors.success,
                   shape: BoxShape.circle,
                 ),
               ),
-              Container(width: 1.5, height: 28, color: AppColorsDark.border),
+              Container(width: 1.5, height: 28, color: AppColors.border),
               Container(
                 width: 10,
                 height: 10,
                 decoration: const BoxDecoration(
-                  color: AppColorsDark.error,
+                  color: AppColors.error,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -1954,7 +1954,7 @@ class _RouteInfo extends StatelessWidget {
                   style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColorsDark.textPrimary),
+                      color: AppColors.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1964,7 +1964,7 @@ class _RouteInfo extends StatelessWidget {
                   style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColorsDark.textPrimary),
+                      color: AppColors.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1997,22 +1997,22 @@ _StatusInfo _getStatusInfo(String status) {
     'accepted' => const _StatusInfo(
         'Haydovchi yo\'lda',
         'Haydovchi sizga qarab kelmoqda',
-        AppColorsDark.primary,
+        AppColors.primary,
         Icons.directions_car,
       ),
     'arrived' => const _StatusInfo(
         'Haydovchi yetib keldi!',
         'Mashinaga chiqishingiz mumkin',
-        AppColorsDark.success,
+        AppColors.success,
         Icons.place,
       ),
     'in_progress' => const _StatusInfo(
         'Sayohat davom etmoqda',
         'Manzilingizga yaqinlashyapsiz...',
-        AppColorsDark.success,
+        AppColors.success,
         Icons.navigation,
       ),
-    _ => _StatusInfo(status, '', AppColorsDark.textSecondary, Icons.info_outline),
+    _ => _StatusInfo(status, '', AppColors.textSecondary, Icons.info_outline),
   };
 }
 
@@ -2051,15 +2051,15 @@ class _SavedAddressChips extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: AppColorsDark.surfaceAlt,
+                    color: AppColors.surfaceAlt,
                     borderRadius: BorderRadius.circular(20),
                     border:
-                        Border.all(color: AppColorsDark.border, width: 0.5),
+                        Border.all(color: AppColors.border, width: 0.5),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(icon, size: 16, color: AppColorsDark.primary),
+                      Icon(icon, size: 16, color: AppColors.primary),
                       const SizedBox(width: 6),
                       Text(label,
                           style: const TextStyle(

@@ -37,15 +37,15 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? AppColorsDark.background : AppColors.background,
+        backgroundColor: isDark ? AppColors.background : AppColors.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: const Text('Buyurtmani bekor qilish'),
         content: Text('Rostdan ham bu buyurtmani bekor qilmoqchimisiz?',
-            style: TextStyle(color: isDark ? AppColorsDark.textSecondary : AppColors.textSecondary)),
+            style: TextStyle(color: isDark ? AppColors.textSecondary : AppColors.textSecondary)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Yo\'q')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: isDark ? AppColorsDark.error : AppColors.error),
+            style: FilledButton.styleFrom(backgroundColor: isDark ? AppColors.error : AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Ha, bekor qilish'),
           ),
@@ -65,7 +65,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Buyurtma bekor qilindi'),
-            backgroundColor: isDark ? AppColorsDark.success : AppColors.success,
+            backgroundColor: isDark ? AppColors.success : AppColors.success,
             duration: const Duration(milliseconds: 1600),
           ),
         );
@@ -77,7 +77,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.response?.data['detail']?.toString() ?? 'Xato'),
-            backgroundColor: isDark ? AppColorsDark.error : AppColors.error,
+            backgroundColor: isDark ? AppColors.error : AppColors.error,
             duration: const Duration(milliseconds: 1600),
           ),
         );
@@ -90,15 +90,15 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColorsDark.background : AppColors.background;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
-    final error = isDark ? AppColorsDark.error : AppColors.error;
-    final success = isDark ? AppColorsDark.success : AppColors.success;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
-    final title = isDark ? AppTextStylesDark.title : AppTextStyles.title;
-    final caption = isDark ? AppTextStylesDark.caption : AppTextStyles.caption;
+    final background = isDark ? AppColors.background : AppColors.background;
+    final surface = isDark ? AppColors.surface : AppColors.surface;
+    final primary = isDark ? AppColors.primary : AppColors.primary;
+    final error = isDark ? AppColors.error : AppColors.error;
+    final success = isDark ? AppColors.success : AppColors.success;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.textSecondary;
+    final title = isDark ? AppTypography.title : AppTypography.title;
+    final caption = isDark ? AppTypography.caption : AppTypography.caption;
 
     final items = (order['items'] as List?) ?? [];
     final status = order['status'] as String;
@@ -221,7 +221,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                       ),
                     ),
                   ],
-                  Divider(height: AppSpacing.xl, color: isDark ? AppColorsDark.border : AppColors.border),
+                  Divider(height: AppSpacing.xl, color: isDark ? AppColors.border : AppColors.border),
                 ],
                 Row(
                   children: [
@@ -266,7 +266,7 @@ class _CancelledBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final error = isDark ? AppColorsDark.error : AppColors.error;
+    final error = isDark ? AppColors.error : AppColors.error;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(AppSpacing.lg),
@@ -355,10 +355,10 @@ class _StepRowState extends State<_StepRow> with SingleTickerProviderStateMixin 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final success = isDark ? AppColorsDark.success : AppColors.success;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
+    final success = isDark ? AppColors.success : AppColors.success;
+    final surface = isDark ? AppColors.surface : AppColors.surface;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.textSecondary;
 
     final color = widget.isCompleted ? success : textSecondary;
     return Row(
@@ -407,8 +407,8 @@ class _StepLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final success = isDark ? AppColorsDark.success : AppColors.success;
-    final border = isDark ? AppColorsDark.border : AppColors.border;
+    final success = isDark ? AppColors.success : AppColors.success;
+    final border = isDark ? AppColors.border : AppColors.border;
     return Padding(
       padding: EdgeInsets.only(left: 17.w),
       child: Container(width: 2, height: 26.h, color: isCompleted ? success : border),
@@ -425,11 +425,11 @@ class _OrderItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final background = isDark ? AppColorsDark.background : AppColors.background;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
+    final primary = isDark ? AppColors.primary : AppColors.primary;
+    final surface = isDark ? AppColors.surface : AppColors.surface;
+    final background = isDark ? AppColors.background : AppColors.background;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.textSecondary;
 
     final name = item['product_name'] as String? ?? 'Mahsulot #${item['product_id']}';
     final imgUrl = item['product_image_url'] as String?;

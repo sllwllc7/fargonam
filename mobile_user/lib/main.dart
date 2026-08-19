@@ -193,12 +193,12 @@ class _RootState extends ConsumerState<_Root> with WidgetsBindingObserver {
       builder: (_) => PopScope(
         canPop: false,
         child: AlertDialog(
-          backgroundColor: AppColorsDark.surface,
+          backgroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text('Yangilanish kerak'),
           content: const Text(
             'Ilovaning yangi versiyasi chiqdi. Davom etish uchun yangilang.',
-            style: TextStyle(color: AppColorsDark.textSecondary),
+            style: TextStyle(color: AppColors.textSecondary),
           ),
           actions: [
             FilledButton(
@@ -243,7 +243,7 @@ class _MaintenanceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColorsDark.background,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -255,11 +255,11 @@ class _MaintenanceScreen extends StatelessWidget {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: AppColorsDark.surfaceAlt,
+                    color: AppColors.surfaceAlt,
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: const Icon(Icons.build_outlined,
-                      size: 52, color: AppColorsDark.primary),
+                      size: 52, color: AppColors.primary),
                 ),
                 const SizedBox(height: 28),
                 const Text(
@@ -267,7 +267,7 @@ class _MaintenanceScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
-                    color: AppColorsDark.textPrimary,
+                    color: AppColors.textPrimary,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -278,7 +278,7 @@ class _MaintenanceScreen extends StatelessWidget {
                       : 'Texnik ishlar olib borilmoqda.\nTez orada qaytamiz.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: AppColorsDark.textSecondary,
+                    color: AppColors.textSecondary,
                     fontSize: 15,
                     height: 1.5,
                   ),

@@ -37,10 +37,10 @@ class HelpScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColorsDark.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Yordam'),
-        backgroundColor: AppColorsDark.background,
+        backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
       ),
       body: ListView(
@@ -53,10 +53,10 @@ class HelpScreen extends StatelessWidget {
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [AppColorsDark.surface, AppColorsDark.surfaceAlt],
+                colors: [AppColors.surface, AppColors.surfaceAlt],
               ),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColorsDark.border, width: 0.5),
+              border: Border.all(color: AppColors.border, width: 0.5),
             ),
             child: Column(
               children: [
@@ -64,11 +64,11 @@ class HelpScreen extends StatelessWidget {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: AppColorsDark.primary.withValues(alpha: 0.12),
+                    color: AppColors.primary.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.support_agent,
-                      size: 40, color: AppColorsDark.primary),
+                      size: 40, color: AppColors.primary),
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -76,7 +76,7 @@ class HelpScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: AppColorsDark.textPrimary,
+                    color: AppColors.textPrimary,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -84,7 +84,7 @@ class HelpScreen extends StatelessWidget {
                 const Text(
                   'Savolingiz bormi? Biz yordam beramiz!',
                   style: TextStyle(
-                      color: AppColorsDark.textSecondary, fontSize: 14),
+                      color: AppColors.textSecondary, fontSize: 14),
                 ),
                 const SizedBox(height: 18),
                 Row(
@@ -150,7 +150,7 @@ class HelpScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: AppColorsDark.textSecondary.withValues(alpha: 0.7),
+                color: AppColors.textSecondary.withValues(alpha: 0.7),
                 letterSpacing: 1.5,
               ),
             ),
@@ -163,7 +163,7 @@ class HelpScreen extends StatelessWidget {
             child: Text(
               'Fargonam v0.1.0',
               style: TextStyle(
-                  color: AppColorsDark.textSecondary.withValues(alpha: 0.7), fontSize: 12),
+                  color: AppColors.textSecondary.withValues(alpha: 0.7), fontSize: 12),
             ),
           ),
           const SizedBox(height: 16),
@@ -198,9 +198,9 @@ class _FaqTileState extends State<_FaqTile>
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: AppColorsDark.surface,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColorsDark.border, width: 0.5),
+        border: Border.all(color: AppColors.border, width: 0.5),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -221,7 +221,7 @@ class _FaqTileState extends State<_FaqTile>
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
-                        color: AppColorsDark.textPrimary,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -232,13 +232,13 @@ class _FaqTileState extends State<_FaqTile>
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: AppColorsDark.surfaceAlt,
+                        color: AppColors.surfaceAlt,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.keyboard_arrow_down,
                         size: 18,
-                        color: AppColorsDark.primary,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -256,7 +256,7 @@ class _FaqTileState extends State<_FaqTile>
                     child: Text(
                       widget.answer,
                       style: const TextStyle(
-                        color: AppColorsDark.textSecondary,
+                        color: AppColors.textSecondary,
                         fontSize: 14,
                         height: 1.5,
                       ),

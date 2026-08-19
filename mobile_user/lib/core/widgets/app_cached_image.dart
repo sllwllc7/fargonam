@@ -26,8 +26,8 @@ class AppCachedImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface = isDark ? AppColorsDark.surfaceAlt : AppColors.surfaceAlt;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
+    final surface = isDark ? AppColors.surfaceAlt : AppColors.surfaceAlt;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.textSecondary;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),

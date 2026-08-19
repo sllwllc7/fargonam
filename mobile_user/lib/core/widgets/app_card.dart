@@ -23,7 +23,7 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = color ?? (isDark ? AppColorsDark.surface : AppColors.background);
+    final bg = color ?? (isDark ? AppColors.surface : AppColors.background);
     final radius = BorderRadius.circular(AppRadius.card);
 
     final content = Container(

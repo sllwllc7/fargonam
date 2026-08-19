@@ -72,11 +72,11 @@ class _NameScreenState extends ConsumerState<NameScreen> {
                   color: AppColors.text,
                 ),
               SizedBox(height: isEdit ? 8.h : 60.h),
-              Text('Tanishib olaylik', style: AppTextStyles.h1),
+              Text('Tanishib olaylik', style: AppTypography.h1),
               SizedBox(height: 8.h),
               Text(
                 'Sizga qanday murojaat qilishimizni bilishni xohlaymiz',
-                style: AppTextStyles.body.copyWith(color: AppColors.textMuted),
+                style: AppTypography.body.copyWith(color: AppColors.textMuted),
               ),
               SizedBox(height: 32.h),
               AppInput(

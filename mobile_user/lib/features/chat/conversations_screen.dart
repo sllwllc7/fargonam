@@ -20,10 +20,10 @@ class ConversationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final convosAsync = ref.watch(conversationsProvider);
     return Scaffold(
-      backgroundColor: AppColorsDark.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Xabarlar'),
-        backgroundColor: AppColorsDark.background,
+        backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
       ),
       body: convosAsync.when(
@@ -33,8 +33,8 @@ class ConversationsScreen extends ConsumerWidget {
         data: (convos) {
           if (convos.isEmpty) return const _EmptyConvosState();
           return RefreshIndicator(
-            color: AppColorsDark.primary,
-            backgroundColor: AppColorsDark.surfaceAlt,
+            color: AppColors.primary,
+            backgroundColor: AppColors.surfaceAlt,
             onRefresh: () async {
               HapticFeedback.lightImpact();
               ref.invalidate(conversationsProvider);
@@ -46,7 +46,7 @@ class ConversationsScreen extends ConsumerWidget {
                   height: 1,
                   indent: 80,
                   endIndent: 16,
-                  color: AppColorsDark.border),
+                  color: AppColors.border),
               itemBuilder: (context, i) {
                 final c = convos[i];
                 return _ConversationTile(
@@ -118,7 +118,7 @@ class _ConversationTileState extends State<_ConversationTile> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 120),
         color: _pressed
-            ? AppColorsDark.surface.withValues(alpha: 0.5)
+            ? AppColors.surface.withValues(alpha: 0.5)
             : Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -130,11 +130,11 @@ class _ConversationTileState extends State<_ConversationTile> {
               decoration: BoxDecoration(
                 gradient: hasUnread
                     ? LinearGradient(
-                        colors: [AppColorsDark.primary, AppColorsDark.primary.withValues(alpha: 0.7)])
+                        colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)])
                     : LinearGradient(
                         colors: [
-                          AppColorsDark.surfaceAlt,
-                          AppColorsDark.surfaceAlt
+                          AppColors.surfaceAlt,
+                          AppColors.surfaceAlt
                         ],
                       ),
                 shape: BoxShape.circle,
@@ -142,7 +142,7 @@ class _ConversationTileState extends State<_ConversationTile> {
                     ? [
                         BoxShadow(
                           color:
-                              AppColorsDark.primary.withValues(alpha: 0.3),
+                              AppColors.primary.withValues(alpha: 0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -156,7 +156,7 @@ class _ConversationTileState extends State<_ConversationTile> {
                     fontWeight: FontWeight.w800,
                     color: hasUnread
                         ? AppColors.primary
-                        : AppColorsDark.textPrimary,
+                        : AppColors.textPrimary,
                     fontSize: 20,
                   ),
                 ),
@@ -179,7 +179,7 @@ class _ConversationTileState extends State<_ConversationTile> {
                                 ? FontWeight.w800
                                 : FontWeight.w700,
                             fontSize: 15,
-                            color: AppColorsDark.textPrimary,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -189,8 +189,8 @@ class _ConversationTileState extends State<_ConversationTile> {
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: hasUnread
-                              ? AppColorsDark.primary
-                              : AppColorsDark.textSecondary.withValues(alpha: 0.7),
+                              ? AppColors.primary
+                              : AppColors.textSecondary.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -205,8 +205,8 @@ class _ConversationTileState extends State<_ConversationTile> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: hasUnread
-                                ? AppColorsDark.textPrimary
-                                : AppColorsDark.textSecondary.withValues(alpha: 0.7),
+                                ? AppColors.textPrimary
+                                : AppColors.textSecondary.withValues(alpha: 0.7),
                             fontSize: 13,
                             fontWeight: hasUnread
                                 ? FontWeight.w600
@@ -220,11 +220,11 @@ class _ConversationTileState extends State<_ConversationTile> {
                           width: 10,
                           height: 10,
                           decoration: BoxDecoration(
-                            color: AppColorsDark.primary,
+                            color: AppColors.primary,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColorsDark.primary
+                                color: AppColors.primary
                                     .withValues(alpha: 0.5),
                                 blurRadius: 6,
                                 spreadRadius: 1,
@@ -255,7 +255,7 @@ class _ConvosSkeleton extends StatelessWidget {
           height: 1,
           indent: 80,
           endIndent: 16,
-          color: AppColorsDark.border),
+          color: AppColors.border),
       itemBuilder: (_, _) => Padding(
         padding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -294,13 +294,13 @@ class _EmptyConvosState extends StatelessWidget {
               width: 110,
               height: 110,
               decoration: BoxDecoration(
-                color: AppColorsDark.surfaceAlt,
+                color: AppColors.surfaceAlt,
                 borderRadius: BorderRadius.circular(32),
               ),
               child: Icon(
                 Icons.chat_bubble_outline,
                 size: 56,
-                color: AppColorsDark.primary.withValues(alpha: 0.4),
+                color: AppColors.primary.withValues(alpha: 0.4),
               ),
             ),
             const SizedBox(height: 24),
@@ -309,7 +309,7 @@ class _EmptyConvosState extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: AppColorsDark.textPrimary,
+                color: AppColors.textPrimary,
                 letterSpacing: -0.5,
               ),
             ),
@@ -318,7 +318,7 @@ class _EmptyConvosState extends StatelessWidget {
               'Sotuvchi yoki haydovchi bilan\nyozishmalaringiz shu yerda paydo bo\'ladi',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColorsDark.textSecondary,
+                color: AppColors.textSecondary,
                 fontSize: 14,
                 height: 1.5,
               ),

@@ -32,19 +32,19 @@ class ShopDetailScreen extends ConsumerWidget {
     final prodsAsync = ref.watch(shopProductsProvider(shopId));
 
     return Scaffold(
-      backgroundColor: AppColorsDark.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: shopAsync.when(
           data: (s) => Text(s['name'] as String),
           loading: () => const Text('Do\'kon'),
           error: (_, _) => const Text('Do\'kon'),
         ),
-        backgroundColor: AppColorsDark.background,
+        backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
       ),
       body: RefreshIndicator(
-        color: AppColorsDark.primary,
-        backgroundColor: AppColorsDark.surfaceAlt,
+        color: AppColors.primary,
+        backgroundColor: AppColors.surfaceAlt,
         onRefresh: () async {
           HapticFeedback.lightImpact();
           ref.invalidate(shopDetailProvider(shopId));
@@ -64,7 +64,7 @@ class ShopDetailScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   child: Text('$e',
                       style:
-                          const TextStyle(color: AppColorsDark.error)),
+                          const TextStyle(color: AppColors.error)),
                 ),
                 data: (shop) => _ShopHeader(shop: shop),
               ),
@@ -81,7 +81,7 @@ class ShopDetailScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: AppColorsDark.textPrimary,
+                        color: AppColors.textPrimary,
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -90,7 +90,7 @@ class ShopDetailScreen extends ConsumerWidget {
                       data: (p) => Text(
                         '${p.length} ta',
                         style: TextStyle(
-                            color: AppColorsDark.textSecondary.withValues(alpha: 0.7),
+                            color: AppColors.textSecondary.withValues(alpha: 0.7),
                             fontSize: 13),
                       ),
                       loading: () => const SizedBox.shrink(),
@@ -119,7 +119,7 @@ class ShopDetailScreen extends ConsumerWidget {
                         child: Text(
                           'Hali mahsulot yo\'q',
                           style: TextStyle(
-                              color: AppColorsDark.textSecondary.withValues(alpha: 0.7),
+                              color: AppColors.textSecondary.withValues(alpha: 0.7),
                               fontSize: 14),
                         ),
                       ),
@@ -167,13 +167,13 @@ class _ShopHeader extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColorsDark.primary.withValues(alpha: 0.1),
-            AppColorsDark.success.withValues(alpha: 0.05),
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.success.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-            color: AppColorsDark.primary.withValues(alpha: 0.2)),
+            color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -183,21 +183,21 @@ class _ShopHeader extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColorsDark.primary,
-                  AppColorsDark.primary.withValues(alpha: 0.7),
+                  AppColors.primary,
+                  AppColors.primary.withValues(alpha: 0.7),
                 ],
               ),
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: AppColorsDark.primary.withValues(alpha: 0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: const Icon(Icons.store,
-                color: AppColorsDark.background, size: 30),
+                color: AppColors.background, size: 30),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -209,7 +209,7 @@ class _ShopHeader extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w800,
-                    color: AppColorsDark.textPrimary,
+                    color: AppColors.textPrimary,
                     letterSpacing: -0.3,
                   ),
                   maxLines: 1,
@@ -221,7 +221,7 @@ class _ShopHeader extends StatelessWidget {
                   Text(
                     shop['description'] as String,
                     style: const TextStyle(
-                        color: AppColorsDark.textSecondary,
+                        color: AppColors.textSecondary,
                         fontSize: 13,
                         height: 1.4),
                     maxLines: 2,
@@ -253,7 +253,7 @@ class _ShopProductsSkeleton extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (_, _) => Container(
             decoration: BoxDecoration(
-              color: AppColorsDark.surface,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(20),
             ),
             clipBehavior: Clip.antiAlias,
@@ -325,9 +325,9 @@ class _ShopProductCardState extends State<_ShopProductCard> {
         duration: const Duration(milliseconds: 120),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColorsDark.surface,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColorsDark.border, width: 0.5),
+            border: Border.all(color: AppColors.border, width: 0.5),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -344,10 +344,10 @@ class _ShopProductCardState extends State<_ShopProductCard> {
                           fit: BoxFit.cover,
                         )
                       : Container(
-                          color: AppColorsDark.surfaceAlt,
+                          color: AppColors.surfaceAlt,
                           child: const Icon(Icons.image_outlined,
                               size: 36,
-                              color: AppColorsDark.textSecondary)),
+                              color: AppColors.textSecondary)),
                 ),
               ),
               Expanded(
@@ -364,7 +364,7 @@ class _ShopProductCardState extends State<_ShopProductCard> {
                         style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: AppColorsDark.textPrimary,
+                            color: AppColors.textPrimary,
                             height: 1.3),
                       ),
                       const Spacer(),
@@ -373,7 +373,7 @@ class _ShopProductCardState extends State<_ShopProductCard> {
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: AppColorsDark.primary,
+                          color: AppColors.primary,
                           letterSpacing: -0.3,
                         ),
                       ),

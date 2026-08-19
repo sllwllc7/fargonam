@@ -36,12 +36,12 @@ class AppInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final border = isDark ? AppColorsDark.border : AppColors.border;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
-    final titleStyle = isDark ? AppTextStylesDark.title : AppTextStyles.title;
-    final bodyStyle = isDark ? AppTextStylesDark.body : AppTextStyles.body;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final surface = isDark ? AppColors.surface : AppColors.surface;
+    final border = isDark ? AppColors.border : AppColors.border;
+    final primary = isDark ? AppColors.primary : AppColors.primary;
+    final titleStyle = isDark ? AppTypography.title : AppTypography.title;
+    final bodyStyle = isDark ? AppTypography.body : AppTypography.body;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

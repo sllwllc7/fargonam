@@ -184,7 +184,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           SnackBar(
             content: Text(
                 e.response?.data['detail']?.toString() ?? 'Xato'),
-            backgroundColor: AppColorsDark.error,
+            backgroundColor: AppColors.error,
             duration: const Duration(milliseconds: 1600),
           ),
         );
@@ -212,9 +212,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColorsDark.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColorsDark.background,
+        backgroundColor: AppColors.background,
         surfaceTintColor: Colors.transparent,
         title: Row(
           children: [
@@ -223,7 +223,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               height: 38,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppColorsDark.primary, AppColorsDark.primary.withValues(alpha: 0.7)],
+                  colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)],
                 ),
                 shape: BoxShape.circle,
               ),
@@ -253,7 +253,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: AppColorsDark.textPrimary,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   Row(
@@ -263,8 +263,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         height: 7,
                         decoration: BoxDecoration(
                           color: _ws != null
-                              ? AppColorsDark.success
-                              : AppColorsDark.textSecondary.withValues(alpha: 0.7),
+                              ? AppColors.success
+                              : AppColors.textSecondary.withValues(alpha: 0.7),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -275,7 +275,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             : (_ws != null ? 'Onlayn' : 'Ulanmoqda...'),
                         style: TextStyle(
                           fontSize: 11,
-                          color: AppColorsDark.textSecondary.withValues(alpha: 0.7),
+                          color: AppColors.textSecondary.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -332,10 +332,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             padding: EdgeInsets.fromLTRB(12, 10, 8,
                 MediaQuery.of(context).padding.bottom + 10),
             decoration: const BoxDecoration(
-              color: AppColorsDark.surface,
+              color: AppColors.surface,
               border: Border(
                 top: BorderSide(
-                    color: AppColorsDark.border, width: 0.5),
+                    color: AppColors.border, width: 0.5),
               ),
             ),
             child: Row(
@@ -345,17 +345,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     controller: _msgCtrl,
                     onChanged: _onInputChanged,
                     style: const TextStyle(
-                        color: AppColorsDark.textPrimary, fontSize: 15),
+                        color: AppColors.textPrimary, fontSize: 15),
                     decoration: InputDecoration(
                       hintText: 'Xabar yozing...',
                       hintStyle: TextStyle(
-                          color: AppColorsDark.textSecondary.withValues(alpha: 0.7)),
+                          color: AppColors.textSecondary.withValues(alpha: 0.7)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: AppColorsDark.surfaceAlt,
+                      fillColor: AppColors.surfaceAlt,
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 18, vertical: 12),
                       isDense: true,
@@ -378,17 +378,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           ? null
                           : LinearGradient(
                               colors: [
-                                AppColorsDark.primary,
-                                AppColorsDark.primary.withValues(alpha: 0.7)
+                                AppColors.primary,
+                                AppColors.primary.withValues(alpha: 0.7)
                               ],
                             ),
-                      color: _sending ? AppColorsDark.surfaceAlt : null,
+                      color: _sending ? AppColors.surfaceAlt : null,
                       shape: BoxShape.circle,
                       boxShadow: _sending
                           ? null
                           : [
                               BoxShadow(
-                                color: AppColorsDark.primary
+                                color: AppColors.primary
                                     .withValues(alpha: 0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
@@ -400,7 +400,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             padding: EdgeInsets.all(13),
                             child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: AppColorsDark.primary),
+                                color: AppColors.primary),
                           )
                         : const Icon(Icons.send,
                             color: AppColors.primary,
@@ -480,8 +480,8 @@ class _MessageBubbleState extends State<_MessageBubble>
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
             decoration: BoxDecoration(
               color: widget.isMine
-                  ? AppColorsDark.primary
-                  : AppColorsDark.surfaceAlt,
+                  ? AppColors.primary
+                  : AppColors.surfaceAlt,
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(20),
                 topRight: const Radius.circular(20),
@@ -508,7 +508,7 @@ class _MessageBubbleState extends State<_MessageBubble>
                     height: 1.4,
                     color: widget.isMine
                         ? AppColors.primary
-                        : AppColorsDark.textPrimary,
+                        : AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -522,7 +522,7 @@ class _MessageBubbleState extends State<_MessageBubble>
                         color: widget.isMine
                             ? AppColors.primary
                                 .withValues(alpha: 0.5)
-                            : AppColorsDark.textSecondary.withValues(alpha: 0.7),
+                            : AppColors.textSecondary.withValues(alpha: 0.7),
                       ),
                     ),
                     if (widget.isMine) ...[
@@ -533,7 +533,7 @@ class _MessageBubbleState extends State<_MessageBubble>
                             : Icons.done,
                         size: 14,
                         color: widget.isRead
-                            ? AppColorsDark.primary
+                            ? AppColors.primary
                             : AppColors.primary
                                 .withValues(alpha: 0.5),
                       ),
@@ -563,13 +563,13 @@ class _EmptyChatState extends StatelessWidget {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: AppColorsDark.surfaceAlt,
+                color: AppColors.surfaceAlt,
                 borderRadius: BorderRadius.circular(28),
               ),
               child: Icon(
                 Icons.waving_hand,
                 size: 48,
-                color: AppColorsDark.primary.withValues(alpha: 0.5),
+                color: AppColors.primary.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: 20),
@@ -578,14 +578,14 @@ class _EmptyChatState extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: AppColorsDark.textPrimary,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 6),
             const Text(
               'Birinchi xabarni yozib suhbatni boshlang',
               style: TextStyle(
-                  color: AppColorsDark.textSecondary, fontSize: 13),
+                  color: AppColors.textSecondary, fontSize: 13),
             ),
           ],
         ),

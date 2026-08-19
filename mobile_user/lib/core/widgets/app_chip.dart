@@ -24,12 +24,12 @@ class AppChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final border = isDark ? AppColorsDark.border : AppColors.border;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
-    final caption = isDark ? AppTextStylesDark.caption : AppTextStyles.caption;
+    final primary = isDark ? AppColors.primary : AppColors.primary;
+    final surface = isDark ? AppColors.surface : AppColors.surface;
+    final border = isDark ? AppColors.border : AppColors.border;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.textSecondary;
+    final caption = isDark ? AppTypography.caption : AppTypography.caption;
 
     final bg = selected ? primary : surface;
     final fg = enabled ? (selected ? Colors.white : textPrimary) : textSecondary;

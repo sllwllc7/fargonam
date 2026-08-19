@@ -16,19 +16,19 @@ class LegalScreen extends StatelessWidget {
       length: 2,
       initialIndex: initialTab,
       child: Scaffold(
-        backgroundColor: AppColorsDark.background,
+        backgroundColor: AppColors.background,
         appBar: AppBar(
           title: const Text('Qoidalar'),
-          backgroundColor: AppColorsDark.background,
+          backgroundColor: AppColors.background,
           surfaceTintColor: Colors.transparent,
           bottom: TabBar(
             tabs: const [
               Tab(text: 'Foydalanish shartlari'),
               Tab(text: 'Maxfiylik siyosati'),
             ],
-            labelColor: AppColorsDark.primary,
-            unselectedLabelColor: AppColorsDark.textSecondary,
-            indicatorColor: AppColorsDark.primary,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textSecondary,
+            indicatorColor: AppColors.primary,
           ),
         ),
         body: const TabBarView(
@@ -205,7 +205,7 @@ class _LegalTitle extends StatelessWidget {
       style: const TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.w800,
-        color: AppColorsDark.textPrimary,
+        color: AppColors.textPrimary,
         letterSpacing: -0.3,
       ),
     );
@@ -224,7 +224,7 @@ class _LegalMeta extends StatelessWidget {
         text,
         style: TextStyle(
           fontSize: 12,
-          color: AppColorsDark.textSecondary.withValues(alpha: 0.7),
+          color: AppColors.textSecondary.withValues(alpha: 0.7),
         ),
       ),
     );
@@ -248,7 +248,7 @@ class _LegalSection extends StatelessWidget {
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: AppColorsDark.primary,
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 6),
@@ -256,7 +256,7 @@ class _LegalSection extends StatelessWidget {
             body,
             style: const TextStyle(
               fontSize: 14,
-              color: AppColorsDark.textSecondary,
+              color: AppColors.textSecondary,
               height: 1.6,
             ),
           ),

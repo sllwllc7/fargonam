@@ -31,8 +31,8 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
-    final border = isDark ? AppColorsDark.border : AppColors.border;
+    final primary = isDark ? AppColors.primary : AppColors.primary;
+    final border = isDark ? AppColors.border : AppColors.border;
     final disabled = onPressed == null || loading;
 
     final content = loading
@@ -70,7 +70,7 @@ class AppButton extends StatelessWidget {
               disabledBackgroundColor: primary.withValues(alpha: 0.4),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: radius),
-              textStyle: AppTextStyles.title.copyWith(color: Colors.white),
+              textStyle: AppTypography.title.copyWith(color: Colors.white),
             ),
             child: content,
           ),
@@ -85,7 +85,7 @@ class AppButton extends StatelessWidget {
               foregroundColor: primary,
               side: BorderSide(color: border),
               shape: RoundedRectangleBorder(borderRadius: radius),
-              textStyle: AppTextStyles.title.copyWith(color: primary),
+              textStyle: AppTypography.title.copyWith(color: primary),
             ),
             child: content,
           ),
@@ -95,7 +95,7 @@ class AppButton extends StatelessWidget {
           onPressed: disabled ? null : onPressed,
           style: TextButton.styleFrom(
             foregroundColor: primary,
-            textStyle: AppTextStyles.title.copyWith(color: primary),
+            textStyle: AppTypography.title.copyWith(color: primary),
           ),
           child: content,
         );

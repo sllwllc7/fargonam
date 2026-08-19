@@ -23,7 +23,7 @@ class ErrorRetryWidget extends StatelessWidget {
             Icon(
               isOffline ? Icons.wifi_off : Icons.error_outline,
               size: 64,
-              color: isOffline ? const Color(0xFFC77B1E) /* DESIGN.md warning */ : AppColorsDark.error,
+              color: isOffline ? const Color(0xFFC77B1E) /* DESIGN.md warning */ : AppColors.error,
             ),
             const SizedBox(height: 16),
             Text(
@@ -36,7 +36,7 @@ class ErrorRetryWidget extends StatelessWidget {
                   ? 'Internetga ulanib, qayta urinib ko\'ring'
                   : 'Server bilan bog\'lanishda muammo. Qayta urinib ko\'ring.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColorsDark.textSecondary.withValues(alpha: 0.7), fontSize: 14),
+              style: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.7), fontSize: 14),
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
@@ -107,9 +107,9 @@ class _ShimmerBoxState extends State<ShimmerBox> with SingleTickerProviderStateM
               begin: Alignment(-1.0 + 2.0 * value, 0),
               end: Alignment(-1.0 + 2.0 * value + 1, 0),
               colors: const [
-                AppColorsDark.surface,
-                AppColorsDark.surfaceAlt,
-                AppColorsDark.surface,
+                AppColors.surface,
+                AppColors.surfaceAlt,
+                AppColors.surface,
               ],
             ),
           ),
@@ -134,12 +134,12 @@ class EmptyStateWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: AppColorsDark.border),
+            Icon(icon, size: 64, color: AppColors.border),
             const SizedBox(height: 16),
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColorsDark.textSecondary)),
+            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
             if (subtitle != null) ...[
               const SizedBox(height: 6),
-              Text(subtitle!, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppColorsDark.textSecondary)),
+              Text(subtitle!, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
             ],
           ],
         ),
@@ -178,19 +178,19 @@ class AppCachedImage extends StatelessWidget {
         placeholder: (context, url) => Container(
           width: width,
           height: height,
-          color: AppColorsDark.surfaceAlt,
+          color: AppColors.surfaceAlt,
           child: Center(
             child: SizedBox(
               width: 20, height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColorsDark.textSecondary.withValues(alpha: 0.7)),
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textSecondary.withValues(alpha: 0.7)),
             ),
           ),
         ),
         errorWidget: (context, url, error) => Container(
           width: width,
           height: height,
-          color: AppColorsDark.surfaceAlt,
-          child: Icon(Icons.image_not_supported_outlined, color: AppColorsDark.textSecondary.withValues(alpha: 0.7), size: iconSize),
+          color: AppColors.surfaceAlt,
+          child: Icon(Icons.image_not_supported_outlined, color: AppColors.textSecondary.withValues(alpha: 0.7), size: iconSize),
         ),
       ),
     );

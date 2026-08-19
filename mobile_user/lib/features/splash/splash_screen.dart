@@ -57,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColorsDark.background,
+      backgroundColor: AppColors.background,
       body: AnimatedBuilder(
         animation: _bgCtrl,
         builder: (context, child) {
@@ -67,9 +67,9 @@ class _SplashScreenState extends State<SplashScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color.lerp(AppColorsDark.background, AppColorsDark.background,
+                  Color.lerp(AppColors.background, AppColors.background,
                       _bgCtrl.value)!,
-                  Color.lerp(AppColorsDark.background, AppColorsDark.background,
+                  Color.lerp(AppColors.background, AppColors.background,
                       _bgCtrl.value)!,
                 ],
               ),
@@ -88,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen>
                 height: 240,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColorsDark.primary.withValues(alpha: 0.04),
+                  color: AppColors.primary.withValues(alpha: 0.04),
                 ),
               ),
             ),
@@ -100,7 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColorsDark.primary.withValues(alpha: 0.03),
+                  color: AppColors.primary.withValues(alpha: 0.03),
                 ),
               ),
             ),
@@ -124,14 +124,14 @@ class _SplashScreenState extends State<SplashScreen>
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                AppColorsDark.primary,
-                                AppColorsDark.primary.withValues(alpha: 0.7)
+                                AppColors.primary,
+                                AppColors.primary.withValues(alpha: 0.7)
                               ],
                             ),
                             borderRadius: BorderRadius.circular(32),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColorsDark.primary
+                                color: AppColors.primary
                                     .withValues(alpha: 0.4),
                                 blurRadius: 40,
                                 spreadRadius: 6,
@@ -141,7 +141,7 @@ class _SplashScreenState extends State<SplashScreen>
                           child: const Icon(
                             Icons.storefront_rounded,
                             size: 64,
-                            color: AppColorsDark.background,
+                            color: AppColors.background,
                           ),
                         ),
                       ),
@@ -194,7 +194,7 @@ class _SplashScreenState extends State<SplashScreen>
                       height: 26,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        color: AppColorsDark.primary,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),

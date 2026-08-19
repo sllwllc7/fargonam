@@ -16,10 +16,10 @@ class AppErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final errorColor = isDark ? AppColorsDark.error : AppColors.error;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
-    final h2 = isDark ? AppTextStylesDark.h2 : AppTextStyles.h2;
-    final body = isDark ? AppTextStylesDark.body : AppTextStyles.body;
+    final errorColor = isDark ? AppColors.error : AppColors.error;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.textSecondary;
+    final h2 = isDark ? AppTypography.h2 : AppTypography.h2;
+    final body = isDark ? AppTypography.body : AppTypography.body;
 
     final msg = error.toString();
     final isOffline = msg.contains('SocketException') ||

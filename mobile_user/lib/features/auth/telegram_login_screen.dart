@@ -95,7 +95,7 @@ class _TelegramLoginScreenState extends ConsumerState<TelegramLoginScreen> {
   Widget build(BuildContext context) {
     final loading = ref.watch(authControllerProvider).loading;
     return Scaffold(
-      backgroundColor: AppColorsDark.background,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -154,21 +154,21 @@ class _InitialStage extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppColorsDark.primary,
-                  AppColorsDark.primary.withValues(alpha: 0.7),
+                  AppColors.primary,
+                  AppColors.primary.withValues(alpha: 0.7),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: AppColorsDark.primary.withValues(alpha: 0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 28,
                   offset: const Offset(0, 12),
                 ),
               ],
             ),
             child: const Icon(Icons.storefront_rounded,
-                size: 42, color: AppColorsDark.background),
+                size: 42, color: AppColors.background),
           ),
         ),
         const SizedBox(height: 24),
@@ -179,14 +179,14 @@ class _InitialStage extends StatelessWidget {
             fontSize: 28,
             fontWeight: FontWeight.w800,
             letterSpacing: -0.5,
-            color: AppColorsDark.textPrimary,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 6),
         const Text(
           'Davom etish uchun Telegram orqali kiring',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 15, color: AppColorsDark.textSecondary),
+          style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 36),
         _ErrorBox(error: error),
@@ -237,7 +237,7 @@ class _WaitingStage extends StatelessWidget {
             width: 64,
             height: 64,
             child: CircularProgressIndicator(
-                strokeWidth: 3, color: AppColorsDark.primary),
+                strokeWidth: 3, color: AppColors.primary),
           ),
         ),
         const SizedBox(height: 28),
@@ -248,21 +248,21 @@ class _WaitingStage extends StatelessWidget {
             fontSize: 24,
             fontWeight: FontWeight.w800,
             letterSpacing: -0.5,
-            color: AppColorsDark.textPrimary,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
         const Text(
           'Ochilgan Telegram botida "Start" tugmasini bosing. Tasdiqlangach avtomatik kirasiz.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, color: AppColorsDark.textSecondary, height: 1.5),
+          style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
         ),
         const SizedBox(height: 28),
         TextButton(
           onPressed: onCancel,
           child: const Text(
             'Bekor qilish',
-            style: TextStyle(color: AppColorsDark.textSecondary),
+            style: TextStyle(color: AppColors.textSecondary),
           ),
         ),
         const SizedBox(height: 24),
@@ -284,7 +284,7 @@ class _ExpiredStage extends StatelessWidget {
         const SizedBox(height: 32),
         Center(
           child: Icon(Icons.timer_off_outlined,
-              size: 64, color: AppColorsDark.textSecondary.withValues(alpha: 0.7)),
+              size: 64, color: AppColors.textSecondary.withValues(alpha: 0.7)),
         ),
         const SizedBox(height: 24),
         const Text(
@@ -293,14 +293,14 @@ class _ExpiredStage extends StatelessWidget {
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
-            color: AppColorsDark.textPrimary,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
         const Text(
           'Qaytadan urinib ko\'ring',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, color: AppColorsDark.textSecondary),
+          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 28),
         SizedBox(
@@ -333,18 +333,18 @@ class _ErrorBox extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColorsDark.error.withValues(alpha: 0.15),
+          color: AppColors.error.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColorsDark.error.withValues(alpha: 0.3)),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.error_outline, color: AppColorsDark.error, size: 20),
+            const Icon(Icons.error_outline, color: AppColors.error, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(error!,
                   style: const TextStyle(
-                      color: AppColorsDark.error, fontSize: 13)),
+                      color: AppColors.error, fontSize: 13)),
             ),
           ],
         ),

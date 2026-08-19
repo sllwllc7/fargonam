@@ -82,10 +82,10 @@ class ProductGroupsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColorsDark.background : AppColors.background;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
-    final h1 = isDark ? AppTextStylesDark.h1 : AppTextStyles.h1;
+    final background = isDark ? AppColors.background : AppColors.background;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final primary = isDark ? AppColors.primary : AppColors.primary;
+    final h1 = isDark ? AppTypography.h1 : AppTypography.h1;
 
     final groupsAsync = ref.watch(productGroupsProvider);
 
@@ -162,10 +162,10 @@ class _GroupTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
+    final surface = isDark ? AppColors.surface : AppColors.surface;
+    final textPrimary = isDark ? AppColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.textSecondary;
+    final primary = isDark ? AppColors.primary : AppColors.primary;
 
     final fullImg = group.imageUrl != null ? '${AppConfig.apiBaseUrl}${group.imageUrl}' : null;
 
@@ -190,7 +190,7 @@ class _GroupTile extends StatelessWidget {
                 height: 56.w,
                 child: fullImg != null
                     ? AppCachedImage(url: fullImg, borderRadius: 0, fit: BoxFit.cover)
-                    : Container(color: isDark ? AppColorsDark.background : AppColors.background, child: Icon(Icons.image_outlined, color: textSecondary)),
+                    : Container(color: isDark ? AppColors.background : AppColors.background, child: Icon(Icons.image_outlined, color: textSecondary)),
               ),
             ),
             SizedBox(width: AppSpacing.md),

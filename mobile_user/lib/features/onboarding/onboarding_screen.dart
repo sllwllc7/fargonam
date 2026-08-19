@@ -19,19 +19,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _pages = [
     _OnboardingPage(
       icon: Icons.storefront_rounded,
-      color: AppColorsDark.primary,
+      color: AppColors.primary,
       title: 'Fargonam\'ga xush kelibsiz!',
       description: 'Farg\'ona vodiysi uchun yagona super-app. Do\'konlar, taksi va ko\'p narsa — hammasini bitta ilovada.',
     ),
     _OnboardingPage(
       icon: Icons.shopping_bag_outlined,
-      color: AppColorsDark.success,
+      color: AppColors.success,
       title: 'Onlayn xarid qiling',
       description: 'Minglab mahsulotlar, yuzlab do\'konlar. Uydan chiqmasdan buyurtma bering — tez va qulay.',
     ),
     _OnboardingPage(
       icon: Icons.local_taxi,
-      color: AppColorsDark.error,
+      color: AppColors.error,
       title: 'Taksi chaqiring',
       description: 'Bir tugma bilan taksi chaqiring. Haydovchini xaritada kuzating, narxni oldindan biling.',
     ),
@@ -89,8 +89,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   decoration: BoxDecoration(
                     color: _page == i
-                        ? AppColorsDark.primary
-                        : AppColorsDark.primary.withValues(alpha: 0.25),
+                        ? AppColors.primary
+                        : AppColors.primary.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -201,7 +201,7 @@ class _OnboardingPageState extends State<_OnboardingPage> with SingleTickerProvi
                       style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
                   const SizedBox(height: 16),
                   Text(widget.description, textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: AppColorsDark.textSecondary.withValues(alpha: 0.7), height: 1.6)),
+                      style: TextStyle(fontSize: 16, color: AppColors.textSecondary.withValues(alpha: 0.7), height: 1.6)),
                 ],
               ),
             ),
