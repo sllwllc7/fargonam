@@ -1,17 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/api_client.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
-import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_error_state.dart';
-import '../../core/widgets/app_shimmer.dart';
 
 final addressesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final res = await ref.watch(dioProvider).get('/addresses');
@@ -41,6 +37,9 @@ const kFerganaDistricts = [
   'Yozyovon tumani',
 ];
 
+const _pinIconSvg =
+    '<svg viewBox="0 0 24 24"><path d="M12 21c-4-3.8-6-7-6-9.7a6 6 0 1 1 12 0C18 14 16 17.2 12 21ZM9.8 11.2a2.2 2.2 0 1 0 4.4 0a2.2 2.2 0 1 0-4.4 0" stroke="#000" stroke-width="1.7" stroke-linejoin="round" fill="none"/></svg>';
+
 class AddressesScreen extends ConsumerWidget {
   const AddressesScreen({super.key});
 
@@ -48,82 +47,77 @@ class AddressesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final addrsAsync = ref.watch(addressesProvider);
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.maybePop(context);
-                    },
-                    child: Container(
-                      width: 36.w,
-                      height: 36.w,
-                      decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
-                      child: Icon(Icons.arrow_back_ios_new, size: 15.sp, color: AppColors.text),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Text('Manzillarim', style: AppTextStyles.h2.copyWith(fontSize: 23)),
-                ],
+        child: ScreenFadeIn(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Row(
+                  children: [
+                    BackCircleButton(onTap: () => Navigator.maybePop(context)),
+                    const SizedBox(width: 12),
+                    Text('Manzillarim', style: AppTypography.h2),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: addrsAsync.when(
-                loading: () => const _AddressesSkeleton(),
-                error: (e, _) => AppErrorState(error: e, onRetry: () => ref.invalidate(addressesProvider)),
-                data: (addrs) {
-                  return RefreshIndicator(
-                    color: AppColors.primary,
-                    backgroundColor: AppColors.surface,
-                    onRefresh: () async {
-                      HapticFeedback.lightImpact();
-                      ref.invalidate(addressesProvider);
-                    },
-                    child: ListView(
-                      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 30.h),
-                      children: [
-                        for (final a in addrs) ...[
-                          _AddressCard(
-                            address: a,
-                            onDelete: () => _confirmDelete(context, ref, a),
-                            onEdit: () => _showEditSheet(context, ref, a),
+              Expanded(
+                child: addrsAsync.when(
+                  loading: () => const _AddressesSkeleton(),
+                  error: (e, _) => AppErrorState(error: e, onRetry: () => ref.invalidate(addressesProvider)),
+                  data: (addrs) {
+                    return RefreshIndicator(
+                      color: AppColors.primary,
+                      backgroundColor: AppColors.surface,
+                      onRefresh: () async {
+                        HapticFeedback.lightImpact();
+                        ref.invalidate(addressesProvider);
+                      },
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+                        children: [
+                          for (var i = 0; i < addrs.length; i++) ...[
+                            FadeUpItem(
+                              delay: AppMotion.staggerStep * i,
+                              child: _AddressCard(
+                                address: addrs[i],
+                                onDelete: () => _confirmDelete(context, ref, addrs[i]),
+                                onEdit: () => _showEditSheet(context, ref, addrs[i]),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                          PressableScale(
+                            scale: 0.98,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              _showAddSheet(context, ref);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(AppRadius.card),
+                                border: Border.all(color: AppColors.textPrimary.withValues(alpha: 0.12), width: 1.5),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('+', style: AppTypography.cardTitle.copyWith(fontSize: 18, letterSpacing: 0)),
+                                  const SizedBox(width: 6),
+                                  Text('Yangi manzil qo\'shish', style: AppTypography.rowTitle.copyWith(fontSize: 14)),
+                                ],
+                              ),
+                            ),
                           ),
-                          SizedBox(height: 10.h),
                         ],
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            _showAddSheet(context, ref);
-                          },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 15.h),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-                              border: Border.all(color: AppColors.text.withValues(alpha: 0.18), width: 1.5),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text('+', style: AppTextStyles.cardTitle.copyWith(fontSize: 18)),
-                                SizedBox(width: 6.w),
-                                Text('Yangi manzil qo\'shish', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 14)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -131,19 +125,17 @@ class AddressesScreen extends ConsumerWidget {
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref, Map<String, dynamic> a) async {
     HapticFeedback.lightImpact();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? AppColorsDark.background : AppColors.background,
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: const Text('Manzilni o\'chirish'),
-        content: Text('"${a['label']}" manzilini o\'chirmoqchimisiz?',
-            style: TextStyle(color: isDark ? AppColorsDark.textSecondary : AppColors.textSecondary)),
+        content: Text('"${a['label']}" manzilini o\'chirmoqchimisiz?', style: TextStyle(color: AppColors.textSecondary)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Yo\'q')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: isDark ? AppColorsDark.error : AppColors.error),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('O\'chirish'),
           ),
@@ -159,11 +151,7 @@ class AddressesScreen extends ConsumerWidget {
         debugPrint('Manzil o\'chirishda xato: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Manzil o\'chirishda xato yuz berdi'),
-              backgroundColor: Colors.red,
-              duration: Duration(milliseconds: 1600),
-            ),
+            const SnackBar(content: Text('Manzil o\'chirishda xato yuz berdi'), backgroundColor: AppColors.danger, duration: Duration(milliseconds: 1600)),
           );
         }
       }
@@ -209,25 +197,12 @@ class _AddressCard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onEdit;
 
-  IconData get _labelIcon {
-    final label = (address['label'] as String).toLowerCase();
-    if (label.contains('uy') || label.contains('home')) return Icons.home;
-    if (label.contains('ish') || label.contains('work') || label.contains('ofis')) return Icons.work;
-    return Icons.location_on;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final error = isDark ? AppColorsDark.error : AppColors.error;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
-
     final parts = [address['region'], address['district'], address['address']].whereType<String>().where((s) => s.isNotEmpty);
     final fullAddress = parts.join(', ');
     final isDefault = address['is_default'] == true;
+    final landmark = address['landmark'] as String?;
 
     return Dismissible(
       key: ValueKey('addr_${address['id']}'),
@@ -238,59 +213,59 @@ class _AddressCard extends StatelessWidget {
       },
       background: Container(
         alignment: Alignment.centerRight,
-        padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-        decoration: BoxDecoration(color: error.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.card)),
-        child: Icon(Icons.delete_outline, color: error, size: 28),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: BoxDecoration(color: AppColors.dangerTint, borderRadius: BorderRadius.circular(AppRadius.card)),
+        child: const Icon(Icons.delete_outline, color: AppColors.danger, size: 28),
       ),
       child: GestureDetector(
         onTap: onEdit,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
           decoration: BoxDecoration(
-            color: surface,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppRadius.card),
-            border: isDefault ? Border.all(color: primary, width: 1.5) : null,
+            border: Border.all(color: AppColors.border),
+            boxShadow: AppShadows.card,
           ),
           child: Row(
             children: [
               Container(
-                width: 46.w,
-                height: 46.w,
-                decoration: BoxDecoration(color: primary, borderRadius: BorderRadius.circular(AppRadius.input)),
-                child: Icon(_labelIcon, color: Colors.white, size: 22),
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(AppRadius.input)),
+                alignment: Alignment.center,
+                child: SvgPicture.string(_pinIconSvg, width: 19, height: 19),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Text(address['label'] as String, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15.sp, color: textPrimary)),
+                        Text(address['label'] as String, style: AppTypography.rowTitle.copyWith(fontSize: 14.5)),
                         if (isDefault) ...[
-                          SizedBox(width: AppSpacing.xs),
+                          const SizedBox(width: 8),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: 2.h),
-                            decoration: BoxDecoration(color: primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)),
-                            child: Text('Asosiy', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w700, color: primary)),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                            decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(6)),
+                            child: Text('Asosiy', style: AppTypography.small.copyWith(fontWeight: FontWeight.w800, fontSize: 10.5, color: AppColors.textPrimary)),
                           ),
                         ],
                       ],
                     ),
-                    SizedBox(height: AppSpacing.xs),
-                    Text(fullAddress, maxLines: 2, overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: textSecondary, fontSize: 13.sp, height: 1.3)),
-                    if (address['landmark'] != null && (address['landmark'] as String).isNotEmpty) ...[
-                      SizedBox(height: 2.h),
-                      Text('Mo\'ljal: ${address['landmark']}',
-                          maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: textSecondary, fontSize: 12.sp)),
+                    const SizedBox(height: 3),
+                    Text(fullAddress, maxLines: 2, overflow: TextOverflow.ellipsis, style: AppTypography.caption.copyWith(height: 1.45)),
+                    if (landmark != null && landmark.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text('Mo\'ljal: $landmark', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTypography.caption.copyWith(fontSize: 12)),
                     ],
                   ],
                 ),
               ),
-              IconButton(icon: Icon(Icons.edit_outlined, color: primary, size: 20), onPressed: onEdit),
-              IconButton(icon: Icon(Icons.delete_outline, color: error, size: 22), onPressed: onDelete),
+              IconButton(icon: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20), onPressed: onEdit),
+              IconButton(icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 22), onPressed: onDelete),
             ],
           ),
         ),
@@ -306,10 +281,10 @@ class _AddressesSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(20),
       itemCount: 4,
-      separatorBuilder: (_, _) => SizedBox(height: AppSpacing.sm),
-      itemBuilder: (_, _) => AppShimmer(height: 78.h, borderRadius: AppRadius.card),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      itemBuilder: (_, _) => const ShimmerBox(width: double.infinity, height: 78, borderRadius: AppRadius.card),
     );
   }
 }
@@ -406,29 +381,20 @@ class _AddAddressSheetState extends ConsumerState<_AddAddressSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? AppColorsDark.background : AppColors.background;
-    final surface = isDark ? AppColorsDark.surface : AppColors.surface;
-    final primary = isDark ? AppColorsDark.primary : AppColors.primary;
-    final error = isDark ? AppColorsDark.error : AppColors.error;
-    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
-    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
-    final h1 = isDark ? AppTextStylesDark.h1 : AppTextStyles.h1;
-
     return Container(
-      padding: EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.md, AppSpacing.xl, MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl),
-      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.sheet))),
+      padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.sheet))),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Center(
-              child: Container(width: 40.w, height: 4.h, decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(2))),
+              child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(2))),
             ),
-            SizedBox(height: AppSpacing.lg),
-            Text(_isEdit ? 'Manzilni tahrirlash' : 'Yangi manzil', style: h1),
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: 20),
+            Text(_isEdit ? 'Manzilni tahrirlash' : 'Yangi manzil', style: AppTypography.h1),
+            const SizedBox(height: 20),
 
             // Tez tanlash chiplari
             Row(
@@ -439,38 +405,37 @@ class _AddAddressSheetState extends ConsumerState<_AddAddressSheet> {
                       onTap: () => _selectPreset(preset.$1),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
-                          color: _labelCtrl.text == preset.$1 ? primary : surface,
+                          color: _labelCtrl.text == preset.$1 ? AppColors.primary : AppColors.surface,
                           borderRadius: BorderRadius.circular(AppRadius.input),
                         ),
                         child: Column(
                           children: [
-                            Icon(preset.$2, color: _labelCtrl.text == preset.$1 ? Colors.white : textSecondary, size: 22),
-                            SizedBox(height: AppSpacing.xs),
-                            Text(preset.$1,
-                                style: TextStyle(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: _labelCtrl.text == preset.$1 ? Colors.white : textSecondary)),
+                            Icon(preset.$2, color: _labelCtrl.text == preset.$1 ? Colors.white : AppColors.textSecondary, size: 22),
+                            const SizedBox(height: 4),
+                            Text(
+                              preset.$1,
+                              style: AppTypography.small.copyWith(fontSize: 12, color: _labelCtrl.text == preset.$1 ? Colors.white : AppColors.textSecondary),
+                            ),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  if (preset != _presets.last) SizedBox(width: AppSpacing.sm),
+                  if (preset != _presets.last) const SizedBox(width: 10),
                 ],
               ],
             ),
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: 14),
 
             TextField(
               controller: _labelCtrl,
               onChanged: (_) => setState(() {}),
-              style: TextStyle(color: textPrimary),
-              decoration: _fieldDecoration('Nomi', 'Masalan: Uy, Ish, Universitet', Icons.label_outline, surface, textSecondary),
+              style: TextStyle(color: AppColors.textPrimary),
+              decoration: _fieldDecoration('Nomi', 'Masalan: Uy, Ish, Universitet', Icons.label_outline),
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: 10),
 
             // Viloyat + tuman
             Row(
@@ -478,59 +443,52 @@ class _AddAddressSheetState extends ConsumerState<_AddAddressSheet> {
                 Expanded(
                   child: TextField(
                     controller: _regionCtrl,
-                    style: TextStyle(color: textPrimary),
-                    decoration: _fieldDecoration('Viloyat', '', Icons.map_outlined, surface, textSecondary),
+                    style: TextStyle(color: AppColors.textPrimary),
+                    decoration: _fieldDecoration('Viloyat', '', Icons.map_outlined),
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: 10),
                 Expanded(
                   flex: 2,
                   child: DropdownButtonFormField<String>(
                     initialValue: _district,
                     isExpanded: true,
-                    style: TextStyle(color: textPrimary, fontSize: 14.sp),
-                    dropdownColor: surface,
-                    decoration: _fieldDecoration('Tuman', '', Icons.location_city_outlined, surface, textSecondary),
-                    items: kFerganaDistricts
-                        .map((d) => DropdownMenuItem(value: d, child: Text(d, overflow: TextOverflow.ellipsis)))
-                        .toList(),
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                    dropdownColor: AppColors.surface,
+                    decoration: _fieldDecoration('Tuman', '', Icons.location_city_outlined),
+                    items: kFerganaDistricts.map((d) => DropdownMenuItem(value: d, child: Text(d, overflow: TextOverflow.ellipsis))).toList(),
                     onChanged: (v) => setState(() => _district = v),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: 10),
 
             TextField(
               controller: _addressCtrl,
-              style: TextStyle(color: textPrimary),
-              decoration: _fieldDecoration('Ko\'cha, uy', 'Mahalla, ko\'cha, uy raqami', Icons.location_on_outlined, surface, textSecondary),
+              style: TextStyle(color: AppColors.textPrimary),
+              decoration: _fieldDecoration('Ko\'cha, uy', 'Mahalla, ko\'cha, uy raqami', Icons.location_on_outlined),
               maxLines: 2,
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: 10),
 
             TextField(
               controller: _landmarkCtrl,
-              style: TextStyle(color: textPrimary),
-              decoration: _fieldDecoration(
-                  'Mo\'ljal (kuryer uchun)', 'Masalan: ko\'k darvoza yonida', Icons.flag_outlined, surface, textSecondary),
+              style: TextStyle(color: AppColors.textPrimary),
+              decoration: _fieldDecoration('Mo\'ljal (kuryer uchun)', 'Masalan: ko\'k darvoza yonida', Icons.flag_outlined),
               textInputAction: TextInputAction.done,
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: 10),
 
             InkWell(
               onTap: () => setState(() => _isDefault = !_isDefault),
               borderRadius: BorderRadius.circular(AppRadius.input),
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Row(
                   children: [
-                    Checkbox(
-                      value: _isDefault,
-                      activeColor: primary,
-                      onChanged: (v) => setState(() => _isDefault = v ?? false),
-                    ),
-                    Text('Asosiy manzil qilib belgilash', style: TextStyle(color: textPrimary, fontSize: 13.sp)),
+                    Checkbox(value: _isDefault, activeColor: AppColors.primary, onChanged: (v) => setState(() => _isDefault = v ?? false)),
+                    Text('Asosiy manzil qilib belgilash', style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
                   ],
                 ),
               ),
@@ -541,21 +499,21 @@ class _AddAddressSheetState extends ConsumerState<_AddAddressSheet> {
               child: _error == null
                   ? const SizedBox.shrink()
                   : Padding(
-                      padding: EdgeInsets.only(top: AppSpacing.sm),
+                      padding: const EdgeInsets.only(top: 10),
                       child: Container(
-                        padding: EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(color: error.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(AppRadius.input)),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(color: AppColors.dangerTint, borderRadius: BorderRadius.circular(AppRadius.input)),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline, color: error, size: 18),
-                            SizedBox(width: AppSpacing.sm),
-                            Expanded(child: Text(_error!, style: TextStyle(color: error, fontSize: 13.sp))),
+                            const Icon(Icons.error_outline, color: AppColors.danger, size: 18),
+                            const SizedBox(width: 10),
+                            Expanded(child: Text(_error!, style: TextStyle(color: AppColors.danger, fontSize: 13))),
                           ],
                         ),
                       ),
                     ),
             ),
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: 20),
             AppButton(label: 'Saqlash', loading: _loading, onPressed: _save),
           ],
         ),
@@ -563,13 +521,13 @@ class _AddAddressSheetState extends ConsumerState<_AddAddressSheet> {
     );
   }
 
-  InputDecoration _fieldDecoration(String label, String hint, IconData icon, Color fill, Color iconColor) {
+  InputDecoration _fieldDecoration(String label, String hint, IconData icon) {
     return InputDecoration(
       labelText: label,
       hintText: hint.isEmpty ? null : hint,
-      prefixIcon: Icon(icon, color: iconColor),
+      prefixIcon: Icon(icon, color: AppColors.textSecondary),
       filled: true,
-      fillColor: fill,
+      fillColor: AppColors.surface,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.input), borderSide: BorderSide.none),
     );
   }
