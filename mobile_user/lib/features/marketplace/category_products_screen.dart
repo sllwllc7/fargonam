@@ -20,9 +20,6 @@ const _searchIconSvg =
     '<svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6" stroke="#3F3F49" stroke-width="1.8" fill="none"/><path d="m14 14 4 4" stroke="#3F3F49" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const _filterIconSvg =
     '<svg viewBox="0 0 16 16"><path d="M1 3h14M4 8h8M6.5 13h3" stroke="#000" stroke-width="1.7" stroke-linecap="round"/></svg>';
-const _favPath = 'M10 17 3.6 10.8a4 4 0 1 1 5.7-5.7L10 5.8l.7-.7a4 4 0 1 1 5.7 5.7Z';
-const _favIconOutline = '<svg viewBox="0 0 20 20"><path d="$_favPath" fill="none" stroke="#000" stroke-width="1.5"/></svg>';
-const _favIconFilled = '<svg viewBox="0 0 20 20"><path d="$_favPath" fill="#000" stroke="#000" stroke-width="1.5"/></svg>';
 
 /// Kategoriya ichi — HANDOFF.md 2-bo'lim, 4-band.
 class CategoryProductsScreen extends ConsumerStatefulWidget {
@@ -314,20 +311,7 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.85), shape: BoxShape.circle),
-                      child: TweenAnimationBuilder<double>(
-                        tween: Tween(begin: widget.isFav ? 0.6 : 1, end: 1),
-                        duration: AppMotion.pop,
-                        builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
-                        child: SvgPicture.string(
-                          widget.isFav ? _favIconFilled : _favIconOutline,
-                          width: 14,
-                          height: 14,
-                          colorFilter: ColorFilter.mode(
-                            widget.isFav ? AppColors.danger : AppColors.textSecondary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
+                      child: FavoriteHeartIcon(active: widget.isFav, size: 14),
                     ),
                   ),
                 ),

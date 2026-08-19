@@ -1,15 +1,15 @@
 import 'package:dio/dio.dart';
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/api_client.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_gradients.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../cart/cart_screen.dart' show cartProvider;
 import '../favorites/favorites_screen.dart' show favoritesProvider;
+import '../marketplace/catalog_screen.dart' show categoriesProvider;
+import '../marketplace/category_icons.dart';
 
 final productDetailProvider = FutureProvider.family<Map<String, dynamic>, int>((ref, id) async {
   final res = await ref.watch(dioProvider).get('/products/$id');
@@ -25,15 +25,15 @@ final isFavoriteProvider = FutureProvider.family<bool, int>((ref, productId) asy
   }
 });
 
-String _fmt(num n) {
-  final s = n.toInt().toString();
-  final buf = StringBuffer();
-  for (var i = 0; i < s.length; i++) {
-    if (i > 0 && (s.length - i) % 3 == 0) buf.write(' ');
-    buf.write(s[i]);
-  }
-  return '$buf so\'m';
+/// dc.html `stockInfo()` — zaxira holatiga qarab yorliq+rang.
+(String, Color) _stockInfo(int stock) {
+  if (stock == 0) return ('Tugagan', AppColors.danger);
+  if (stock < 10) return ('Kam qolgan · $stock dona', AppColors.primary);
+  return ('Mavjud', AppColors.textPrimary);
 }
+
+/// Dot indikator faol bo'lmagan holati — dc.html `pdDots` `#C2CCDB`.
+const _dotInactiveColor = Color(0xFFC2CCDB);
 
 /// Mahsulot sahifasi — HANDOFF.md 2-bo'lim, 5-band.
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -123,12 +123,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final pAsync = ref.watch(productDetailProvider(widget.productId));
     final favAsync = ref.watch(isFavoriteProvider(widget.productId));
+    final categoriesAsync = ref.watch(categoriesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.background,
       body: pAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (e, _) => Center(child: Text('Yuklab bo\'lmadi', style: AppTextStyles.caption)),
+        error: (e, _) => Center(child: Text('Yuklab bo\'lmadi', style: AppTypography.caption)),
         data: (p) {
           _initSelection(p);
           final variants = (p['variants'] as List? ?? []).cast<Map<String, dynamic>>();
@@ -138,170 +139,172 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           final price = (variant?['price'] as num?)?.toInt() ?? 0;
           final isFav = favAsync.value ?? false;
           final canAdd = variant != null && stock > 0;
+          final (stockLabel, stockColor) = _stockInfo(stock);
+          final name = p['name'] as String? ?? '';
+
+          final categoryId = p['category_id'] as int?;
+          final categories = categoriesAsync.value ?? const [];
+          var slug = '';
+          for (final c in categories) {
+            if (c.id == categoryId) {
+              slug = c.slug;
+              break;
+            }
+          }
+          final tint = AppColors.categoryTints[(categoryId ?? 0) % AppColors.categoryTints.length];
 
           return SafeArea(
             bottom: false,
-            child: Stack(
-              children: [
-                ListView(
-                  padding: EdgeInsets.only(bottom: 130.h),
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _RoundButton(icon: Icons.arrow_back_ios_new, onTap: () => Navigator.maybePop(context)),
-                          _RoundButton(
-                            icon: isFav ? Icons.favorite : Icons.favorite_border,
-                            iconColor: isFav ? AppColors.danger : AppColors.text,
-                            onTap: () => _toggleFav(widget.productId, isFav),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      margin: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 0),
-                      decoration: BoxDecoration(color: const Color(0xFFEDE9FE), borderRadius: BorderRadius.circular(20.r)),
-                      child: AspectRatio(
-                        aspectRatio: 1,
-                        child: Center(child: Icon(Icons.inventory_2_outlined, size: 100.sp, color: AppColors.primaryDark)),
-                      ),
-                    ),
-                    SizedBox(height: 10.h),
-                    Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(width: 16.w, height: 5, margin: EdgeInsets.symmetric(horizontal: 2.w), decoration: BoxDecoration(color: AppColors.text, borderRadius: BorderRadius.circular(3))),
-                          Container(width: 5, height: 5, margin: EdgeInsets.symmetric(horizontal: 2.w), decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle)),
-                          Container(width: 5, height: 5, margin: EdgeInsets.symmetric(horizontal: 2.w), decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle)),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if ((p['brand'] as String? ?? '').isNotEmpty)
-                            Text((p['brand'] as String).toUpperCase(), style: AppTextStyles.small.copyWith(color: AppColors.text, fontSize: 12, letterSpacing: 0.5)),
-                          SizedBox(height: 4.h),
-                          Text(p['name'] as String? ?? '', style: AppTextStyles.h2.copyWith(fontSize: 22)),
-                          SizedBox(height: 8.h),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(_fmt(price), style: AppTextStyles.h2.copyWith(fontSize: 24)),
-                              SizedBox(width: 10.w),
-                              Text(
-                                stock == 0 ? 'Tugagan' : (stock < 10 ? 'Kam qolgan · $stock dona' : 'Mavjud'),
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  fontSize: 12.5,
-                                  color: stock == 0 ? AppColors.textMuted : AppColors.text,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if ((p['description'] as String? ?? '').isNotEmpty) ...[
-                            SizedBox(height: 10.h),
-                            Text(p['description'] as String, style: AppTextStyles.body.copyWith(color: AppColors.textMuted, fontSize: 14, height: 1.5)),
-                          ],
-                        ],
-                      ),
-                    ),
-                    for (final attrName in attrNames)
+            child: ScreenFadeIn(
+              child: Stack(
+                children: [
+                  ListView(
+                    padding: const EdgeInsets.only(bottom: 132),
+                    children: [
                       Padding(
-                        padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            BackCircleButton(onTap: () => Navigator.maybePop(context)),
+                            _RoundFavButton(active: isFav, onTap: () => _toggleFav(widget.productId, isFav)),
+                          ],
+                        ),
+                      ),
+                      _ProductImageCarousel(
+                        iconPath: categorySvg(slug),
+                        bg: tint[0],
+                        fg: tint[1],
+                        labels: ['${name.toLowerCase()} — asosiy rasm', 'yon tomondan', 'yaqindan'],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(attrName, style: AppTextStyles.cardTitleSm.copyWith(fontSize: 14.5)),
-                            SizedBox(height: 10.h),
-                            Wrap(
-                              spacing: 8.w,
-                              runSpacing: 8.h,
+                            if ((p['brand'] as String? ?? '').isNotEmpty)
+                              Text(
+                                (p['brand'] as String).toUpperCase(),
+                                style: AppTypography.eyebrow.copyWith(color: AppColors.textPrimary, letterSpacing: 0.5),
+                              ),
+                            const SizedBox(height: 4),
+                            Text(name, style: AppTypography.cardTitle.copyWith(fontSize: 22, letterSpacing: -0.4, height: 1.2)),
+                            const SizedBox(height: 8),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
                               children: [
-                                for (final val in _valuesFor(variants, attrName))
-                                  _AttrChip(
-                                    label: val,
-                                    selected: _selected[attrName] == val,
-                                    onTap: () => setState(() {
-                                      _selected[attrName] = val;
-                                      _qty = 1;
-                                    }),
-                                  ),
+                                Text(formatSom(price), style: AppTypography.price),
+                                const SizedBox(width: 10),
+                                Text(stockLabel, style: AppTypography.bodyMedium.copyWith(fontSize: 12.5, height: null, color: stockColor)),
                               ],
+                            ),
+                            if ((p['description'] as String? ?? '').isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              Text(p['description'] as String, style: AppTypography.body.copyWith(color: AppColors.textMuted)),
+                            ],
+                          ],
+                        ),
+                      ),
+                      for (final attrName in attrNames)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(attrName, style: AppTypography.rowTitle.copyWith(letterSpacing: -0.1)),
+                              const SizedBox(height: 10),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  for (final val in _valuesFor(variants, attrName))
+                                    _AttrChip(
+                                      label: val,
+                                      selected: _selected[attrName] == val,
+                                      onTap: () => setState(() {
+                                        _selected[attrName] = val;
+                                        _qty = 1;
+                                      }),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Miqdor', style: AppTypography.rowTitle),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(AppRadius.input),
+                                border: Border.all(color: AppColors.border),
+                                boxShadow: AppShadows.card,
+                              ),
+                              child: Row(
+                                children: [
+                                  _StepperButton(label: '−', fontSize: 20, onTap: () => setState(() => _qty = _qty > 1 ? _qty - 1 : 1)),
+                                  SizedBox(width: 34, child: Text('$_qty', textAlign: TextAlign.center, style: AppTypography.rowTitle.copyWith(fontSize: 16))),
+                                  _StepperButton(label: '+', fontSize: 19, onTap: () => setState(() => _qty = _qty < stock ? _qty + 1 : _qty)),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(20.w, 22.h, 20.w, 0),
+                    ],
+                  ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          stops: const [0, 0.7, 1],
+                          colors: [AppColors.background, AppColors.background, AppColors.background.withValues(alpha: 0)],
+                        ),
+                      ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Miqdor', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 14.5)),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(12.r),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Row(
-                              children: [
-                                _StepperButton(icon: Icons.remove, onTap: () => setState(() => _qty = _qty > 1 ? _qty - 1 : 1)),
-                                SizedBox(width: 34.w, child: Text('$_qty', textAlign: TextAlign.center, style: AppTextStyles.cardTitleSm.copyWith(fontSize: 16))),
-                                _StepperButton(icon: Icons.add, onTap: () => setState(() => _qty = _qty < stock ? _qty + 1 : _qty)),
-                              ],
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Jami', style: AppTypography.small.copyWith(fontSize: 11)),
+                              Text(formatSom(price * _qty), style: AppTypography.price.copyWith(fontSize: 18, letterSpacing: -0.3)),
+                            ],
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: PressableScale(
+                              onTap: (!canAdd || _adding) ? () {} : () => _addToCart(variant),
+                              child: Container(
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  color: canAdd ? AppColors.textPrimary : AppColors.textSecondary,
+                                  borderRadius: BorderRadius.circular(AppRadius.button),
+                                  boxShadow: AppShadows.cta,
+                                ),
+                                alignment: Alignment.center,
+                                child: _adding
+                                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                                    : Text(canAdd ? 'Savatga qo\'shish' : 'Tugagan', style: AppTypography.button),
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 30.h),
-                    color: AppColors.bg,
-                    child: Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Jami', style: AppTextStyles.small.copyWith(fontSize: 11)),
-                            Text(_fmt(price * _qty), style: AppTextStyles.h2.copyWith(fontSize: 18)),
-                          ],
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: (!canAdd || _adding) ? null : () => _addToCart(variant),
-                            child: Container(
-                              height: 52.h,
-                              decoration: BoxDecoration(
-                                gradient: canAdd ? AppGradients.primary : null,
-                                color: canAdd ? null : AppColors.textMuted,
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
-                              child: Center(
-                                child: _adding
-                                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                                    : Text(canAdd ? 'Savatga qo\'shish' : 'Tugagan', style: AppTextStyles.button),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -320,24 +323,127 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   }
 }
 
-class _RoundButton extends StatelessWidget {
-  const _RoundButton({required this.icon, required this.onTap, this.iconColor});
-  final IconData icon;
+class _RoundFavButton extends StatelessWidget {
+  const _RoundFavButton({required this.active, required this.onTap});
+  final bool active;
   final VoidCallback onTap;
-  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
+    return PressableScale(
+      scale: 0.92,
+      onTap: onTap,
       child: Container(
-        width: 36.w,
-        height: 36.w,
-        decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
-        child: Icon(icon, size: 16.sp, color: iconColor ?? AppColors.text),
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.border),
+          boxShadow: [BoxShadow(color: AppColors.border, blurRadius: 2, offset: const Offset(0, 1))],
+        ),
+        alignment: Alignment.center,
+        child: FavoriteHeartIcon(active: active, size: 17),
+      ),
+    );
+  }
+}
+
+/// dc.html'dagi 3D "coverflow" rasm karuseli (`pdSlides`) soddalashtirilgan
+/// ko'rinishda — aniq CSS perspective/rotateY o'rniga scale+qorayish bilan
+/// taqlid qilinadi (dekorativ effekt, biznes-mantiqqa taalluqli emas).
+/// Bosilganda keyingi rasmga o'tadi, nuqta bosilganda o'sha rasmga sakraydi.
+class _ProductImageCarousel extends StatefulWidget {
+  const _ProductImageCarousel({required this.iconPath, required this.bg, required this.fg, required this.labels});
+  final String iconPath;
+  final Color bg;
+  final Color fg;
+  final List<String> labels;
+
+  @override
+  State<_ProductImageCarousel> createState() => _ProductImageCarouselState();
+}
+
+class _ProductImageCarouselState extends State<_ProductImageCarousel> {
+  int _index = 0;
+
+  void _goTo(int i) {
+    HapticFeedback.selectionClick();
+    setState(() => _index = i);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final n = widget.labels.length;
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () => _goTo((_index + 1) % n),
+          child: SizedBox(
+            height: 300,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                for (var i = 0; i < n; i++) _buildSlide(i, n),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < n; i++)
+              GestureDetector(
+                onTap: () => _goTo(i),
+                child: AnimatedContainer(
+                  duration: AppMotion.fadeUp,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  width: i == _index ? 16 : 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: i == _index ? AppColors.textPrimary : _dotInactiveColor,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSlide(int i, int n) {
+    var d = i - _index;
+    d = ((d % n) + n) % n;
+    if (d > n ~/ 2) d -= n;
+    if (d < 0) return const SizedBox.shrink();
+    final forward = d.clamp(0, 1).toDouble();
+
+    return AnimatedContainer(
+      duration: AppMotion.screenIn,
+      curve: AppMotion.standard,
+      transformAlignment: Alignment.center,
+      transform: Matrix4.identity()
+        ..translateByDouble(forward * 26, 0, 0, 1)
+        ..scaleByDouble(1 - forward * 0.08, 1 - forward * 0.08, 1, 1),
+      width: MediaQuery.of(context).size.width * 0.78,
+      height: 270,
+      decoration: BoxDecoration(
+        color: Color.lerp(widget.bg, Colors.black, forward * 0.18),
+        borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+        boxShadow: d == 0 ? AppShadows.productImage : null,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.string(widget.iconPath, width: 96, height: 96, colorFilter: ColorFilter.mode(widget.fg, BlendMode.srcIn)),
+          const SizedBox(height: 12),
+          Text(
+            widget.labels[i],
+            style: TextStyle(fontFamily: 'monospace', fontSize: 10, color: widget.fg.withValues(alpha: 0.65)),
+          ),
+        ],
       ),
     );
   }
@@ -351,38 +457,45 @@ class _AttrChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PressableScale(
+      scale: 0.94,
       onTap: () {
         HapticFeedback.selectionClick();
         onTap();
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppColors.text : AppColors.surface,
-          borderRadius: BorderRadius.circular(999.r),
-          border: Border.all(color: selected ? AppColors.text : AppColors.borderStrong, width: 1.5),
+          color: selected ? AppColors.textPrimary : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.chip),
+          border: Border.all(color: selected ? AppColors.textPrimary : AppColors.borderStrong, width: 1.5),
         ),
-        child: Text(label, style: AppTextStyles.cardTitleSm.copyWith(fontSize: 14, color: selected ? Colors.white : AppColors.text)),
+        child: Text(label, style: AppTypography.cardTitleSm.copyWith(fontSize: 14, letterSpacing: 0, color: selected ? Colors.white : AppColors.textPrimary)),
       ),
     );
   }
 }
 
 class _StepperButton extends StatelessWidget {
-  const _StepperButton({required this.icon, required this.onTap});
-  final IconData icon;
+  const _StepperButton({required this.label, required this.fontSize, required this.onTap});
+  final String label;
+  final double fontSize;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PressableScale(
+      scale: 0.85,
       onTap: () {
         HapticFeedback.selectionClick();
         onTap();
       },
-      child: SizedBox(width: 40.w, height: 40.w, child: Icon(icon, size: 18.sp, color: AppColors.text)),
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: Center(child: Text(label, style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w500, color: AppColors.textPrimary))),
+      ),
     );
   }
 }

@@ -69,6 +69,9 @@ class AppColors {
   /// 3-bosqichda tegishli ekran o'qilganda dc.html'dan tasdiqlanadi.
   static const warning = Color(0xFFB45309);
   static const warningSoft = Color(0xFFFEF3C7);
-  static const borderStrong = Color(0xFFE0DCD4);
+
+  /// Tanlanmagan variant chipi chegarasi — `#C6D0DF` (Mahsulot sahifasi, dc.html
+  /// `o.border`). 2026-08-19 Phase-3'da tasdiqlangan (avval eski qiymat edi).
+  static const borderStrong = Color(0xFFC6D0DF);
   static const rating = Color(0xFFFFC120);
 }

@@ -33,15 +33,16 @@ void main() {
     await tester.pumpAndSettle();
 
     // Standart holatda birinchi variant (12) tanlangan bo'lishi kerak
-    // (narx ikki joyda ko'rinadi: asosiy narx + pastdagi "Jami" panel)
-    expect(find.textContaining('2 000'), findsWidgets);
+    // (narx ikki joyda ko'rinadi: asosiy narx + pastdagi "Jami" panel).
+    // formatSom NBSP (U+00A0) ishlatadi, oddiy bo'shliq emas.
+    expect(find.textContaining('2 000'), findsWidgets);
 
     // Ikkinchi variant (48) chipini bosamiz
     await tester.tap(find.text('48'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('5 500'), findsWidgets);
-    expect(find.textContaining('2 000'), findsNothing);
+    expect(find.textContaining('5 500'), findsWidgets);
+    expect(find.textContaining('2 000'), findsNothing);
   });
 
   testWidgets('Zaxira 0 bo\'lsa "Tugagan" chiqadi va tugma o\'chiriladi', (tester) async {

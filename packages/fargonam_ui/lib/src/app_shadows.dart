@@ -29,6 +29,11 @@ class AppShadows {
     BoxShadow(color: Color(0x66101F38), blurRadius: 16, offset: Offset(0, 8), spreadRadius: -4),
   ];
 
+  /// Mahsulot sahifasi rasm kartasi: `0 24px 44px -18px rgba(23,19,39,.35)`.
+  static const productImage = [
+    BoxShadow(color: Color(0x59171327), blurRadius: 44, offset: Offset(0, 24), spreadRadius: -18),
+  ];
+
   /// mobile_user eski ekranlarida ishlatiladi (cart/checkout/kit) — 3-bosqichda
   /// tegishli ekran o'qilganda dc.html'dan tasdiqlanadi yoki `cta` bilan almashadi.
   static const primaryButton = [

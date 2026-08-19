@@ -18,6 +18,7 @@ export 'src/widgets/back_circle_button.dart';
 export 'src/widgets/cart_fab.dart';
 export 'src/widgets/error_retry.dart';
 export 'src/widgets/fade_up_item.dart';
+export 'src/widgets/favorite_heart_icon.dart';
 export 'src/widgets/floating_tab_bar.dart';
 export 'src/widgets/format.dart';
 export 'src/widgets/guarded_action.dart';
