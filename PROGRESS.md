@@ -498,6 +498,31 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   4-bosqich (mobile_seller to'liq qayta dizayn, LEGACY tokenlarni olib tashlash),
   2-bosqich (`buildData()` va real model to'liq solishtiruvi — hali yozilmagan).
 
+- [2026-08-19] **PDP rasm karuseli — soddalashtirish bekor qilindi, aniq 3D qayta
+  qurildi.** Foydalanuvchi avvalgi "scale+qorayish taqlidi" qarorini rad etdi: "dc.html
+  dagi 3D stack aynan ko'chirilsin". `mobile_user/lib/features/products/product_detail_screen.dart`
+  — `_ProductImageCarouselState._buildSlide()` endi `Matrix4..setEntry(3,2,1/1200)`
+  (CSS `perspective:1200px`ga mos) + `translateByDouble`+`rotateY` bilan haqiqiy 3D
+  transform, `ImageFiltered`+`Color.lerp` bilan blur/brightness filtri (dc.html:1127-1139
+  formulasidan aynan: `tf`, `op`, `filter`, `z`). Stack bolalari endi `z`
+  qiymatiga qarab tartiblanadi (pastroq `z` avval chiziladi).
+
+- [2026-08-19] **Foydalanuvchi tekshiruvi uchun manba tasdiqlash** (PDP tugma rangi va
+  yurakcha rangi bo'yicha savol berilgach) — aynan qator raqami va CSS qiymati:
+  - **"Savatga qo'shish" tugmasi qat'iy qora, gradient EMAS**:
+    `handoff/Fargonam User App v2.dc.html:1166` — `vals.addBtnBg = can ? '#000000' : '#1C1C22';`
+    Markap (`dc.html:329`): `background: {{ addBtnBg }}` (dinamik, gradient emas — solid rang).
+    Taqqoslash uchun: Kit/Checkout/Cart'ning "asosiy CTA" tugmalari esa haqiqatda
+    `linear-gradient(180deg,#24406F,#12233F)` — bular ATayin FARQLI ikkita naqsh, PDP
+    ular bilan bir xil emas (aralashtirmaslik uchun manba kodi ikkalasini alohida
+    tasdiqlaydi).
+  - **Sevimli yurakcha PDP'da qizil EMAS, neytral kulrang**:
+    `handoff/Fargonam User App v2.dc.html:1147` —
+    `vals.pdFavFill = fav ? '#3F3F49' : 'none'; vals.pdFavStroke = fav ? '#3F3F49' : '#1C1C22';`
+    Markap (`dc.html:280`): `fill="{{ pdFavFill }}" stroke="{{ pdFavStroke }}"`.
+    `#3F3F49` = `AppColors.textMuted`, `#1C1C22` = `AppColors.textSecondary` — hech
+    qanday qizil (`#DC2626`/`danger`) qiymat yo'q.
+
 ### Backend farqlari
 - [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),
   garchi `products` jadvalida test mahsulotlari bor. Kategoriyasiz UI to'g'ri ishlaydi

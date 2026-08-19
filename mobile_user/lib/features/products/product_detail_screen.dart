@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui';
+
 import 'package:dio/dio.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
@@ -483,10 +486,12 @@ class _RoundFavButton extends StatelessWidget {
   }
 }
 
-/// dc.html'dagi 3D "coverflow" rasm karuseli (`pdSlides`) soddalashtirilgan
-/// ko'rinishda — aniq CSS perspective/rotateY o'rniga scale+qorayish bilan
-/// taqlid qilinadi (dekorativ effekt, biznes-mantiqqa taalluqli emas).
-/// Bosilganda keyingi rasmga o'tadi, nuqta bosilganda o'sha rasmga sakraydi.
+/// dc.html'dagi 3D "coverflow" rasm karuseli (`pdSlides`, dc.html:1127-1139)
+/// aynan: `Matrix4..setEntry(3,2,1/1200)` orqali perspective (CSS
+/// `perspective:1200px`ga mos), rotateY, translateX/Z, brightness (rangni
+/// qora tomon lerp qilish — `filter:brightness()` bilan matematik teng),
+/// blur (`ImageFiltered`). Bosilganda keyingi rasmga o'tadi, nuqta
+/// bosilganda o'sha rasmga sakraydi.
 class _ProductImageCarousel extends StatefulWidget {
   const _ProductImageCarousel({
     required this.iconPath,
@@ -511,9 +516,21 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
     setState(() => _index = i);
   }
 
+  /// dc.html: `d = i - cimg`, `n`ga nisbatan aylana masofasi (`-1..1`, n=3'da).
+  int _circularDelta(int i, int n) {
+    var d = i - _index;
+    d = ((d % n) + n) % n;
+    if (d > n ~/ 2) d -= n;
+    return d;
+  }
+
   @override
   Widget build(BuildContext context) {
     final n = widget.labels.length;
+    // dc.html `z: 100 - round(d*10)` — z kichikroq (d kattaroq) avval
+    // chizilishi kerak (Stack'da keyingi bola tepada chiqadi).
+    final order = List<int>.generate(n, (i) => i)..sort((a, b) => _circularDelta(b, n).compareTo(_circularDelta(a, n)));
+
     return Column(
       children: [
         GestureDetector(
@@ -522,7 +539,7 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
             height: 300,
             child: Stack(
               alignment: Alignment.center,
-              children: [for (var i = 0; i < n; i++) _buildSlide(i, n)],
+              children: [for (final i in order) _buildSlide(i, _circularDelta(i, n))],
             ),
           ),
         ),
@@ -539,9 +556,7 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
                   width: i == _index ? 16 : 5,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: i == _index
-                        ? AppColors.textPrimary
-                        : _dotInactiveColor,
+                    color: i == _index ? AppColors.textPrimary : _dotInactiveColor,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -552,26 +567,38 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
     );
   }
 
-  Widget _buildSlide(int i, int n) {
-    var d = i - _index;
-    d = ((d % n) + n) % n;
-    if (d > n ~/ 2) d -= n;
-    if (d < 0) return const SizedBox.shrink();
-    final forward = d.clamp(0, 1).toDouble();
+  /// dc.html `pdSlides` formulasi aynan (1127-1139-qatorlar):
+  /// `tf: translate(-50%,-50%) translateX(d*40) translateZ(-d*130) rotateY(clamp(d,0,1)*16deg)`,
+  /// `op: d<0 ? max(0,1+d) : 1`, `filter: brightness(max(.55,1-back*.18)) blur(back*1.5px)`.
+  Widget _buildSlide(int i, int d) {
+    final dd = d.toDouble();
+    final back = dd < 0 ? 0.0 : dd;
+    final rotateDeg = dd.clamp(0.0, 1.0) * 16.0;
+    final opacity = dd < 0 ? (1 + dd).clamp(0.0, 1.0) : 1.0;
+    // filter:brightness(x) — har bir rang kanalini x ga ko'paytiradi, bu
+    // rangni qora tomon (1-x) ulushda lerp qilish bilan matematik teng.
+    final brightness = (1 - back * 0.18).clamp(0.55, 1.0);
+    final blurPx = back * 1.5;
+    final dx = dd * 40.0;
+    final dz = -dd * 130.0;
 
-    return AnimatedContainer(
+    final matrix = Matrix4.identity()
+      // CSS `perspective:1200px` — Flutter'da vector_math m[3][2] orqali taqlid.
+      ..setEntry(3, 2, 1 / 1200)
+      ..translateByDouble(dx, 0.0, dz, 1)
+      ..rotateY(rotateDeg * math.pi / 180);
+
+    Widget slide = AnimatedContainer(
       duration: AppMotion.screenIn,
       curve: AppMotion.standard,
       transformAlignment: Alignment.center,
-      transform: Matrix4.identity()
-        ..translateByDouble(forward * 26, 0, 0, 1)
-        ..scaleByDouble(1 - forward * 0.08, 1 - forward * 0.08, 1, 1),
+      transform: matrix,
       width: MediaQuery.of(context).size.width * 0.78,
       height: 270,
       decoration: BoxDecoration(
-        color: Color.lerp(widget.bg, Colors.black, forward * 0.18),
-        borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-        boxShadow: d == 0 ? AppShadows.productImage : null,
+        color: Color.lerp(widget.bg, Colors.black, 1 - brightness),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppShadows.productImage,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -585,13 +612,26 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
           const SizedBox(height: 12),
           Text(
             widget.labels[i],
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 10,
-              color: widget.fg.withValues(alpha: 0.65),
-            ),
+            style: TextStyle(fontFamily: 'monospace', fontSize: 10, color: widget.fg.withValues(alpha: 0.65)),
           ),
         ],
+      ),
+    );
+
+    return AnimatedOpacity(
+      key: ValueKey('slide_$i'),
+      duration: AppMotion.screenIn,
+      curve: AppMotion.standard,
+      opacity: opacity,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: blurPx, end: blurPx),
+        duration: AppMotion.screenIn,
+        curve: AppMotion.standard,
+        builder: (context, animatedBlur, child) {
+          if (animatedBlur <= 0) return child!;
+          return ImageFiltered(imageFilter: ImageFilter.blur(sigmaX: animatedBlur, sigmaY: animatedBlur), child: child);
+        },
+        child: slide,
       ),
     );
   }
