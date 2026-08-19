@@ -172,6 +172,8 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | 3 | 4/17: Kategoriya (category detail) — to'liq qayta yozildi (dc.html aynan, kategoriya ikonka+imgLabel, Filtr) | `mobile_user/lib/features/marketplace/category_products_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 | 3 | `FavoriteHeartIcon` umumiy widget (Kategoriya+Mahsulot) | `packages/fargonam_ui/lib/src/widgets/favorite_heart_icon.dart` | — | 0/0/0 | ✅ |
 | 3 | 5/17: Mahsulot (product detail) — to'liq qayta yozildi (dc.html aynan, rasm karuseli soddalashtirilgan taqlid, stockInfo rangi tuzatildi) | `mobile_user/lib/features/products/product_detail_screen.dart` | 11/11 (2 tuzatildi: NBSP narx) | 0/0/0 | ✅ |
+| 3 | `QtyStepperButton` umumiy widget (Mahsulot+Savat, matn glif −/+) | `packages/fargonam_ui/lib/src/widgets/qty_stepper_button.dart` | — | 0/0/0 | ✅ |
+| 3 | 6/17: Savat (cart) — to'liq qayta yozildi (dc.html aynan, backdrop-blur footer, kategoriya ikonka) | `mobile_user/lib/features/cart/cart_screen.dart` | 11/11 (3 tuzatildi: NBSP+minus glif) | 0/0/0 | ✅ |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -384,6 +386,25 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   - `AppColors.borderStrong` (variant chip chegarasi) `#E0DCD4`→`#C6D0DF` — bu token
     "3-bosqichda tasdiqlanadi" izohi bilan qo'yilgan edi, endi tasdiqlandi.
   Yangi qo'shildi: `AppShadows.productImage`.
+
+- [2026-08-19] **6/17: Savat (cart)** ekrani dc.html'ning `CART` bo'limiga moslab qayta
+  yozildi. Kategoriya ikonka/tint uchun `productCategoryMapProvider` (avval
+  `catalog_screen.dart`da private edi, endi public — Savat ham qayta ishlatadi) +
+  `categoriesProvider` orqali `product_id -> category_id -> slug` zanjiri bilan hal qilindi
+  (backend `CartItemOut`da category ma'lumoti yo'q, lekin buni ham client tomonda,
+  backend'ni o'zgartirmasdan yechish mumkin bo'ldi — Mahsulot ekranidagi bilan bir xil
+  yondashuv). Sticky pastki panelga dc.html'dagi `backdrop-filter:blur(16px)` qo'shildi
+  (avval oddiy oq fon edi — `ClipRect`+`BackdropFilter`).
+  **dc.html'da tab bar uchun qoldirilgan qo'shimcha 96px pastki bo'shliq** (`bottom:96px`,
+  bizning boshqa push qilingan ekranlarimiz — Kit/Kategoriya/Mahsulot — hammasi `bottom:0`)
+  — bu asl prototipning "tab bar doim ko'rinadi" SPA arxitekturasiga xos, bizning
+  ilovamizda Savat alohida route sifatida push qilinadi (tab bar unda umuman yo'q) —
+  boshqa push qilingan ekranlar bilan bir xil qarorga (`bottom:0`) rioya qilindi, izchillik
+  saqlandi.
+  O'chirish (×) tugmasi endi dc.html'dagi aniq axlat qutisi SVG (avval Material X ikoni edi).
+  `QtyStepperButton` umumiy widget qilib chiqarildi (dc.html'da minus/plus MATN belgisi
+  ishlatiladi, Material ikon emas — Mahsulot sahifasidagi xuddi shu pattern bilan bitta
+  manba).
 
 ### Backend farqlari
 - [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),
