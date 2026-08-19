@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -17,18 +19,24 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17"
     }
 
-    // Release imzolash — keystores/ papkasidan o'qiladi
+    // Release imzolash — keystores/ papkasidan, parollar key.properties'dan
+    // o'qiladi (key.properties git'ga tushmaydi, .gitignore'da)
     val keystoreFile = rootProject.file("../../keystores/fargonam-user-release.jks")
+    val keyProps = Properties()
+    val keyPropsFile = rootProject.file("key.properties")
+    if (keyPropsFile.exists()) {
+        keyPropsFile.inputStream().use { keyProps.load(it) }
+    }
     signingConfigs {
-        if (keystoreFile.exists()) {
+        if (keystoreFile.exists() && keyProps.containsKey("storePassword")) {
             create("release") {
                 storeFile = keystoreFile
-                storePassword = "fargonam@user2024"
-                keyAlias = "fargonam-user"
-                keyPassword = "fargonam@user2024"
+                storePassword = keyProps.getProperty("storePassword")
+                keyAlias = keyProps.getProperty("keyAlias", "fargonam-user")
+                keyPassword = keyProps.getProperty("keyPassword")
             }
         }
     }
@@ -42,7 +50,7 @@ android {
         versionName = flutter.versionName
 
         // Yandex MapKit API kalit — local.properties dan o'qiladi
-        val localProps = java.util.Properties()
+        val localProps = Properties()
         val localPropsFile = rootProject.file("local.properties")
         if (localPropsFile.exists()) {
             localPropsFile.inputStream().use { localProps.load(it) }
@@ -64,6 +72,7 @@ android {
             val relCfg = signingConfigs.findByName("release")
             signingConfig = relCfg ?: signingConfigs.getByName("debug")
             isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
@@ -73,6 +82,5 @@ flutter {
 }
 
 dependencies {
-    // Yandex MapKit native SDK (lite variant — kichikroq, POI'lar yo'q)
     implementation("com.yandex.android:maps.mobile:4.22.0-lite")
 }

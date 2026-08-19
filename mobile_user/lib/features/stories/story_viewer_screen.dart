@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../core/config.dart';
-import '../../core/theme.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets.dart';
 
 /// Bitta story ma'lumoti (banner'dan olinadi).
@@ -85,10 +85,10 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   bool _isPaused = false;
 
   // Dizayn ranglari (AppColors'dan)
-  static const _surfaceBg = AppColors.bg;
-  static const _surfaceBright = AppColors.surfaceBright;
-  static const _primaryFixed = AppColors.cream;
-  static const _primaryFixedDim = AppColors.creamDim;
+  static const _surfaceBg = AppColorsDark.background;
+  static const _surfaceBright = AppColorsDark.surfaceAlt;
+  static const _primaryFixed = AppColorsDark.primary;
+  static final _primaryFixedDim = AppColorsDark.primary.withValues(alpha: 0.7);
 
   // Story davomiyligi (sekundda)
   static const _storyDuration = Duration(seconds: 6);
@@ -271,12 +271,12 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                                   border: Border.all(
                                     color: _primaryFixed.withValues(alpha: 0.2),
                                   ),
-                                  gradient: const LinearGradient(
+                                  gradient: LinearGradient(
                                     colors: [_primaryFixed, _primaryFixedDim],
                                   ),
                                 ),
                                 child: const Icon(Icons.storefront_rounded,
-                                    size: 16, color: AppColors.midnightIndigo),
+                                    size: 16, color: AppColors.primary),
                               ),
                               const SizedBox(width: 10),
                               Expanded(
@@ -370,6 +370,8 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                                       SnackBar(
                                         content: Text(
                                             'Havola ochilmadi: ${story.linkUrl}'),
+                                        duration: const Duration(
+                                            milliseconds: 1600),
                                       ),
                                     );
                                   }
@@ -468,8 +470,8 @@ class _StoryBackgroundState extends State<_StoryBackground> {
   Widget build(BuildContext context) {
     if (widget.story.isVideo) {
       if (_ctrl == null || !_ctrl!.value.isInitialized) {
-        return Container(color: AppColors.bg,
-          child: const Center(child: CircularProgressIndicator(color: AppColors.cream)));
+        return Container(color: AppColorsDark.background,
+          child: const Center(child: CircularProgressIndicator(color: AppColorsDark.primary)));
       }
       return SizedBox.expand(
         child: FittedBox(
@@ -521,7 +523,7 @@ class _StoryProgressBars extends StatelessWidget {
                         value: 1.0,
                         backgroundColor: Color(0x33FFFFFF),
                         valueColor:
-                            AlwaysStoppedAnimation<Color>(AppColors.cream),
+                            AlwaysStoppedAnimation<Color>(AppColorsDark.primary),
                       )
                     : i == current
                         // Hozirgi story — animatsiyali
@@ -531,7 +533,7 @@ class _StoryProgressBars extends StatelessWidget {
                               value: controller.value,
                               backgroundColor: const Color(0x33FFFFFF),
                               valueColor: const AlwaysStoppedAnimation<Color>(
-                                  AppColors.cream),
+                                  AppColorsDark.primary),
                             ),
                           )
                         // Keyingi story'lar — bo'sh
@@ -562,7 +564,7 @@ class _StoryTitle extends StatelessWidget {
       style: const TextStyle(
         fontSize: 32,
         fontWeight: FontWeight.w900,
-        color: AppColors.cream,
+        color: AppColorsDark.primary,
         height: 1.15,
         letterSpacing: -1,
       ),
@@ -585,13 +587,13 @@ class _CtaButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.cream, AppColors.creamDim],
+          gradient: LinearGradient(
+            colors: [AppColorsDark.primary, AppColorsDark.primary.withValues(alpha: 0.7)],
           ),
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: AppColors.bgDeep.withValues(alpha: 0.8),
+              color: AppColorsDark.background.withValues(alpha: 0.8),
               blurRadius: 40,
               offset: const Offset(0, 20),
             ),
@@ -603,13 +605,13 @@ class _CtaButton extends StatelessWidget {
             Text(
               label,
               style: const TextStyle(
-                color: AppColors.midnightIndigo,
+                color: AppColors.primary,
                 fontWeight: FontWeight.w700,
                 fontSize: 15,
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward, size: 18, color: AppColors.midnightIndigo),
+            const Icon(Icons.arrow_forward, size: 18, color: AppColors.primary),
           ],
         ),
       ),
@@ -634,7 +636,7 @@ class _ShareButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(30),
           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
-        child: const Icon(Icons.share, color: AppColors.cream),
+        child: const Icon(Icons.share, color: AppColorsDark.primary),
       ),
     );
   }
@@ -654,10 +656,10 @@ class _HeaderButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.surfaceBright.withValues(alpha: 0.7),
+          color: AppColorsDark.surfaceAlt.withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(30),
         ),
-        child: Icon(icon, color: AppColors.cream, size: 20),
+        child: Icon(icon, color: AppColorsDark.primary, size: 20),
       ),
     );
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme.dart';
+import '../../core/theme/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -57,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgDeep,
+      backgroundColor: AppColorsDark.background,
       body: AnimatedBuilder(
         animation: _bgCtrl,
         builder: (context, child) {
@@ -67,9 +67,9 @@ class _SplashScreenState extends State<SplashScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color.lerp(AppColors.bgDeep, AppColors.midnightIndigo,
+                  Color.lerp(AppColorsDark.background, AppColorsDark.background,
                       _bgCtrl.value)!,
-                  Color.lerp(AppColors.midnightIndigo, AppColors.bg,
+                  Color.lerp(AppColorsDark.background, AppColorsDark.background,
                       _bgCtrl.value)!,
                 ],
               ),
@@ -88,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen>
                 height: 240,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.cream.withValues(alpha: 0.04),
+                  color: AppColorsDark.primary.withValues(alpha: 0.04),
                 ),
               ),
             ),
@@ -100,7 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.cream.withValues(alpha: 0.03),
+                  color: AppColorsDark.primary.withValues(alpha: 0.03),
                 ),
               ),
             ),
@@ -120,18 +120,18 @@ class _SplashScreenState extends State<SplashScreen>
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                AppColors.cream,
-                                AppColors.creamDim
+                                AppColorsDark.primary,
+                                AppColorsDark.primary.withValues(alpha: 0.7)
                               ],
                             ),
                             borderRadius: BorderRadius.circular(32),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.cream
+                                color: AppColorsDark.primary
                                     .withValues(alpha: 0.4),
                                 blurRadius: 40,
                                 spreadRadius: 6,
@@ -141,7 +141,7 @@ class _SplashScreenState extends State<SplashScreen>
                           child: const Icon(
                             Icons.storefront_rounded,
                             size: 64,
-                            color: AppColors.midnightIndigo,
+                            color: AppColorsDark.background,
                           ),
                         ),
                       ),
@@ -194,7 +194,7 @@ class _SplashScreenState extends State<SplashScreen>
                       height: 26,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        color: AppColors.cream,
+                        color: AppColorsDark.primary,
                       ),
                     ),
                   ),

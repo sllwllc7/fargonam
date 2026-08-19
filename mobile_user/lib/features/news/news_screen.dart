@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/config.dart';
-import '../../core/theme.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets.dart';
 
 final newsProvider =
@@ -24,10 +24,10 @@ class NewsListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final newsAsync = ref.watch(newsProvider);
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColorsDark.background,
       appBar: AppBar(
         title: const Text('Yangiliklar'),
-        backgroundColor: AppColors.bg,
+        backgroundColor: AppColorsDark.background,
         surfaceTintColor: Colors.transparent,
       ),
       body: newsAsync.when(
@@ -37,8 +37,8 @@ class NewsListScreen extends ConsumerWidget {
         data: (news) {
           if (news.isEmpty) return const _EmptyNewsState();
           return RefreshIndicator(
-            color: AppColors.cream,
-            backgroundColor: AppColors.surfaceHigh,
+            color: AppColorsDark.primary,
+            backgroundColor: AppColorsDark.surfaceAlt,
             onRefresh: () async {
               HapticFeedback.lightImpact();
               ref.invalidate(newsProvider);
@@ -97,9 +97,9 @@ class _NewsListCardState extends State<_NewsListCard> {
         duration: const Duration(milliseconds: 120),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColorsDark.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.divider, width: 0.5),
+            border: Border.all(color: AppColorsDark.border, width: 0.5),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -128,7 +128,7 @@ class _NewsListCardState extends State<_NewsListCard> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.cream,
+                            color: AppColorsDark.primary,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Text(
@@ -136,7 +136,7 @@ class _NewsListCardState extends State<_NewsListCard> {
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w900,
-                              color: AppColors.midnightIndigo,
+                              color: AppColorsDark.background,
                               letterSpacing: 0.8,
                             ),
                           ),
@@ -144,8 +144,8 @@ class _NewsListCardState extends State<_NewsListCard> {
                         const Spacer(),
                         Text(
                           dateFormatted,
-                          style: const TextStyle(
-                              color: AppColors.textMuted,
+                          style: TextStyle(
+                              color: AppColorsDark.textSecondary.withValues(alpha: 0.7),
                               fontSize: 12),
                         ),
                       ],
@@ -158,7 +158,7 @@ class _NewsListCardState extends State<_NewsListCard> {
                       style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: AppColorsDark.textPrimary,
                         height: 1.3,
                       ),
                     ),
@@ -168,7 +168,7 @@ class _NewsListCardState extends State<_NewsListCard> {
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: AppColors.textSecondary,
+                        color: AppColorsDark.textSecondary,
                         fontSize: 14,
                         height: 1.4,
                       ),
@@ -195,11 +195,11 @@ class _NewsDetail extends StatelessWidget {
         imgUrl != null ? '${AppConfig.apiBaseUrl}$imgUrl' : null;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColorsDark.background,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            backgroundColor: AppColors.bg,
+            backgroundColor: AppColorsDark.background,
             surfaceTintColor: Colors.transparent,
             expandedHeight: fullImg != null ? 280 : 80,
             pinned: true,
@@ -228,7 +228,7 @@ class _NewsDetail extends StatelessWidget {
                                 end: Alignment.bottomCenter,
                                 colors: [
                                   Colors.transparent,
-                                  AppColors.bg,
+                                  AppColorsDark.background,
                                 ],
                               ),
                             ),
@@ -249,7 +249,7 @@ class _NewsDetail extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.cream,
+                      color: AppColorsDark.primary,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -257,7 +257,7 @@ class _NewsDetail extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
-                        color: AppColors.midnightIndigo,
+                        color: AppColorsDark.background,
                         letterSpacing: 1,
                       ),
                     ),
@@ -269,7 +269,7 @@ class _NewsDetail extends StatelessWidget {
                       fontSize: 26,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -0.5,
-                      color: AppColors.textPrimary,
+                      color: AppColorsDark.textPrimary,
                       height: 1.2,
                     ),
                   ),
@@ -278,7 +278,7 @@ class _NewsDetail extends StatelessWidget {
                     post['body'] as String,
                     style: const TextStyle(
                       fontSize: 16,
-                      color: AppColors.textSecondary,
+                      color: AppColorsDark.textSecondary,
                       height: 1.7,
                     ),
                   ),
@@ -303,7 +303,7 @@ class _NewsListSkeleton extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (_, _) => Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColorsDark.surface,
           borderRadius: BorderRadius.circular(20),
         ),
         clipBehavior: Clip.antiAlias,
@@ -352,13 +352,13 @@ class _EmptyNewsState extends StatelessWidget {
               width: 110,
               height: 110,
               decoration: BoxDecoration(
-                color: AppColors.surfaceHigh,
+                color: AppColorsDark.surfaceAlt,
                 borderRadius: BorderRadius.circular(32),
               ),
               child: Icon(
                 Icons.newspaper,
                 size: 56,
-                color: AppColors.cream.withValues(alpha: 0.4),
+                color: AppColorsDark.primary.withValues(alpha: 0.4),
               ),
             ),
             const SizedBox(height: 24),
@@ -367,7 +367,7 @@ class _EmptyNewsState extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: AppColorsDark.textPrimary,
                 letterSpacing: -0.5,
               ),
             ),
@@ -376,7 +376,7 @@ class _EmptyNewsState extends StatelessWidget {
               'Tez orada eng so\'nggi yangiliklar\nbu yerda paydo bo\'ladi',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: AppColorsDark.textSecondary,
                 fontSize: 14,
                 height: 1.5,
               ),

@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
-import '../../core/theme.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets.dart';
 import '../../core/ws_service.dart';
 
@@ -184,7 +184,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           SnackBar(
             content: Text(
                 e.response?.data['detail']?.toString() ?? 'Xato'),
-            backgroundColor: AppColors.error,
+            backgroundColor: AppColorsDark.error,
+            duration: const Duration(milliseconds: 1600),
           ),
         );
       }
@@ -211,9 +212,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColorsDark.background,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: AppColorsDark.background,
         surfaceTintColor: Colors.transparent,
         title: Row(
           children: [
@@ -221,8 +222,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.cream, AppColors.creamDim],
+                gradient: LinearGradient(
+                  colors: [AppColorsDark.primary, AppColorsDark.primary.withValues(alpha: 0.7)],
                 ),
                 shape: BoxShape.circle,
               ),
@@ -234,7 +235,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.midnightIndigo,
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -252,7 +253,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: AppColorsDark.textPrimary,
                     ),
                   ),
                   Row(
@@ -262,8 +263,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         height: 7,
                         decoration: BoxDecoration(
                           color: _ws != null
-                              ? AppColors.success
-                              : AppColors.textMuted,
+                              ? AppColorsDark.success
+                              : AppColorsDark.textSecondary.withValues(alpha: 0.7),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -272,9 +273,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         _otherTyping
                             ? 'yozyapti...'
                             : (_ws != null ? 'Onlayn' : 'Ulanmoqda...'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.textMuted,
+                          color: AppColorsDark.textSecondary.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -331,10 +332,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             padding: EdgeInsets.fromLTRB(12, 10, 8,
                 MediaQuery.of(context).padding.bottom + 10),
             decoration: const BoxDecoration(
-              color: AppColors.surface,
+              color: AppColorsDark.surface,
               border: Border(
                 top: BorderSide(
-                    color: AppColors.divider, width: 0.5),
+                    color: AppColorsDark.border, width: 0.5),
               ),
             ),
             child: Row(
@@ -344,17 +345,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     controller: _msgCtrl,
                     onChanged: _onInputChanged,
                     style: const TextStyle(
-                        color: AppColors.textPrimary, fontSize: 15),
+                        color: AppColorsDark.textPrimary, fontSize: 15),
                     decoration: InputDecoration(
                       hintText: 'Xabar yozing...',
-                      hintStyle: const TextStyle(
-                          color: AppColors.textMuted),
+                      hintStyle: TextStyle(
+                          color: AppColorsDark.textSecondary.withValues(alpha: 0.7)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: AppColors.surfaceHigh,
+                      fillColor: AppColorsDark.surfaceAlt,
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 18, vertical: 12),
                       isDense: true,
@@ -375,19 +376,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     decoration: BoxDecoration(
                       gradient: _sending
                           ? null
-                          : const LinearGradient(
+                          : LinearGradient(
                               colors: [
-                                AppColors.cream,
-                                AppColors.creamDim
+                                AppColorsDark.primary,
+                                AppColorsDark.primary.withValues(alpha: 0.7)
                               ],
                             ),
-                      color: _sending ? AppColors.surfaceBright : null,
+                      color: _sending ? AppColorsDark.surfaceAlt : null,
                       shape: BoxShape.circle,
                       boxShadow: _sending
                           ? null
                           : [
                               BoxShadow(
-                                color: AppColors.cream
+                                color: AppColorsDark.primary
                                     .withValues(alpha: 0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
@@ -399,10 +400,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             padding: EdgeInsets.all(13),
                             child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: AppColors.cream),
+                                color: AppColorsDark.primary),
                           )
                         : const Icon(Icons.send,
-                            color: AppColors.midnightIndigo,
+                            color: AppColors.primary,
                             size: 20),
                   ),
                 ),
@@ -479,8 +480,8 @@ class _MessageBubbleState extends State<_MessageBubble>
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
             decoration: BoxDecoration(
               color: widget.isMine
-                  ? AppColors.cream
-                  : AppColors.surfaceHigh,
+                  ? AppColorsDark.primary
+                  : AppColorsDark.surfaceAlt,
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(20),
                 topRight: const Radius.circular(20),
@@ -506,8 +507,8 @@ class _MessageBubbleState extends State<_MessageBubble>
                     fontSize: 15,
                     height: 1.4,
                     color: widget.isMine
-                        ? AppColors.midnightIndigo
-                        : AppColors.textPrimary,
+                        ? AppColors.primary
+                        : AppColorsDark.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -519,9 +520,9 @@ class _MessageBubbleState extends State<_MessageBubble>
                       style: TextStyle(
                         fontSize: 11,
                         color: widget.isMine
-                            ? AppColors.midnightIndigo
+                            ? AppColors.primary
                                 .withValues(alpha: 0.5)
-                            : AppColors.textMuted,
+                            : AppColorsDark.textSecondary.withValues(alpha: 0.7),
                       ),
                     ),
                     if (widget.isMine) ...[
@@ -532,8 +533,8 @@ class _MessageBubbleState extends State<_MessageBubble>
                             : Icons.done,
                         size: 14,
                         color: widget.isRead
-                            ? AppColors.info
-                            : AppColors.midnightIndigo
+                            ? AppColorsDark.primary
+                            : AppColors.primary
                                 .withValues(alpha: 0.5),
                       ),
                     ],
@@ -562,13 +563,13 @@ class _EmptyChatState extends StatelessWidget {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: AppColors.surfaceHigh,
+                color: AppColorsDark.surfaceAlt,
                 borderRadius: BorderRadius.circular(28),
               ),
               child: Icon(
                 Icons.waving_hand,
                 size: 48,
-                color: AppColors.cream.withValues(alpha: 0.5),
+                color: AppColorsDark.primary.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: 20),
@@ -577,14 +578,14 @@ class _EmptyChatState extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: AppColorsDark.textPrimary,
               ),
             ),
             const SizedBox(height: 6),
             const Text(
               'Birinchi xabarni yozib suhbatni boshlang',
               style: TextStyle(
-                  color: AppColors.textSecondary, fontSize: 13),
+                  color: AppColorsDark.textSecondary, fontSize: 13),
             ),
           ],
         ),

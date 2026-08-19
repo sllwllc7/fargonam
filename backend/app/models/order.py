@@ -12,10 +12,12 @@ from app.db.base import Base
 
 
 class OrderStatus(str, Enum):
-    pending = "pending"
-    paid = "paid"
-    shipped = "shipped"
-    delivered = "delivered"
+    pending = "pending"  # "Qabul qilindi" — buyurtma qabul qilingan
+    paid = "paid"  # eski oqim uchun saqlanadi (endi ishlatilmaydi — to'lov kuryerga offline)
+    preparing = "preparing"  # "Tayyorlanmoqda" — sotuvchi mahsulotlarni yig'moqda
+    ready = "ready"  # "Tayyor" — yig'ib bo'lindi, xaridorga bildirishnoma boradi
+    shipped = "shipped"  # "Kuryerda" — yo'lda
+    delivered = "delivered"  # "Yetkazildi"
     cancelled = "cancelled"
 
 
@@ -71,6 +73,8 @@ class Order(Base):
     # Bekor qilinganda sabab (xaridor bekor qilsa odatda bo'sh, sotuvchi
     # "Bajarib bo'lmaydi" desa to'ldiriladi)
     cancel_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Xaridor izohi (masalan "domofon kodi 1234") — checkout paytida kiritiladi
+    note: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

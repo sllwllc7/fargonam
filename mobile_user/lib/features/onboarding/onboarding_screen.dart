@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/theme.dart';
+import '../../core/theme/app_colors.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key, required this.onDone});
@@ -19,19 +19,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _pages = [
     _OnboardingPage(
       icon: Icons.storefront_rounded,
-      color: AppColors.cream,
+      color: AppColorsDark.primary,
       title: 'Fargonam\'ga xush kelibsiz!',
       description: 'Farg\'ona vodiysi uchun yagona super-app. Do\'konlar, taksi va ko\'p narsa — hammasini bitta ilovada.',
     ),
     _OnboardingPage(
       icon: Icons.shopping_bag_outlined,
-      color: AppColors.success,
+      color: AppColorsDark.success,
       title: 'Onlayn xarid qiling',
       description: 'Minglab mahsulotlar, yuzlab do\'konlar. Uydan chiqmasdan buyurtma bering — tez va qulay.',
     ),
     _OnboardingPage(
       icon: Icons.local_taxi,
-      color: AppColors.error,
+      color: AppColorsDark.error,
       title: 'Taksi chaqiring',
       description: 'Bir tugma bilan taksi chaqiring. Haydovchini xaritada kuzating, narxni oldindan biling.',
     ),
@@ -89,8 +89,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   decoration: BoxDecoration(
                     color: _page == i
-                        ? AppColors.cream
-                        : AppColors.cream.withValues(alpha: 0.25),
+                        ? AppColorsDark.primary
+                        : AppColorsDark.primary.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -201,7 +201,7 @@ class _OnboardingPageState extends State<_OnboardingPage> with SingleTickerProvi
                       style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
                   const SizedBox(height: 16),
                   Text(widget.description, textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16, color: AppColors.textMuted, height: 1.6)),
+                      style: TextStyle(fontSize: 16, color: AppColorsDark.textSecondary.withValues(alpha: 0.7), height: 1.6)),
                 ],
               ),
             ),

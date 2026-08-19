@@ -61,6 +61,7 @@ async def _product_out(
         category_id=p.category_id,
         name=p.name,
         slug=p.slug,
+        brand=p.brand,
         description=p.description,
         image_url=p.image_url,
         is_active=p.is_active,
@@ -236,6 +237,7 @@ async def create_product(
         shop_id=payload.shop_id,
         category_id=payload.category_id,
         name=payload.name,
+        brand=payload.brand,
         description=payload.description,
     )
     db.add(product)

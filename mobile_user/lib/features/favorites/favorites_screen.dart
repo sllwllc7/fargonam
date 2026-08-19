@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/api_client.dart';
 import '../../core/config.dart';
-import '../../core/theme.dart';
-import '../../core/widgets.dart';
+import '../../core/format.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_gradients.dart';
+import '../../core/theme/app_radius.dart';
+import '../../core/theme/app_shadows.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../products/product_detail_screen.dart';
+import '../shell/app_shell.dart' show appShellKey;
 
-final favoritesProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final favoritesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final res = await ref.watch(dioProvider).get('/favorites');
   return (res.data as List).cast<Map<String, dynamic>>();
 });
 
+/// Sevimlilar — HANDOFF.md 2-bo'lim, 15-band.
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
 
@@ -22,33 +28,60 @@ class FavoritesScreen extends ConsumerWidget {
     final favsAsync = ref.watch(favoritesProvider);
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        title: const Text('Sevimlilar'),
-        backgroundColor: AppColors.bg,
-        surfaceTintColor: Colors.transparent,
-      ),
-      body: favsAsync.when(
-        loading: () => const _FavoritesSkeleton(),
-        error: (e, _) => ErrorRetryWidget(
-            error: e, onRetry: () => ref.invalidate(favoritesProvider)),
-        data: (favs) {
-          if (favs.isEmpty) return const _EmptyFavoritesState();
-          return RefreshIndicator(
-            color: AppColors.cream,
-            backgroundColor: AppColors.surfaceHigh,
-            onRefresh: () async {
-              HapticFeedback.lightImpact();
-              ref.invalidate(favoritesProvider);
-            },
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: favs.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, i) =>
-                  _FavoriteCard(item: favs[i]),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.maybePop(context);
+                    },
+                    child: Container(
+                      width: 36.w,
+                      height: 36.w,
+                      decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
+                      child: Icon(Icons.arrow_back_ios_new, size: 15.sp, color: AppColors.text),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Text('Sevimlilar', style: AppTextStyles.h2.copyWith(fontSize: 23)),
+                ],
+              ),
             ),
-          );
-        },
+            Expanded(
+              child: favsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                error: (e, _) => Center(child: Text('Yuklab bo\'lmadi', style: AppTextStyles.caption)),
+                data: (favs) {
+                  if (favs.isEmpty) return const _EmptyFavorites();
+                  return RefreshIndicator(
+                    color: AppColors.primary,
+                    backgroundColor: AppColors.surface,
+                    onRefresh: () async {
+                      HapticFeedback.lightImpact();
+                      ref.invalidate(favoritesProvider);
+                    },
+                    child: GridView.builder(
+                      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 20.h),
+                      itemCount: favs.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12.w,
+                        mainAxisSpacing: 12.h,
+                        childAspectRatio: 0.72,
+                      ),
+                      itemBuilder: (context, i) => _FavoriteCard(item: favs[i]),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -63,28 +96,18 @@ class _FavoriteCard extends ConsumerStatefulWidget {
 }
 
 class _FavoriteCardState extends ConsumerState<_FavoriteCard> {
-  bool _pressed = false;
   bool _removing = false;
 
   Future<void> _remove() async {
     if (_removing) return;
-    HapticFeedback.lightImpact();
+    HapticFeedback.selectionClick();
     setState(() => _removing = true);
     try {
       final productId = widget.item['product_id'] as int;
       await ref.read(dioProvider).delete('/favorites/$productId');
       ref.invalidate(favoritesProvider);
-    } catch (e) {
-      debugPrint('Sevimlilardan o\'chirishda xato: $e');
-      if (mounted) {
-        setState(() => _removing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('O\'chirishda xato yuz berdi'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    } catch (_) {
+      if (mounted) setState(() => _removing = false);
     }
   }
 
@@ -94,152 +117,95 @@ class _FavoriteCardState extends ConsumerState<_FavoriteCard> {
     final productId = item['product_id'] as int;
     final imgUrl = item['product_image_url'] as String?;
     final fullImg = imgUrl != null ? '${AppConfig.apiBaseUrl}$imgUrl' : null;
-    final priceStr = item['product_price']?.toString() ?? '0';
-    final price = double.tryParse(priceStr) ?? 0;
+    final price = double.tryParse(item['product_price']?.toString() ?? '') ?? 0;
 
     return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
       onTap: () {
         HapticFeedback.lightImpact();
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (_) => ProductDetailScreen(productId: productId)),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(productId: productId)));
       },
-      child: AnimatedScale(
-        scale: _pressed ? 0.98 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.divider, width: 0.5),
-          ),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Hero(
-                  tag: 'product_image_$productId',
-                  child: SizedBox(
-                    width: 76,
-                    height: 76,
+      child: Container(
+        padding: EdgeInsets.all(10.w),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppShadows.card,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: Container(
+                    decoration: BoxDecoration(color: const Color(0xFFEDE9FE), borderRadius: BorderRadius.circular(12.r)),
                     child: fullImg != null
-                        ? AppCachedImage(
-                            url: fullImg,
-                            width: 76,
-                            height: 76,
-                            borderRadius: 0,
-                          )
-                        : Container(
-                            color: AppColors.surfaceHigh,
-                            child: const Icon(Icons.image_outlined,
-                                color: AppColors.textSecondary)),
+                        ? ClipRRect(borderRadius: BorderRadius.circular(12.r), child: Image.network(fullImg, fit: BoxFit.cover))
+                        : Icon(Icons.inventory_2_outlined, color: AppColors.primaryDark, size: 40.sp),
                   ),
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['product_name'] as String,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                        height: 1.3,
-                      ),
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: GestureDetector(
+                    onTap: _remove,
+                    child: Container(
+                      width: 28.w,
+                      height: 28.w,
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.85), shape: BoxShape.circle),
+                      child: _removing
+                          ? Padding(padding: EdgeInsets.all(6.w), child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.textMuted))
+                          : Icon(Icons.favorite, size: 14.sp, color: AppColors.textMuted),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _formatPrice(price),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.cream,
-                        fontSize: 16,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: _remove,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: _removing
-                      ? const Padding(
-                          padding: EdgeInsets.all(10),
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: AppColors.error),
-                        )
-                      : const Icon(Icons.favorite,
-                          color: AppColors.error, size: 20),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+            SizedBox(height: 9.h),
+            Text(item['product_name'] as String? ?? '', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+            SizedBox(height: 6.h),
+            Text(formatSom(price), style: AppTextStyles.cardTitle.copyWith(fontSize: 14.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+          ],
         ),
       ),
     );
   }
 }
 
-class _EmptyFavoritesState extends StatelessWidget {
-  const _EmptyFavoritesState();
+class _EmptyFavorites extends StatelessWidget {
+  const _EmptyFavorites();
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(32.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 110,
-              height: 110,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceHigh,
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: Icon(
-                Icons.favorite_border,
-                size: 56,
-                color: AppColors.error.withValues(alpha: 0.6),
-              ),
+              width: 96.w,
+              height: 96.w,
+              decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
+              child: Icon(Icons.favorite_border, size: 40.sp, color: AppColors.textSecondary),
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'Sevimlilar bo\'sh',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Yoqqan mahsulotlarni ❤ tugmasi\nbilan saqlab boring',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                height: 1.5,
+            SizedBox(height: 20.h),
+            Text('Sevimlilar bo\'sh', style: AppTextStyles.cardTitle.copyWith(fontSize: 17)),
+            SizedBox(height: 8.h),
+            Text('Mahsulot kartasidagi yurakchani bosib, yoqqanlaringizni shu yerga saqlang',
+                textAlign: TextAlign.center, style: AppTextStyles.body.copyWith(color: AppColors.textMuted, fontSize: 13.5)),
+            SizedBox(height: 18.h),
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                appShellKey.currentState?.switchTab(0);
+                Navigator.maybePop(context);
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 12.h),
+                decoration: BoxDecoration(gradient: AppGradients.primary, borderRadius: BorderRadius.circular(14.r)),
+                child: Text('Marketga o\'tish', style: AppTextStyles.cardTitleSm.copyWith(color: Colors.white, fontSize: 14.5)),
               ),
             ),
           ],
@@ -247,49 +213,4 @@ class _EmptyFavoritesState extends StatelessWidget {
       ),
     );
   }
-}
-
-class _FavoritesSkeleton extends StatelessWidget {
-  const _FavoritesSkeleton();
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: 5,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (_, _) => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: const [
-            ShimmerBox(width: 76, height: 76, borderRadius: 14),
-            SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ShimmerBox(width: 160, height: 14),
-                  SizedBox(height: 8),
-                  ShimmerBox(width: 80, height: 16),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-String _formatPrice(num value) {
-  final intStr = value.toInt().toString();
-  final buf = StringBuffer();
-  for (var i = 0; i < intStr.length; i++) {
-    if (i > 0 && (intStr.length - i) % 3 == 0) buf.write(' ');
-    buf.write(intStr[i]);
-  }
-  return '$buf UZS';
 }

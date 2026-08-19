@@ -66,3 +66,13 @@ async def require_admin(current_user: User = Depends(get_current_user)) -> User:
             detail="Bu sahifa faqat admin uchun",
         )
     return current_user
+
+
+async def require_seller_or_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Sotuvchi yoki admin bo'lsa o'tkazadi (masalan sotuvchi o'z e'lonini yozishi uchun)."""
+    if current_user.role not in (UserRole.seller, UserRole.admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bu amal faqat sotuvchi yoki admin uchun",
+        )
+    return current_user

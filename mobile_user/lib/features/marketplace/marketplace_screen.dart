@@ -6,7 +6,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/api_client.dart';
 import '../../core/config.dart';
-import '../../core/theme.dart' as tokens;
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
@@ -203,7 +202,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
     // Sahifa foni (#f8f9fa) — kartochka/qidiruv foni (AppColors.background,
     // paper-white)dan atayin farqlangan, mockup shu ikki qatlamli fonni
     // ishlatadi. Dark rejimda eski indigo fon saqlanadi.
-    final pageBg = isDark ? AppColorsDark.background : tokens.AppColors.background;
+    final pageBg = isDark ? AppColorsDark.background : AppColors.background;
     final surface = isDark ? AppColorsDark.surface : AppColors.background;
     final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
     final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
@@ -235,7 +234,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                 toolbarHeight: 64.h,
                 title: Text(
                   widget.groupName ?? 'Marketplace',
-                  style: tokens.AppTypography.headlineMd
+                  style: (isDark ? AppTextStylesDark.h2 : AppTextStyles.h2)
                       .copyWith(color: textPrimary, fontWeight: FontWeight.w700),
                 ),
                 leading: widget.groupName != null
@@ -261,11 +260,11 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                   child: _PressableScale(
                     onTap: _openSearch,
                     child: Container(
-                      height: tokens.AppSizes.searchInput,
+                      height: AppSizes.searchInput,
                       padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: surface,
-                        borderRadius: BorderRadius.circular(tokens.AppRadius.xl),
+                        borderRadius: BorderRadius.circular(AppRadius.card),
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Row(
@@ -277,7 +276,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                               'Qidiruv...',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: tokens.AppTypography.bodyMd.copyWith(color: textSecondary),
+                              style: (isDark ? AppTextStylesDark.body : AppTextStyles.body).copyWith(color: textSecondary),
                             ),
                           ),
                         ],
@@ -323,7 +322,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                     widget.groupName != null
                         ? '${widget.groupName} turlari'
                         : (filter.categoryId != null ? 'Kategoriya mahsulotlari' : 'Tavsiya etilganlar'),
-                    style: tokens.AppTypography.headlineMd.copyWith(color: textPrimary),
+                    style: (isDark ? AppTextStylesDark.h2 : AppTextStyles.h2).copyWith(color: textPrimary),
                   ),
                 ),
               ),
@@ -679,10 +678,10 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
     final success = isDark ? AppColorsDark.success : AppColors.success;
     final cardBg = isDark ? AppColorsDark.surface : AppColors.background;
     final border = isDark ? AppColorsDark.border : AppColors.border;
-    final imgBg = isDark ? AppColorsDark.surfaceAlt : tokens.AppColors.vanillaCream.withValues(alpha: 0.25);
+    final imgBg = isDark ? AppColorsDark.surfaceAlt : AppColors.surfaceAlt;
     final textPrimary = isDark ? AppColorsDark.textPrimary : AppColors.textPrimary;
     final textSecondary = isDark ? AppColorsDark.textSecondary : AppColors.textSecondary;
-    final warning = isDark ? AppColorsDark.error : tokens.AppColors.statusWarning;
+    final warning = isDark ? AppColorsDark.error : AppColors.rating;
     final error = isDark ? AppColorsDark.error : AppColors.error;
 
     final p = widget.product;
@@ -708,7 +707,7 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
         child: Container(
           decoration: BoxDecoration(
             color: cardBg,
-            borderRadius: BorderRadius.circular(tokens.AppRadius.xl),
+            borderRadius: BorderRadius.circular(AppRadius.card),
             border: Border.all(color: border),
           ),
           clipBehavior: Clip.antiAlias,
@@ -738,11 +737,11 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
                           padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4.h),
                           decoration: BoxDecoration(
                             color: isOutOfStock ? error : warning,
-                            borderRadius: BorderRadius.circular(tokens.AppRadius.sm),
+                            borderRadius: BorderRadius.circular(AppRadius.chip),
                           ),
                           child: Text(
                             isOutOfStock ? 'Sotuvda yo\'q' : 'Yangi',
-                            style: tokens.AppTypography.labelSm.copyWith(
+                            style: (isDark ? AppTextStylesDark.labelSm : AppTextStyles.labelSm).copyWith(
                               color: Colors.white,
                               fontSize: 10,
                             ),
@@ -791,14 +790,14 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
                             p['shop_name'] as String,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: tokens.AppTypography.labelSm.copyWith(color: textSecondary, fontSize: 10),
+                            style: (isDark ? AppTextStylesDark.labelSm : AppTextStyles.labelSm).copyWith(color: textSecondary, fontSize: 10),
                           ),
                         ),
                       Text(
                         p['name'] as String,
                         maxLines: canQuickAdd ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
-                        style: tokens.AppTypography.bodyMd.copyWith(color: textPrimary, fontWeight: FontWeight.w600),
+                        style: (isDark ? AppTextStylesDark.body : AppTextStyles.body).copyWith(color: textPrimary, fontWeight: FontWeight.w600),
                       ),
                       const Spacer(),
                       FittedBox(
@@ -812,11 +811,11 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
                             Text(
                               priceParts.first,
                               maxLines: 1,
-                              style: tokens.AppTypography.priceDisplay.copyWith(color: primary),
+                              style: (isDark ? AppTextStylesDark.price : AppTextStyles.price).copyWith(color: primary),
                             ),
                             if (priceParts.length > 1)
                               Text(' so\'m',
-                                  style: tokens.AppTypography.labelSm.copyWith(color: textSecondary)),
+                                  style: (isDark ? AppTextStylesDark.labelSm : AppTextStyles.labelSm).copyWith(color: textSecondary)),
                           ],
                         ),
                       ),
@@ -835,7 +834,7 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
                                       color: primary,
-                                      borderRadius: BorderRadius.circular(tokens.AppRadius.sm),
+                                      borderRadius: BorderRadius.circular(AppRadius.input),
                                     ),
                                     child: _addingToCart
                                         ? const SizedBox(
@@ -844,7 +843,7 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
                                             child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white),
                                           )
                                         : Text('+$qty',
-                                            style: tokens.AppTypography.labelSm.copyWith(color: Colors.white, fontSize: 11)),
+                                            style: (isDark ? AppTextStylesDark.labelSm : AppTextStyles.labelSm).copyWith(color: Colors.white, fontSize: 11)),
                                   ),
                                 ),
                               ),
@@ -864,7 +863,7 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
                               height: 32.w,
                               decoration: BoxDecoration(
                                 color: isOutOfStock ? textSecondary : (_addedToCart ? success : primary),
-                                borderRadius: BorderRadius.circular(tokens.AppRadius.sm),
+                                borderRadius: BorderRadius.circular(AppRadius.input),
                               ),
                               child: _addingToCart
                                   ? const Padding(

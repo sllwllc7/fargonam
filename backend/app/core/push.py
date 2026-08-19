@@ -203,7 +203,9 @@ async def notify_order_status(user_id: int, order_id: int, status: str) -> None:
     """Buyurtma holati o'zgarganda push yuborish."""
     labels = {
         "paid": "Buyurtma tasdiqlandi ✓",
-        "shipped": "Yo'lga chiqdi 🚚",
+        "preparing": "Buyurtmangiz tayyorlanmoqda 📦",
+        "ready": "Buyurtmangiz tayyor! 🎉",
+        "shipped": "Kuryer yo'lda 🚚",
         "delivered": "Yetkazildi ✓",
         "cancelled": "Bekor qilindi ✗",
     }

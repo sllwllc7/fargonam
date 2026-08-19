@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets.dart';
 import '../marketplace/marketplace_screen.dart' show shopsProvider;
 import 'shop_detail_screen.dart';
@@ -15,10 +15,10 @@ class ShopsListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final shopsAsync = ref.watch(shopsProvider);
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColorsDark.background,
       appBar: AppBar(
         title: const Text('Do\'konlar'),
-        backgroundColor: AppColors.bg,
+        backgroundColor: AppColorsDark.background,
         surfaceTintColor: Colors.transparent,
       ),
       body: shopsAsync.when(
@@ -37,27 +37,27 @@ class ShopsListScreen extends ConsumerWidget {
                       width: 110,
                       height: 110,
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceHigh,
+                        color: AppColorsDark.surfaceAlt,
                         borderRadius: BorderRadius.circular(32),
                       ),
                       child: Icon(Icons.store,
                           size: 56,
-                          color: AppColors.cream.withValues(alpha: 0.4)),
+                          color: AppColorsDark.primary.withValues(alpha: 0.4)),
                     ),
                     const SizedBox(height: 20),
                     const Text('Do\'konlar yo\'q',
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary)),
+                            color: AppColorsDark.textPrimary)),
                   ],
                 ),
               ),
             );
           }
           return RefreshIndicator(
-            color: AppColors.cream,
-            backgroundColor: AppColors.surfaceHigh,
+            color: AppColorsDark.primary,
+            backgroundColor: AppColorsDark.surfaceAlt,
             onRefresh: () async {
               HapticFeedback.lightImpact();
               ref.invalidate(shopsProvider);
@@ -117,12 +117,12 @@ class _ShopGridCardState extends State<_ShopGridCard> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppColors.surface,
-                AppColors.surfaceHigh,
+                AppColorsDark.surface,
+                AppColorsDark.surfaceAlt,
               ],
             ),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.divider, width: 0.5),
+            border: Border.all(color: AppColorsDark.border, width: 0.5),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,20 +131,23 @@ class _ShopGridCardState extends State<_ShopGridCard> {
                 width: 54,
                 height: 54,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.cream, AppColors.creamDim],
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColorsDark.primary,
+                      AppColorsDark.primary.withValues(alpha: 0.7),
+                    ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.cream.withValues(alpha: 0.25),
+                      color: AppColorsDark.primary.withValues(alpha: 0.25),
                       blurRadius: 14,
                       offset: const Offset(0, 6),
                     ),
                   ],
                 ),
                 child: const Icon(Icons.store,
-                    color: AppColors.midnightIndigo, size: 28),
+                    color: AppColorsDark.background, size: 28),
               ),
               const Spacer(),
               Text(
@@ -154,7 +157,7 @@ class _ShopGridCardState extends State<_ShopGridCard> {
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  color: AppColorsDark.textPrimary,
                   letterSpacing: -0.3,
                 ),
               ),
@@ -165,9 +168,9 @@ class _ShopGridCardState extends State<_ShopGridCard> {
                   s['description'] as String,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textMuted),
+                      color: AppColorsDark.textSecondary.withValues(alpha: 0.7)),
                 ),
               ],
             ],

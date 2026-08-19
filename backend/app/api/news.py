@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import BaseModel, Field
 
-from app.api.deps import get_current_user, require_admin
+from app.api.deps import get_current_user, require_admin, require_seller_or_admin
 from app.core.storage import UPLOAD_ROOT, public_url
 from app.core.upload_utils import validate_image
 from app.db.session import get_db
@@ -62,6 +62,26 @@ async def get_news(news_id: int, db: AsyncSession = Depends(get_db)):
     return {"id": n.id, "title": n.title, "body": n.body, "image_url": n.image_url, "created_at": n.created_at.isoformat()}
 
 
+@router.post("/image")
+async def upload_news_image(
+    file: UploadFile = File(...),
+    author: User = Depends(require_seller_or_admin),
+):
+    """Yangilik rasmi yuklash — natijadagi `image_url` `POST /news`ga beriladi."""
+    import secrets
+
+    contents = await file.read()
+    try:
+        ext = validate_image(contents)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    NEWS_IMG_DIR.mkdir(parents=True, exist_ok=True)
+    filename = f"{author.id}_{secrets.token_hex(8)}{ext}"
+    (NEWS_IMG_DIR / filename).write_bytes(contents)
+    return {"image_url": public_url(f"news/{filename}")}
+
+
 class NewsCreate(BaseModel):
     title: str = Field(max_length=500)
     body: str = Field(max_length=10000)
@@ -71,11 +91,11 @@ class NewsCreate(BaseModel):
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_news(
     payload: NewsCreate,
-    admin: User = Depends(require_admin),
+    author: User = Depends(require_seller_or_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    """Admin yangilik yaratadi (JSON body, image_url — ixtiyoriy URL)."""
-    post = NewsPost(author_id=admin.id, title=payload.title, body=payload.body, image_url=payload.image_url)
+    """Admin yoki sotuvchi yangilik/e'lon yaratadi (JSON body, image_url — ixtiyoriy URL)."""
+    post = NewsPost(author_id=author.id, title=payload.title, body=payload.body, image_url=payload.image_url)
     db.add(post)
     await db.commit()
     await db.refresh(post)

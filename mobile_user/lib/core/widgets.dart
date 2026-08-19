@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'theme.dart';
+import 'theme/app_colors.dart';
 
 /// Internet yo'q yoki server xatosi uchun umumiy widget.
 class ErrorRetryWidget extends StatelessWidget {
@@ -23,7 +23,7 @@ class ErrorRetryWidget extends StatelessWidget {
             Icon(
               isOffline ? Icons.wifi_off : Icons.error_outline,
               size: 64,
-              color: isOffline ? AppColors.warning : AppColors.error,
+              color: isOffline ? const Color(0xFFC77B1E) /* DESIGN.md warning */ : AppColorsDark.error,
             ),
             const SizedBox(height: 16),
             Text(
@@ -36,7 +36,7 @@ class ErrorRetryWidget extends StatelessWidget {
                   ? 'Internetga ulanib, qayta urinib ko\'ring'
                   : 'Server bilan bog\'lanishda muammo. Qayta urinib ko\'ring.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+              style: TextStyle(color: AppColorsDark.textSecondary.withValues(alpha: 0.7), fontSize: 14),
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
@@ -107,9 +107,9 @@ class _ShimmerBoxState extends State<ShimmerBox> with SingleTickerProviderStateM
               begin: Alignment(-1.0 + 2.0 * value, 0),
               end: Alignment(-1.0 + 2.0 * value + 1, 0),
               colors: const [
-                AppColors.surfaceHigh,
-                AppColors.surfaceBright,
-                AppColors.surfaceHigh,
+                AppColorsDark.surface,
+                AppColorsDark.surfaceAlt,
+                AppColorsDark.surface,
               ],
             ),
           ),
@@ -134,12 +134,12 @@ class EmptyStateWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: AppColors.divider),
+            Icon(icon, size: 64, color: AppColorsDark.border),
             const SizedBox(height: 16),
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColorsDark.textSecondary)),
             if (subtitle != null) ...[
               const SizedBox(height: 6),
-              Text(subtitle!, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+              Text(subtitle!, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppColorsDark.textSecondary)),
             ],
           ],
         ),
@@ -178,19 +178,19 @@ class AppCachedImage extends StatelessWidget {
         placeholder: (context, url) => Container(
           width: width,
           height: height,
-          color: AppColors.surfaceHigh,
-          child: const Center(
+          color: AppColorsDark.surfaceAlt,
+          child: Center(
             child: SizedBox(
               width: 20, height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textMuted),
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColorsDark.textSecondary.withValues(alpha: 0.7)),
             ),
           ),
         ),
         errorWidget: (context, url, error) => Container(
           width: width,
           height: height,
-          color: AppColors.surfaceHigh,
-          child: Icon(Icons.image_not_supported_outlined, color: AppColors.textMuted, size: iconSize),
+          color: AppColorsDark.surfaceAlt,
+          child: Icon(Icons.image_not_supported_outlined, color: AppColorsDark.textSecondary.withValues(alpha: 0.7), size: iconSize),
         ),
       ),
     );

@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     # JWT
     SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 43200   # 30 kun
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15      # qisqa — Dio interceptor 401'da avtomatik yangilaydi
     REFRESH_TOKEN_EXPIRE_DAYS: int = 90        # 3 oy
     JWT_ALGORITHM: str = "HS256"
 
@@ -40,6 +40,18 @@ class Settings(BaseSettings):
     S3_BUCKET: str = "fargonam"
     S3_PUBLIC_URL: str = ""  # Public URL prefix for files
 
+    # Telegram login (mobile_user) — BotFather'dan olinadi
+    TELEGRAM_BOT_TOKEN: str = ""
+    TELEGRAM_BOT_USERNAME: str = ""  # @ belgisiz, masalan: fargonam_login_bot
+    TELEGRAM_WEBHOOK_SECRET: str = ""
+    # true = long-polling (ochiq HTTPS domen shart emas, lokal dev uchun).
+    # false = webhook (production, domen kerak).
+    TELEGRAM_USE_POLLING: bool = False
+    # Admin huquqi avtomatik beriladigan Telegram foydalanuvchi ID'lari
+    # (username emas, raqamli ID — @userinfobot orqali olinadi). Vergul bilan
+    # ajratilgan ro'yxat: ADMIN_TELEGRAM_IDS=123456789,987654321
+    ADMIN_TELEGRAM_IDS: str = ""
+
     @field_validator("SECRET_KEY")
     @classmethod
     def secret_key_must_be_strong(cls, v: str) -> str:
@@ -53,6 +65,13 @@ class Settings(BaseSettings):
         if not self.ALLOWED_ORIGINS:
             return []
         return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+
+    @property
+    def admin_telegram_ids(self) -> set[str]:
+        """ADMIN_TELEGRAM_IDS ni set ga aylantiradi."""
+        if not self.ADMIN_TELEGRAM_IDS:
+            return set()
+        return {s.strip() for s in self.ADMIN_TELEGRAM_IDS.split(",") if s.strip()}
 
     model_config = SettingsConfigDict(
         env_file=".env",

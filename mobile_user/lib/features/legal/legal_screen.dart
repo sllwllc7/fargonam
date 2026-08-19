@@ -2,7 +2,7 @@
 // Play Store uchun majburiy.
 import 'package:flutter/material.dart';
 
-import '../../core/theme.dart';
+import '../../core/theme/app_colors.dart';
 
 class LegalScreen extends StatelessWidget {
   const LegalScreen({super.key, this.initialTab = 0});
@@ -16,19 +16,19 @@ class LegalScreen extends StatelessWidget {
       length: 2,
       initialIndex: initialTab,
       child: Scaffold(
-        backgroundColor: AppColors.bg,
+        backgroundColor: AppColorsDark.background,
         appBar: AppBar(
           title: const Text('Qoidalar'),
-          backgroundColor: AppColors.bg,
+          backgroundColor: AppColorsDark.background,
           surfaceTintColor: Colors.transparent,
           bottom: TabBar(
             tabs: const [
               Tab(text: 'Foydalanish shartlari'),
               Tab(text: 'Maxfiylik siyosati'),
             ],
-            labelColor: AppColors.cream,
-            unselectedLabelColor: AppColors.textSecondary,
-            indicatorColor: AppColors.cream,
+            labelColor: AppColorsDark.primary,
+            unselectedLabelColor: AppColorsDark.textSecondary,
+            indicatorColor: AppColorsDark.primary,
           ),
         ),
         body: const TabBarView(
@@ -205,7 +205,7 @@ class _LegalTitle extends StatelessWidget {
       style: const TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.w800,
-        color: AppColors.textPrimary,
+        color: AppColorsDark.textPrimary,
         letterSpacing: -0.3,
       ),
     );
@@ -222,9 +222,9 @@ class _LegalMeta extends StatelessWidget {
       padding: const EdgeInsets.only(top: 4),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
-          color: AppColors.textMuted,
+          color: AppColorsDark.textSecondary.withValues(alpha: 0.7),
         ),
       ),
     );
@@ -248,7 +248,7 @@ class _LegalSection extends StatelessWidget {
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: AppColors.cream,
+              color: AppColorsDark.primary,
             ),
           ),
           const SizedBox(height: 6),
@@ -256,7 +256,7 @@ class _LegalSection extends StatelessWidget {
             body,
             style: const TextStyle(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: AppColorsDark.textSecondary,
               height: 1.6,
             ),
           ),

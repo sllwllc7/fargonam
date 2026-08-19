@@ -1,11 +1,11 @@
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/api_client.dart';
 import '../../core/config.dart';
-import '../../core/theme.dart';
-import '../../core/widgets.dart';
 import '../shop/shop_providers.dart' show ShopStatus, myShopProvider;
 import 'add_product_screen.dart';
 import 'edit_product_screen.dart';
@@ -21,72 +21,52 @@ class ProductsScreen extends ConsumerWidget {
     return shopAsync.when(
       loading: () => const Scaffold(
         backgroundColor: AppColors.bg,
-        body: Center(
-            child: CircularProgressIndicator(color: AppColors.cream)),
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: AppColors.bg,
-        appBar: AppBar(title: const Text('Mahsulotlar')),
-        body: ErrorRetryWidget(
-            error: e, onRetry: () => ref.invalidate(myShopProvider)),
+        appBar: _appBar('Market'),
+        body: ErrorRetryWidget(error: e, onRetry: () => ref.invalidate(myShopProvider)),
       ),
       data: (shop) {
         if (shop == null) {
-          return Scaffold(
-            backgroundColor: AppColors.bg,
-            appBar: AppBar(title: const Text('Mahsulotlar')),
-            body: const _NoShopState(),
-          );
+          return Scaffold(backgroundColor: AppColors.bg, appBar: _appBar('Market'), body: const _NoShopState());
         }
-        // Do'kon tasdiqlanmagan bo'lsa — ogohlantirish
         if (shop.status != ShopStatus.approved) {
           return Scaffold(
             backgroundColor: AppColors.bg,
-            appBar: AppBar(title: const Text('Mahsulotlar')),
+            appBar: _appBar('Market'),
             body: Center(
               child: Padding(
-                padding: const EdgeInsets.all(28),
+                padding: EdgeInsets.all(28.w),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(20),
+                      padding: EdgeInsets.all(20.w),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: AppColors.warning.withValues(alpha: 0.3)),
+                        color: AppColors.warning.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+                        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
                       ),
                       child: Icon(
-                        shop.status == ShopStatus.rejected
-                            ? Icons.cancel_outlined
-                            : Icons.hourglass_empty,
-                        color: shop.status == ShopStatus.rejected
-                            ? AppColors.error
-                            : AppColors.warning,
-                        size: 48,
+                        shop.status == ShopStatus.rejected ? Icons.cancel_outlined : Icons.hourglass_empty,
+                        color: shop.status == ShopStatus.rejected ? AppColors.danger : AppColors.warning,
+                        size: 44.sp,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h),
                     Text(
-                      shop.status == ShopStatus.rejected
-                          ? 'Do\'koningiz rad etilgan'
-                          : 'Do\'koningiz tasdiqlanmagan',
-                      style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary),
+                      shop.status == ShopStatus.rejected ? 'Do\'koningiz rad etilgan' : 'Do\'koningiz tasdiqlanmagan',
+                      style: AppTextStyles.cardTitle,
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
                     Text(
                       shop.status == ShopStatus.rejected
                           ? 'Mahsulot yuklash uchun admin bilan bog\'laning: support@fargonam.uz'
                           : 'Mahsulot yuklash uchun admin tasdiqini kuting.',
-                      style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
-                          height: 1.5),
+                      style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -95,8 +75,143 @@ class ProductsScreen extends ConsumerWidget {
             ),
           );
         }
-        return _ProductsList(shopId: shop.id);
+        return _ProductGroupsList(shopId: shop.id);
       },
+    );
+  }
+}
+
+PreferredSizeWidget _appBar(String title) => AppBar(
+      backgroundColor: AppColors.bg,
+      title: Text(title, style: AppTextStyles.title),
+    );
+
+/// Umumiy nom bo'yicha guruh — masalan "Ruchka" ostidagi barcha mahsulot qatorlari.
+class _ProductGroup {
+  const _ProductGroup({required this.name, required this.products});
+  final String name;
+  final List<Product> products;
+}
+
+class _ProductGroupsList extends ConsumerWidget {
+  const _ProductGroupsList({required this.shopId});
+  final int shopId;
+
+  Future<void> _addProduct(BuildContext context, WidgetRef ref) async {
+    HapticFeedback.lightImpact();
+    final created =
+        await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => AddProductScreen(shopId: shopId)));
+    if (created == true) ref.invalidate(shopProductsProvider(shopId));
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final productsAsync = ref.watch(shopProductsProvider(shopId));
+
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      appBar: _appBar('Market'),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.sellerAccent,
+        foregroundColor: Colors.white,
+        shape: const CircleBorder(),
+        onPressed: () => _addProduct(context, ref),
+        child: const Icon(Icons.add, size: 28),
+      ),
+      body: productsAsync.when(
+        loading: () => const _ProductsSkeleton(),
+        error: (e, _) => ErrorRetryWidget(error: e, onRetry: () => ref.invalidate(shopProductsProvider(shopId))),
+        data: (products) {
+          if (products.isEmpty) return const _EmptyProductsState();
+          final byName = <String, List<Product>>{};
+          for (final p in products) {
+            byName.putIfAbsent(p.name.trim(), () => []).add(p);
+          }
+          final groups = byName.entries.map((e) => _ProductGroup(name: e.key, products: e.value)).toList()
+            ..sort((a, b) => a.name.compareTo(b.name));
+          return RefreshIndicator(
+            color: AppColors.primary,
+            backgroundColor: AppColors.surface,
+            onRefresh: () async {
+              HapticFeedback.lightImpact();
+              ref.invalidate(shopProductsProvider(shopId));
+            },
+            child: ListView.separated(
+              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 100.h),
+              itemCount: groups.length,
+              separatorBuilder: (_, _) => SizedBox(height: 10.h),
+              itemBuilder: (context, i) => _GroupTile(shopId: shopId, group: groups[i]),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _GroupTile extends StatelessWidget {
+  const _GroupTile({required this.shopId, required this.group});
+  final int shopId;
+  final _ProductGroup group;
+
+  @override
+  Widget build(BuildContext context) {
+    final first = group.products.first;
+    final imgUrl = first.imageUrl != null ? '${AppConfig.apiBaseUrl}${first.imageUrl}' : null;
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => _ProductsList(shopId: shopId, groupName: group.name)),
+        );
+      },
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppShadows.card,
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.image),
+              child: SizedBox(
+                width: 64.w,
+                height: 64.w,
+                child: imgUrl != null
+                    ? Image.network(
+                        imgUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Container(
+                          color: const Color(0xFFEDE9FE),
+                          child: Icon(Icons.broken_image, color: AppColors.textMuted),
+                        ),
+                      )
+                    : Container(color: const Color(0xFFEDE9FE), child: Icon(Icons.image_outlined, color: AppColors.textMuted)),
+              ),
+            ),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(group.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: AppTextStyles.cardTitleSm),
+                  SizedBox(height: 5.h),
+                  Text(group.products.length > 1 ? '${group.products.length} ta tur' : '1 ta tur',
+                      style: AppTextStyles.caption),
+                ],
+              ),
+            ),
+            Icon(Icons.edit_outlined, size: 18.sp, color: AppColors.textSecondary),
+            SizedBox(width: 6.w),
+            Icon(Icons.chevron_right, color: AppColors.textMuted),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -107,36 +222,21 @@ class _NoShopState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(32.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 110,
-              height: 110,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceHigh,
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: const Icon(Icons.store,
-                  size: 56, color: AppColors.cream),
+              width: 96.w,
+              height: 96.w,
+              decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
+              child: Icon(Icons.storefront_outlined, size: 42.sp, color: AppColors.textMuted),
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'Avval do\'kon yarating',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Dashboard tabida do\'kon yaratishingiz mumkin',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: AppColors.textSecondary, fontSize: 14),
-            ),
+            SizedBox(height: 20.h),
+            Text('Avval do\'kon yarating', style: AppTextStyles.cardTitle),
+            SizedBox(height: 8.h),
+            Text('Bosh sahifada do\'kon yaratishingiz mumkin',
+                textAlign: TextAlign.center, style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
           ],
         ),
       ),
@@ -145,8 +245,16 @@ class _NoShopState extends StatelessWidget {
 }
 
 class _ProductsList extends ConsumerWidget {
-  const _ProductsList({required this.shopId});
+  const _ProductsList({required this.shopId, this.groupName});
   final int shopId;
+  final String? groupName;
+
+  Future<void> _addProduct(BuildContext context, WidgetRef ref) async {
+    HapticFeedback.lightImpact();
+    final created =
+        await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => AddProductScreen(shopId: shopId)));
+    if (created == true) ref.invalidate(shopProductsProvider(shopId));
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -154,49 +262,34 @@ class _ProductsList extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(title: const Text('Mahsulotlar')),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.cream,
-        foregroundColor: AppColors.midnightIndigo,
-        icon: const Icon(Icons.add),
-        label: const Text(
-          'Qo\'shish',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
-        onPressed: () async {
-          HapticFeedback.lightImpact();
-          final created = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(
-                builder: (_) => AddProductScreen(shopId: shopId)),
-          );
-          if (created == true) {
-            ref.invalidate(shopProductsProvider(shopId));
-          }
-        },
+      appBar: _appBar(groupName ?? 'Mahsulotlar'),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.sellerAccent,
+        foregroundColor: Colors.white,
+        shape: const CircleBorder(),
+        onPressed: () => _addProduct(context, ref),
+        child: const Icon(Icons.add, size: 28),
       ),
       body: productsAsync.when(
         loading: () => const _ProductsSkeleton(),
-        error: (e, _) => ErrorRetryWidget(
-          error: e,
-          onRetry: () =>
-              ref.invalidate(shopProductsProvider(shopId)),
-        ),
-        data: (products) {
+        error: (e, _) => ErrorRetryWidget(error: e, onRetry: () => ref.invalidate(shopProductsProvider(shopId))),
+        data: (allProducts) {
+          final products = groupName == null
+              ? allProducts
+              : allProducts.where((p) => p.name.trim().toLowerCase() == groupName!.trim().toLowerCase()).toList();
           if (products.isEmpty) return const _EmptyProductsState();
           return RefreshIndicator(
-            color: AppColors.cream,
-            backgroundColor: AppColors.surfaceHigh,
+            color: AppColors.primary,
+            backgroundColor: AppColors.surface,
             onRefresh: () async {
               HapticFeedback.lightImpact();
               ref.invalidate(shopProductsProvider(shopId));
             },
             child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 100.h),
               itemCount: products.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, i) =>
-                  _ProductTile(product: products[i]),
+              separatorBuilder: (_, _) => SizedBox(height: 10.h),
+              itemBuilder: (context, i) => _ProductTile(product: products[i]),
             ),
           );
         },
@@ -211,38 +304,21 @@ class _EmptyProductsState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(32.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 110,
-              height: 110,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceHigh,
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: const Icon(Icons.inventory_2_outlined,
-                  size: 56, color: AppColors.cream),
+              width: 96.w,
+              height: 96.w,
+              decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
+              child: Icon(Icons.inventory_2_outlined, size: 42.sp, color: AppColors.textMuted),
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'Hali mahsulot yo\'q',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Pastdagi tugma bilan birinchi mahsulotingizni qo\'shing',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                  height: 1.5),
-            ),
+            SizedBox(height: 20.h),
+            Text('Hali mahsulot yo\'q', style: AppTextStyles.cardTitle),
+            SizedBox(height: 8.h),
+            Text('Pastdagi tugma bilan birinchi mahsulotingizni qo\'shing',
+                textAlign: TextAlign.center, style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
           ],
         ),
       ),
@@ -255,26 +331,23 @@ class _ProductsSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(20.w),
       itemCount: 5,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      separatorBuilder: (_, _) => SizedBox(height: 10.h),
       itemBuilder: (_, _) => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-        ),
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(AppRadius.card)),
         child: Row(
-          children: const [
-            ShimmerBox(width: 64, height: 64, borderRadius: 12),
-            SizedBox(width: 14),
+          children: [
+            ShimmerBox(width: 64.w, height: 64.w, borderRadius: AppRadius.image),
+            SizedBox(width: 14.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ShimmerBox(width: 140, height: 14),
-                  SizedBox(height: 8),
-                  ShimmerBox(width: 100, height: 14),
+                  ShimmerBox(width: 140.w, height: 14),
+                  SizedBox(height: 8.h),
+                  ShimmerBox(width: 100.w, height: 14),
                 ],
               ),
             ),
@@ -302,20 +375,13 @@ class _ProductTileState extends ConsumerState<_ProductTile> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: const Text('Mahsulotni o\'chirish'),
-        content: Text(
-          '"${widget.product.name}" ni o\'chirmoqchimisiz?',
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
+        content: Text('"${widget.product.name}" ni o\'chirmoqchimisiz?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Yo\'q')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Yo\'q')),
           FilledButton(
-            style:
-                FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('O\'chirish'),
           ),
@@ -330,10 +396,7 @@ class _ProductTileState extends ConsumerState<_ProductTile> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('O\'chirishda xato: $e'),
-              backgroundColor: AppColors.error,
-            ),
+            SnackBar(content: Text('O\'chirishda xato: $e'), backgroundColor: AppColors.danger),
           );
         }
       }
@@ -344,21 +407,16 @@ class _ProductTileState extends ConsumerState<_ProductTile> {
     HapticFeedback.lightImpact();
     final edited = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-          builder: (_) => EditProductScreen(product: widget.product)),
+      MaterialPageRoute(builder: (_) => EditProductScreen(product: widget.product)),
     );
-    if (edited == true) {
-      ref.invalidate(shopProductsProvider(widget.product.shopId));
-    }
+    if (edited == true) ref.invalidate(shopProductsProvider(widget.product.shopId));
   }
 
   @override
   Widget build(BuildContext context) {
     final p = widget.product;
-    final imgUrl =
-        p.imageUrl != null ? '${AppConfig.apiBaseUrl}${p.imageUrl}' : null;
-    final stockColor =
-        p.stock > 0 ? AppColors.success : AppColors.error;
+    final imgUrl = p.imageUrl != null ? '${AppConfig.apiBaseUrl}${p.imageUrl}' : null;
+    final stockColor = p.stock > 0 ? AppColors.success : AppColors.danger;
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
@@ -369,87 +427,56 @@ class _ProductTileState extends ConsumerState<_ProductTile> {
         scale: _pressed ? 0.98 : 1.0,
         duration: const Duration(milliseconds: 120),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.divider, width: 0.5),
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: AppColors.border),
+            boxShadow: AppShadows.card,
           ),
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.image),
                 child: SizedBox(
-                  width: 64,
-                  height: 64,
+                  width: 64.w,
+                  height: 64.w,
                   child: imgUrl != null
                       ? Image.network(
                           imgUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => Container(
-                            color: AppColors.surfaceHigh,
-                            child: const Icon(Icons.broken_image,
-                                color: AppColors.textMuted),
-                          ),
+                          errorBuilder: (_, _, _) =>
+                              Container(color: const Color(0xFFEDE9FE), child: Icon(Icons.broken_image, color: AppColors.textMuted)),
                         )
-                      : Container(
-                          color: AppColors.surfaceHigh,
-                          child: const Icon(Icons.image_outlined,
-                              color: AppColors.textMuted)),
+                      : Container(color: const Color(0xFFEDE9FE), child: Icon(Icons.image_outlined, color: AppColors.textMuted)),
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      p.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
+                    Text(p.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: AppTextStyles.cardTitleSm),
+                    SizedBox(height: 6.h),
                     Row(
                       children: [
-                        Text(
-                          formatPrice(double.tryParse(p.price) ?? 0),
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.cream,
-                              fontSize: 14),
-                        ),
-                        const SizedBox(width: 10),
+                        Text(formatSom(double.tryParse(p.price) ?? 0), style: AppTextStyles.price.copyWith(fontSize: 14)),
+                        SizedBox(width: 10.w),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: stockColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            p.stock > 0
-                                ? 'Bor: ${p.stock}'
-                                : 'Tugagan',
-                            style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: stockColor),
-                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                          decoration:
+                              BoxDecoration(color: stockColor.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(6.r)),
+                          child: Text(p.stock > 0 ? 'Bor: ${p.stock}' : 'Tugagan',
+                              style: AppTextStyles.small.copyWith(color: stockColor, fontSize: 11)),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
+              Icon(Icons.edit_outlined, size: 18.sp, color: AppColors.textSecondary),
               IconButton(
-                icon: const Icon(Icons.delete_outline,
-                    color: AppColors.error, size: 22),
+                icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 22),
                 onPressed: _delete,
               ),
             ],

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/config.dart';
-import '../../core/theme.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/widgets.dart';
 import '../products/product_detail_screen.dart';
 
@@ -32,19 +32,19 @@ class ShopDetailScreen extends ConsumerWidget {
     final prodsAsync = ref.watch(shopProductsProvider(shopId));
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColorsDark.background,
       appBar: AppBar(
         title: shopAsync.when(
           data: (s) => Text(s['name'] as String),
           loading: () => const Text('Do\'kon'),
           error: (_, _) => const Text('Do\'kon'),
         ),
-        backgroundColor: AppColors.bg,
+        backgroundColor: AppColorsDark.background,
         surfaceTintColor: Colors.transparent,
       ),
       body: RefreshIndicator(
-        color: AppColors.cream,
-        backgroundColor: AppColors.surfaceHigh,
+        color: AppColorsDark.primary,
+        backgroundColor: AppColorsDark.surfaceAlt,
         onRefresh: () async {
           HapticFeedback.lightImpact();
           ref.invalidate(shopDetailProvider(shopId));
@@ -64,7 +64,7 @@ class ShopDetailScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   child: Text('$e',
                       style:
-                          const TextStyle(color: AppColors.error)),
+                          const TextStyle(color: AppColorsDark.error)),
                 ),
                 data: (shop) => _ShopHeader(shop: shop),
               ),
@@ -81,7 +81,7 @@ class ShopDetailScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: AppColorsDark.textPrimary,
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -89,8 +89,8 @@ class ShopDetailScreen extends ConsumerWidget {
                     prodsAsync.when(
                       data: (p) => Text(
                         '${p.length} ta',
-                        style: const TextStyle(
-                            color: AppColors.textMuted,
+                        style: TextStyle(
+                            color: AppColorsDark.textSecondary.withValues(alpha: 0.7),
                             fontSize: 13),
                       ),
                       loading: () => const SizedBox.shrink(),
@@ -112,14 +112,14 @@ class ShopDetailScreen extends ConsumerWidget {
               ),
               data: (products) {
                 if (products.isEmpty) {
-                  return const SliverFillRemaining(
+                  return SliverFillRemaining(
                     child: Center(
                       child: Padding(
-                        padding: EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(32),
                         child: Text(
                           'Hali mahsulot yo\'q',
                           style: TextStyle(
-                              color: AppColors.textMuted,
+                              color: AppColorsDark.textSecondary.withValues(alpha: 0.7),
                               fontSize: 14),
                         ),
                       ),
@@ -167,13 +167,13 @@ class _ShopHeader extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.cream.withValues(alpha: 0.1),
-            AppColors.success.withValues(alpha: 0.05),
+            AppColorsDark.primary.withValues(alpha: 0.1),
+            AppColorsDark.success.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-            color: AppColors.cream.withValues(alpha: 0.2)),
+            color: AppColorsDark.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -181,20 +181,23 @@ class _ShopHeader extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.cream, AppColors.creamDim],
+              gradient: LinearGradient(
+                colors: [
+                  AppColorsDark.primary,
+                  AppColorsDark.primary.withValues(alpha: 0.7),
+                ],
               ),
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.cream.withValues(alpha: 0.3),
+                  color: AppColorsDark.primary.withValues(alpha: 0.3),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: const Icon(Icons.store,
-                color: AppColors.midnightIndigo, size: 30),
+                color: AppColorsDark.background, size: 30),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -206,7 +209,7 @@ class _ShopHeader extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: AppColorsDark.textPrimary,
                     letterSpacing: -0.3,
                   ),
                   maxLines: 1,
@@ -218,7 +221,7 @@ class _ShopHeader extends StatelessWidget {
                   Text(
                     shop['description'] as String,
                     style: const TextStyle(
-                        color: AppColors.textSecondary,
+                        color: AppColorsDark.textSecondary,
                         fontSize: 13,
                         height: 1.4),
                     maxLines: 2,
@@ -250,7 +253,7 @@ class _ShopProductsSkeleton extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (_, _) => Container(
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColorsDark.surface,
               borderRadius: BorderRadius.circular(20),
             ),
             clipBehavior: Clip.antiAlias,
@@ -322,9 +325,9 @@ class _ShopProductCardState extends State<_ShopProductCard> {
         duration: const Duration(milliseconds: 120),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColorsDark.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.divider, width: 0.5),
+            border: Border.all(color: AppColorsDark.border, width: 0.5),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -341,10 +344,10 @@ class _ShopProductCardState extends State<_ShopProductCard> {
                           fit: BoxFit.cover,
                         )
                       : Container(
-                          color: AppColors.surfaceHigh,
+                          color: AppColorsDark.surfaceAlt,
                           child: const Icon(Icons.image_outlined,
                               size: 36,
-                              color: AppColors.textSecondary)),
+                              color: AppColorsDark.textSecondary)),
                 ),
               ),
               Expanded(
@@ -361,7 +364,7 @@ class _ShopProductCardState extends State<_ShopProductCard> {
                         style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            color: AppColorsDark.textPrimary,
                             height: 1.3),
                       ),
                       const Spacer(),
@@ -370,7 +373,7 @@ class _ShopProductCardState extends State<_ShopProductCard> {
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.cream,
+                          color: AppColorsDark.primary,
                           letterSpacing: -0.3,
                         ),
                       ),

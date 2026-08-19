@@ -1,15 +1,14 @@
 import 'package:dio/dio.dart';
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_client.dart';
-import '../../core/theme.dart';
-import '../../core/widgets.dart';
 
-final sellerOrdersProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final sellerOrdersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final dio = ref.watch(dioProvider);
   final res = await dio.get('/seller/orders');
   return (res.data as List).cast<Map<String, dynamic>>();
@@ -39,63 +38,69 @@ class _SellerOrdersScreenState extends ConsumerState<SellerOrdersScreen> {
     final ordersAsync = ref.watch(sellerOrdersProvider);
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(title: const Text('Buyurtmalar')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: TextField(
-              onChanged: (v) => setState(() => _search = v),
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Kod, ism yoki telefon bo\'yicha qidirish',
-                hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-                prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 20),
-                filled: true,
-                fillColor: AppColors.surfaceHigh,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+              child: Text('Buyurtmalar', style: AppTextStyles.h2.copyWith(color: AppColors.primaryDark)),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 8.h),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceAlt,
+                  borderRadius: BorderRadius.circular(AppRadius.input),
+                ),
+                child: TextField(
+                  onChanged: (v) => setState(() => _search = v),
+                  style: AppTextStyles.body.copyWith(color: AppColors.text),
+                  decoration: InputDecoration(
+                    hintText: 'Kod, ism yoki telefon bo\'yicha qidirish',
+                    hintStyle: AppTextStyles.body.copyWith(color: AppColors.textMuted, fontSize: 14),
+                    prefixIcon: Icon(Icons.search, color: AppColors.textMuted, size: 20.sp),
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.input),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: ordersAsync.when(
-              loading: () => const _OrdersSkeleton(),
-              error: (e, _) => ErrorRetryWidget(
-                  error: e, onRetry: () => ref.invalidate(sellerOrdersProvider)),
-              data: (orders) {
-                if (orders.isEmpty) return const _EmptyOrdersState();
-                final filtered = orders.where((o) => _matchesSearch(o, _search)).toList();
-                if (filtered.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'Hech narsa topilmadi',
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+            Expanded(
+              child: ordersAsync.when(
+                loading: () => const _OrdersSkeleton(),
+                error: (e, _) => ErrorRetryWidget(error: e, onRetry: () => ref.invalidate(sellerOrdersProvider)),
+                data: (orders) {
+                  if (orders.isEmpty) return const _EmptyOrdersState();
+                  final filtered = orders.where((o) => _matchesSearch(o, _search)).toList();
+                  if (filtered.isEmpty) {
+                    return Center(
+                      child: Text('Hech narsa topilmadi', style: AppTextStyles.body.copyWith(color: AppColors.textMuted)),
+                    );
+                  }
+                  return RefreshIndicator(
+                    color: AppColors.primary,
+                    backgroundColor: AppColors.surface,
+                    onRefresh: () async {
+                      HapticFeedback.lightImpact();
+                      ref.invalidate(sellerOrdersProvider);
+                    },
+                    child: ListView.separated(
+                      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 20.h),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, _) => SizedBox(height: 10.h),
+                      itemBuilder: (context, i) => _OrderCard(order: filtered[i]),
                     ),
                   );
-                }
-                return RefreshIndicator(
-                  color: AppColors.cream,
-                  backgroundColor: AppColors.surfaceHigh,
-                  onRefresh: () async {
-                    HapticFeedback.lightImpact();
-                    ref.invalidate(sellerOrdersProvider);
-                  },
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (context, i) =>
-                        _OrderCard(order: filtered[i]),
-                  ),
-                );
-              },
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -106,14 +111,10 @@ class _OrdersSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 20.h),
       itemCount: 4,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (_, _) => const ShimmerBox(
-        width: double.infinity,
-        height: 160,
-        borderRadius: 20,
-      ),
+      separatorBuilder: (_, _) => SizedBox(height: 10.h),
+      itemBuilder: (_, _) => ShimmerBox(width: double.infinity, height: 160.h, borderRadius: AppRadius.card),
     );
   }
 }
@@ -129,36 +130,27 @@ class _EmptyOrdersState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 110,
-              height: 110,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceHigh,
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: const Icon(Icons.receipt_long,
-                  size: 56, color: AppColors.cream),
+              width: 96.w,
+              height: 96.w,
+              decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
+              child: Icon(Icons.receipt_long, size: 42.sp, color: AppColors.textMuted),
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'Hali buyurtma kelmagan',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Buyurtmalar shu yerda paydo bo\'ladi',
-              style: TextStyle(
-                  color: AppColors.textSecondary, fontSize: 14),
-            ),
+            SizedBox(height: 20.h),
+            Text('Hali buyurtma kelmagan', style: AppTextStyles.cardTitle),
+            SizedBox(height: 6.h),
+            Text('Buyurtmalar shu yerda paydo bo\'ladi',
+                style: AppTextStyles.body.copyWith(color: AppColors.textMuted)),
           ],
         ),
       ),
     );
   }
 }
+
+/// Delivery: Qabul qilindi -> Tayyorlanmoqda -> Tayyor -> Kuryerda -> Yetkazildi
+/// Pickup:   Qabul qilindi -> Tayyorlanmoqda -> Tayyor -> Topshirildi (kuryer bosqichisiz)
+const _deliveryFlow = ['pending', 'preparing', 'ready', 'shipped', 'delivered'];
+const _pickupFlow = ['pending', 'preparing', 'ready', 'delivered'];
 
 class _OrderCard extends ConsumerStatefulWidget {
   const _OrderCard({required this.order});
@@ -178,44 +170,46 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     _status = widget.order['status'] as String;
   }
 
-  static const _statusFlow = ['pending', 'paid', 'shipped', 'delivered'];
-
   bool get _isPickup => widget.order['delivery_type'] == 'pickup';
+  List<String> get _flow => _isPickup ? _pickupFlow : _deliveryFlow;
 
   Map<String, String> get _statusLabels => {
-        'pending': 'Kutilmoqda',
-        'paid': 'To\'langan',
-        'shipped': _isPickup ? 'Tayyor' : 'Yo\'lda',
+        'pending': 'Qabul qilindi',
+        'preparing': 'Tayyorlanmoqda',
+        'ready': 'Tayyor',
+        'shipped': 'Kuryerda',
         'delivered': _isPickup ? 'Topshirildi' : 'Yetkazildi',
-        'cancelled': 'Bekor',
+        'cancelled': 'Bekor qilingan',
       };
   static const _statusColors = {
-    'pending': AppColors.warning,
-    'paid': AppColors.info,
-    'shipped': AppColors.info,
+    'pending': AppColors.textMuted,
+    'preparing': AppColors.warning,
+    'ready': AppColors.accent,
+    'shipped': AppColors.accent,
     'delivered': AppColors.success,
-    'cancelled': AppColors.error,
+    'cancelled': AppColors.danger,
   };
 
   String? get _nextStatus {
     if (_status == 'cancelled') return null;
-    final idx = _statusFlow.indexOf(_status);
-    if (idx < 0 || idx >= _statusFlow.length - 1) return null;
-    return _statusFlow[idx + 1];
+    final idx = _flow.indexOf(_status);
+    if (idx < 0 || idx >= _flow.length - 1) return null;
+    return _flow[idx + 1];
   }
 
   String? get _nextLabel {
     final next = _nextStatus;
     if (next == null) return null;
     return switch (next) {
-      'paid' => 'To\'landi',
-      'shipped' => _isPickup ? 'Tayyor' : 'Yuborildi',
+      'preparing' => 'Tayyorlashni boshlash',
+      'ready' => 'Tayyor',
+      'shipped' => 'Kuryerga berish',
       'delivered' => _isPickup ? 'Topshirdim' : 'Yetkazildi',
       _ => null,
     };
   }
 
-  bool get _canCancel => _status == 'pending' || _status == 'paid';
+  bool get _canCancel => _status == 'pending' || _status == 'preparing' || _status == 'ready';
 
   Future<void> _callCustomer(String phone) async {
     HapticFeedback.selectionClick();
@@ -238,11 +232,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       ref.invalidate(sellerOrdersProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Status: ${_statusLabels[newStatus]}'),
-            backgroundColor: AppColors.success,
-          ),
+          SnackBar(content: Text('Holat: ${_statusLabels[newStatus]}'), backgroundColor: AppColors.success),
         );
       }
     } on DioException catch (e) {
@@ -250,9 +240,8 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                e.response?.data['detail']?.toString() ?? 'Xato'),
-            backgroundColor: AppColors.error,
+            content: Text(e.response?.data['detail']?.toString() ?? 'Xato'),
+            backgroundColor: AppColors.danger,
           ),
         );
       }
@@ -272,17 +261,15 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Yetkazildi deb belgilansinmi?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
+        title: Text(_isPickup ? 'Topshirildi deb belgilansinmi?' : 'Yetkazildi deb belgilansinmi?'),
         content: const Text(
-          'Bu amalni ortga qaytarib bo\'lmaydi. Buyurtma "Yetkazildi" '
-          'holatiga o\'tadi.',
+          'Bu amalni ortga qaytarib bo\'lmaydi.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Bekor qilish'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Bekor qilish')),
           FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Ha, tasdiqlayman'),
           ),
@@ -295,25 +282,24 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
   }
 
   /// "Bajarib bo'lmaydi" — sababni majburiy so'raydi, terminal holat
-  /// ekanini ochiq ogohlantiradi (bu dialog o'zi tasdiqlash vazifasini
-  /// bajaradi — alohida qo'shimcha tasdiqlash shart emas).
+  /// ekanini ochiq ogohlantiradi.
   Future<void> _cancelWithReason() async {
     final controller = TextEditingController();
     final reason = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: const Text('Buyurtmani bekor qilish'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Bu amalni ortga qaytarib bo\'lmaydi. Zaxira avtomatik '
-              'qaytariladi, xaridorga xabar boradi.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            Text(
+              'Bu amalni ortga qaytarib bo\'lmaydi. Zaxira avtomatik qaytariladi, xaridorga xabar boradi.',
+              style: AppTextStyles.caption,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             TextField(
               controller: controller,
               autofocus: true,
@@ -326,12 +312,9 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Yopish'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Yopish')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () {
               final text = controller.text.trim();
               if (text.isEmpty) return;
@@ -355,11 +338,12 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     final total = double.tryParse(totalStr) ?? 0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.divider, width: 0.5),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,53 +351,35 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceHigh,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '#${widget.order['id']}',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                      color: AppColors.cream),
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 4.h),
+                decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(8.r)),
+                child: Text('#${widget.order['id']}',
+                    style: AppTextStyles.small.copyWith(color: AppColors.text, fontSize: 13)),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 5),
+                padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(10),
+                  color: color.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: Text(
-                  _statusLabels[_status] ?? _status,
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: color),
-                ),
+                child: Text(_statusLabels[_status] ?? _status,
+                    style: AppTextStyles.small.copyWith(color: color, fontSize: 11.5)),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-
-          // Xaridor ismi/telefoni
+          SizedBox(height: 10.h),
           if (widget.order['customer_name'] != null || widget.order['customer_phone'] != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: EdgeInsets.only(bottom: 8.h),
               child: Row(
                 children: [
-                  const Icon(Icons.person_outline, size: 15, color: AppColors.textMuted),
-                  const SizedBox(width: 6),
+                  Icon(Icons.person_outline, size: 15.sp, color: AppColors.textMuted),
+                  SizedBox(width: 6.w),
                   Expanded(
                     child: Text(
                       (widget.order['customer_name'] as String?) ?? '',
-                      style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -421,18 +387,15 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   if (widget.order['customer_phone'] != null)
                     InkWell(
                       onTap: () => _callCustomer(widget.order['customer_phone'] as String),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(8.r),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
                         child: Row(
                           children: [
-                            const Icon(Icons.call, size: 14, color: AppColors.success),
-                            const SizedBox(width: 4),
-                            Text(
-                              widget.order['customer_phone'] as String,
-                              style: const TextStyle(
-                                  fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.success),
-                            ),
+                            Icon(Icons.call, size: 14.sp, color: AppColors.success),
+                            SizedBox(width: 4.w),
+                            Text(widget.order['customer_phone'] as String,
+                                style: AppTextStyles.small.copyWith(color: AppColors.success, fontSize: 13)),
                           ],
                         ),
                       ),
@@ -440,158 +403,103 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                 ],
               ),
             ),
-
-          // Yetkazib berish manzili (pickup bo'lmasa)
           if (!_isPickup && (widget.order['delivery_address'] as String?)?.isNotEmpty == true)
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
+              padding: EdgeInsets.only(bottom: 10.h),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.location_on_outlined, size: 15, color: AppColors.textMuted),
-                  const SizedBox(width: 6),
+                  Icon(Icons.location_on_outlined, size: 15.sp, color: AppColors.textMuted),
+                  SizedBox(width: 6.w),
                   Expanded(
-                    child: Text(
-                      widget.order['delivery_address'] as String,
-                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                    ),
+                    child: Text(widget.order['delivery_address'] as String,
+                        style: AppTextStyles.body.copyWith(color: AppColors.textSecondary, fontSize: 13)),
                   ),
                 ],
               ),
             ),
-
-          // Pickup kod — katta, ajratilgan
           if (_isPickup && widget.order['pickup_code'] != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
+              padding: EdgeInsets.only(bottom: 10.h),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: EdgeInsets.symmetric(vertical: 10.h),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
+                  color: AppColors.success.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
                 ),
                 child: Center(
                   child: Text(
                     widget.order['pickup_code'] as String,
-                    style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.success,
-                        letterSpacing: 4),
+                    style: AppTextStyles.h2.copyWith(color: AppColors.success, letterSpacing: 4, fontSize: 22),
                   ),
                 ),
               ),
             ),
-
-          // Mahsulotlar
-          for (final item in items) ...[
+          for (final item in items)
             Padding(
-              padding: const EdgeInsets.only(bottom: 6),
+              padding: EdgeInsets.only(bottom: 6.h),
               child: Row(
                 children: [
                   Container(
                     width: 4,
                     height: 4,
-                    decoration: const BoxDecoration(
-                      color: AppColors.textMuted,
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: const BoxDecoration(color: AppColors.textMuted, shape: BoxShape.circle),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10.w),
                   Expanded(
                     child: Text(
                       '${item['product_name'] ?? 'Mahsulot #${item['product_id']}'} × ${item['quantity']}',
-                      style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textPrimary),
+                      style: AppTextStyles.body.copyWith(fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Text(
-                    formatPrice(double.tryParse(
-                            item['price_at_purchase']
-                                    ?.toString() ??
-                                '0') ??
-                        0),
-                    style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textMuted),
+                    formatSom(double.tryParse(item['price_at_purchase']?.toString() ?? '0') ?? 0),
+                    style: AppTextStyles.caption.copyWith(fontSize: 12),
                   ),
                 ],
               ),
             ),
-          ],
-
-          const Divider(height: 22),
-
+          Divider(height: 22.h, color: AppColors.border),
           Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Jami',
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textMuted),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      formatPrice(total),
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.cream,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
+                    Text('Jami', style: AppTextStyles.caption.copyWith(fontSize: 11)),
+                    SizedBox(height: 2.h),
+                    Text(formatSom(total), style: AppTextStyles.price.copyWith(fontSize: 17)),
                   ],
                 ),
               ),
               if (_canCancel)
                 Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: EdgeInsets.only(right: 8.w),
                   child: TextButton(
                     onPressed: _updating ? null : _cancelWithReason,
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.error,
-                    ),
-                    child: const Text(
-                      'Bajarib bo\'lmaydi',
-                      style: TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w800),
-                    ),
+                    style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                    child: const Text('Bajarib bo\'lmaydi', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
                   ),
                 ),
               if (_nextLabel != null)
-                FilledButton.tonal(
-                  onPressed: _updating
-                      ? null
-                      : () => _confirmAndAdvance(_nextStatus!),
+                FilledButton(
+                  onPressed: _updating ? null : () => _confirmAndAdvance(_nextStatus!),
                   style: FilledButton.styleFrom(
-                    backgroundColor:
-                        AppColors.cream.withValues(alpha: 0.15),
-                    foregroundColor: AppColors.cream,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                    backgroundColor: AppColors.sellerAccent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
                   ),
                   child: _updating
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.cream))
-                      : Text(
-                          _nextLabel!,
-                          style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800),
-                        ),
+                      ? SizedBox(
+                          width: 18.w,
+                          height: 18.w,
+                          child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : Text(_nextLabel!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
                 ),
             ],
           ),

@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1094695330974:android:302f0a738c7fa2e3d1478f",
+        "mobilesdk_app_id": "1:1094695330974:android:1eea1248fce684b5d1478f",
         "android_client_info": {
-          "package_name": "com.feron"
+          "package_name": "uz.fargonam.app"
         }
       },
       "oauth_client": [],
@@ -26,9 +26,9 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1094695330974:android:1eea1248fce684b5d1478f",
+        "mobilesdk_app_id": "1:1094695330974:android:f75f856b21aeec27d1478f",
         "android_client_info": {
-          "package_name": "uz.fargonam.app"
+          "package_name": "uz.fargonam.mobile_seller"
         }
       },
       "oauth_client": [],

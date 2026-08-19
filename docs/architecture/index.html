@@ -1,0 +1,1087 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fargonam — Arxitektura Hujjati</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#161922; --panel2:#1c202b; --border:#2a2f3d;
+  --text:#e6e8ee; --text-dim:#9aa1b2; --accent:#5b8cff; --accent-dim:#2f4a8f;
+  --red:#ef4444; --red-bg:#3a1a1a; --yellow:#eab308; --yellow-bg:#3a3316; --green:#22c55e; --green-bg:#16311f;
+  --mono: "SF Mono", "Cascadia Code", Consolas, "Courier New", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.55}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code, .mono{font-family:var(--mono);font-size:0.92em}
+.layout{display:flex;min-height:100vh}
+.sidebar{
+  width:290px;flex:0 0 290px;background:var(--panel);border-right:1px solid var(--border);
+  position:sticky;top:0;height:100vh;overflow-y:auto;padding:16px 0 60px;
+}
+.sidebar .brand{padding:0 18px 14px;font-weight:700;font-size:16px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.sidebar .brand small{display:block;font-weight:400;color:var(--text-dim);font-size:12px;margin-top:2px}
+.sidebar nav a{display:block;padding:7px 18px;color:var(--text-dim);font-size:13.5px;border-left:2px solid transparent}
+.sidebar nav a:hover{background:var(--panel2);color:var(--text);text-decoration:none}
+.sidebar nav a.top{color:var(--text);font-weight:600;margin-top:10px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;padding-bottom:4px}
+.sidebar nav a.sub{padding-left:30px;font-size:13px}
+#searchWrap{padding:0 18px 14px;border-bottom:1px solid var(--border);margin-bottom:6px}
+#searchBox{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px}
+#searchBox:focus{outline:none;border-color:var(--accent)}
+#searchCount{font-size:11px;color:var(--text-dim);margin-top:6px;display:none}
+.content{flex:1;min-width:0;padding:36px 44px 120px;max-width:1180px}
+section.doc-section{margin-bottom:64px;scroll-margin-top:20px}
+h1{font-size:26px;margin:0 0 8px}
+h2{font-size:21px;border-bottom:1px solid var(--border);padding-bottom:10px;margin:0 0 18px;scroll-margin-top:20px}
+h3{font-size:16px;margin:28px 0 10px;color:var(--text)}
+h3 .file-tag{font-weight:400}
+h4{font-size:14px;margin:18px 0 8px;color:var(--text-dim)}
+p{color:var(--text-dim)}
+p.lead{color:var(--text);font-size:15.5px}
+.badge{display:inline-block;padding:1px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-left:6px;vertical-align:middle}
+.badge.warn{background:var(--red-bg);color:var(--red)}
+.badge.mock{background:var(--yellow-bg);color:var(--yellow)}
+.badge.ok{background:var(--green-bg);color:var(--green)}
+.badge.dim{background:var(--panel2);color:var(--text-dim)}
+table{width:100%;border-collapse:collapse;margin:14px 0 22px;font-size:13.3px}
+table.wide{font-size:12.8px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--panel2);color:var(--text-dim);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;cursor:pointer;user-select:none;position:sticky;top:0}
+th:hover{color:var(--text)}
+th.sort-asc::after{content:" \25B2"} th.sort-desc::after{content:" \25BC"}
+tr:hover td{background:var(--panel2)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px}
+.tbl-wrap table{margin:0}
+.tbl-wrap th:first-child,.tbl-wrap td:first-child{padding-left:14px}
+.method{font-family:var(--mono);font-size:11.5px;font-weight:700;padding:2px 6px;border-radius:4px;display:inline-block;min-width:44px;text-align:center}
+.method.GET{background:#123a2e;color:#3ddc97}
+.method.POST{background:#1a2f52;color:#6ea8ff}
+.method.PATCH{background:#3a2f12;color:#e0b34d}
+.method.PUT{background:#3a2f12;color:#e0b34d}
+.method.DELETE{background:#3a1414;color:#f27171}
+.method.WS{background:#2c1a3a;color:#c58bff}
+.path{font-family:var(--mono);color:var(--text)}
+.file-ref{font-family:var(--mono);font-size:12px;color:var(--accent);white-space:nowrap}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin:14px 0}
+.card h4{margin-top:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+.note{border-left:3px solid var(--accent);background:var(--panel);padding:10px 14px;border-radius:0 6px 6px 0;margin:12px 0;color:var(--text-dim);font-size:13.5px}
+.note.warn{border-color:var(--red)} .note.mock{border-color:var(--yellow)} .note.ok{border-color:var(--green)}
+.svg-wrap{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;overflow-x:auto;margin:16px 0}
+.svg-wrap svg{display:block;margin:0 auto;max-width:100%}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--text-dim);margin:10px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.toc-hint{color:var(--text-dim);font-size:12.5px;margin-top:-10px}
+.hidden-by-search{display:none !important}
+mark{background:#5b3d00;color:#ffd77a;border-radius:2px}
+.step-list{counter-reset:step;list-style:none;padding:0;margin:14px 0}
+.step-list li{counter-increment:step;position:relative;padding:6px 0 6px 34px;border-left:2px solid var(--border);margin-left:12px}
+.step-list li::before{content:counter(step);position:absolute;left:-13px;top:4px;width:24px;height:24px;background:var(--accent-dim);color:#cfe0ff;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.step-list li:last-child{border-left-color:transparent}
+footer.page-footer{color:var(--text-dim);font-size:12px;padding:30px 44px;border-top:1px solid var(--border)}
+@media print{
+  .sidebar,#searchWrap{display:none}
+  .content{max-width:none;padding:0 20px}
+  body{background:#fff;color:#000}
+  .card,.svg-wrap,.tbl-wrap{border-color:#ccc}
+  a{color:#000}
+  th{background:#eee;color:#000}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">Fargonam<small>Arxitektura hujjati · 2026-08-14</small></div>
+  <div id="searchWrap">
+    <input id="searchBox" type="text" placeholder="Fayl, endpoint, jadval qidirish…" autocomplete="off">
+    <div id="searchCount"></div>
+  </div>
+  <nav id="sideNav">
+    <a class="top" href="#overview">1. Umumiy ko'rinish</a>
+    <a class="top" href="#backend">2. Backend</a>
+    <a class="sub" href="#backend-endpoints">Endpoint jadvali</a>
+    <a class="sub" href="#backend-middleware">Middleware zanjiri</a>
+    <a class="sub" href="#backend-errors">Xatolarni ushlash</a>
+    <a class="top" href="#database">3. Ma'lumotlar bazasi</a>
+    <a class="sub" href="#db-tables">Jadvallar</a>
+    <a class="sub" href="#db-er">ER sxema</a>
+    <a class="sub" href="#db-migrations">Migratsiyalar</a>
+    <a class="top" href="#mobile-user">4. Mobile User</a>
+    <a class="sub" href="#mu-screens">Ekranlar</a>
+    <a class="sub" href="#mu-nav">Navigatsiya daraxti</a>
+    <a class="sub" href="#mu-state">State management</a>
+    <a class="sub" href="#mu-storage">Lokal saqlash</a>
+    <a class="top" href="#mobile-seller">5. Mobile Seller</a>
+    <a class="sub" href="#ms-screens">Ekranlar</a>
+    <a class="sub" href="#ms-nav">Navigatsiya daraxti</a>
+    <a class="sub" href="#ms-state">State management</a>
+    <a class="sub" href="#ms-storage">Lokal saqlash</a>
+    <a class="top" href="#flows">6. Asosiy oqimlar</a>
+    <a class="sub" href="#flow-login">Ro'yxatdan o'tish/Login</a>
+    <a class="sub" href="#flow-refresh">Token yangilash</a>
+    <a class="sub" href="#flow-checkout">Savatdan to'lovgacha</a>
+    <a class="sub" href="#flow-product">Mahsulot qo'shish→ko'rinish</a>
+    <a class="top" href="#techdebt">7. Muammolar va texnik qarz</a>
+    <a class="top" href="#where">8. Qayerdan o'zgartiraman?</a>
+    <a class="top" href="#verify">Tekshiruv (Bosqich 3)</a>
+  </nav>
+</aside>
+<main class="content">
+
+<section class="doc-section" id="overview">
+<h1>Fargonam — Arxitektura Hujjati</h1>
+<p class="lead">Farg'ona vodiysi uchun hududiy Super App (marketplace, taksi, yangiliklar). Bu hujjat <strong>butunlay real koddan</strong> yig'ilgan — har bir da'vo fayl:qator bilan tasdiqlangan. Aniqlanmagan narsalar ⚠️ bilan, mock ma'lumotlar 🟡 bilan belgilangan.</p>
+
+<h2>1. Umumiy ko'rinish</h2>
+<div class="svg-wrap">
+<svg viewBox="0 0 1080 620" xmlns="http://www.w3.org/2000/svg" font-family="var(--sans)">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#5b8cff"/>
+    </marker>
+  </defs>
+  <style>
+    .box{fill:#1c202b;stroke:#2a2f3d;stroke-width:1.2;rx:8}
+    .boxlabel{fill:#e6e8ee;font-size:13px;font-weight:600}
+    .boxsub{fill:#9aa1b2;font-size:10.5px;font-family:monospace}
+    .edge{stroke:#5b8cff;stroke-width:1.6;fill:none;marker-end:url(#arrow)}
+    .edge-ext{stroke:#eab308;stroke-width:1.4;fill:none;stroke-dasharray:4 3;marker-end:url(#arrow)}
+    .lbl{fill:#7d859a;font-size:10px}
+  </style>
+
+  <rect class="box" x="40" y="30" width="220" height="76" rx="8"/>
+  <text class="boxlabel" x="150" y="55" text-anchor="middle">mobile_user (Flutter)</text>
+  <text class="boxsub" x="150" y="73" text-anchor="middle">xaridor ilovasi</text>
+  <text class="boxsub" x="150" y="90" text-anchor="middle">mobile_user/</text>
+
+  <rect class="box" x="40" y="150" width="220" height="76" rx="8"/>
+  <text class="boxlabel" x="150" y="175" text-anchor="middle">mobile_seller (Flutter)</text>
+  <text class="boxsub" x="150" y="193" text-anchor="middle">sotuvchi + haydovchi ilovasi</text>
+  <text class="boxsub" x="150" y="210" text-anchor="middle">mobile_seller/</text>
+
+  <rect class="box" x="40" y="270" width="220" height="76" rx="8"/>
+  <text class="boxlabel" x="150" y="295" text-anchor="middle">admin_web</text>
+  <text class="boxsub" x="150" y="313" text-anchor="middle">vanilla JS + fetch(), 1 fayl</text>
+  <text class="boxsub" x="150" y="330" text-anchor="middle">admin_web/index.html</text>
+
+  <rect class="box" x="410" y="150" width="240" height="90" rx="8"/>
+  <text class="boxlabel" x="530" y="178" text-anchor="middle">FastAPI Backend</text>
+  <text class="boxsub" x="530" y="196" text-anchor="middle">100 REST + 2 WebSocket endpoint</text>
+  <text class="boxsub" x="530" y="212" text-anchor="middle">backend/app/ · main.py:68-89</text>
+  <text class="boxsub" x="530" y="228" text-anchor="middle">21 router, prefiks yo'q (global)</text>
+
+  <rect class="box" x="800" y="30" width="230" height="70" rx="8"/>
+  <text class="boxlabel" x="915" y="55" text-anchor="middle">PostgreSQL 17</text>
+  <text class="boxsub" x="915" y="73" text-anchor="middle">26 jadval · Alembic 20 migratsiya</text>
+  <text class="boxsub" x="915" y="88" text-anchor="middle">docker-compose.prod.yml</text>
+
+  <rect class="box" x="800" y="120" width="230" height="70" rx="8"/>
+  <text class="boxlabel" x="915" y="145" text-anchor="middle">Redis 7</text>
+  <text class="boxsub" x="915" y="163" text-anchor="middle">refresh-token jti, idempotency-key,</text>
+  <text class="boxsub" x="915" y="178" text-anchor="middle">telegram login session (TTL)</text>
+
+  <rect class="box" x="800" y="210" width="230" height="70" rx="8"/>
+  <text class="boxlabel" x="915" y="235" text-anchor="middle">MinIO (S3-compatible)</text>
+  <text class="boxsub" x="915" y="253" text-anchor="middle">core/storage.py — qisman ishlatiladi</text>
+  <text class="boxsub" x="915" y="268" text-anchor="middle">⚠️ products.py rasm disk'ga yozadi</text>
+
+  <rect class="box" x="800" y="300" width="230" height="76" rx="8"/>
+  <text class="boxlabel" x="915" y="325" text-anchor="middle">Telegram Bot API</text>
+  <text class="boxsub" x="915" y="343" text-anchor="middle">login: webhook yoki long-polling</text>
+  <text class="boxsub" x="915" y="358" text-anchor="middle">core/telegram_bot.py, telegram_polling.py</text>
+
+  <rect class="box" x="800" y="396" width="230" height="70" rx="8"/>
+  <text class="boxlabel" x="915" y="421" text-anchor="middle">Firebase (FCM + Crashlytics)</text>
+  <text class="boxsub" x="915" y="439" text-anchor="middle">core/push.py — push notification</text>
+  <text class="boxsub" x="915" y="454" text-anchor="middle" fill="#9aa1b2">real ulangan</text>
+
+  <rect class="box" x="800" y="486" width="230" height="70" rx="8"/>
+  <text class="boxlabel" x="915" y="511" text-anchor="middle">OSRM (router.project-osrm.org)</text>
+  <text class="boxsub" x="915" y="529" text-anchor="middle">marshrut chizish, taxi/route_service.dart</text>
+  <text class="boxsub" x="915" y="544" text-anchor="middle" fill="#eab308">tashqi ochiq servis</text>
+
+  <rect class="box" x="410" y="486" width="240" height="70" rx="8"/>
+  <text class="boxlabel" x="530" y="511" text-anchor="middle">Yandex MapKit SDK</text>
+  <text class="boxsub" x="530" y="529" text-anchor="middle">xarita render (mobile_user)</text>
+  <text class="boxsub" x="530" y="544" text-anchor="middle" fill="#9aa1b2">to'lov integratsiyasi YO'Q (skelet)</text>
+
+  <path class="edge" d="M260,68 C340,68 340,155 410,175"/>
+  <path class="edge" d="M260,188 C340,188 340,188 410,188"/>
+  <path class="edge" d="M260,308 C340,308 340,220 410,205"/>
+  <path class="edge" d="M650,175 C720,175 720,65 800,65"/>
+  <path class="edge" d="M650,190 C720,190 720,155 800,155"/>
+  <path class="edge" d="M650,205 C720,205 720,245 800,245"/>
+  <path class="edge" d="M650,215 C720,240 720,330 800,335"/>
+  <path class="edge" d="M650,225 C700,300 700,430 800,430"/>
+  <path class="edge-ext" d="M260,185 C330,400 330,510 410,510"/>
+  <path class="edge-ext" d="M530,235 L530,486"/>
+
+  <text class="lbl" x="270" y="65">HTTPS REST</text>
+  <text class="lbl" x="270" y="345">HTTPS REST</text>
+  <text class="lbl" x="660" y="90">SQLAlchemy async</text>
+  <text class="lbl" x="660" y="145">redis-py</text>
+  <text class="lbl" x="30" y="20">Klientlar</text>
+  <text class="lbl" x="770" y="20">Backend + tashqi servislar</text>
+</svg>
+</div>
+<div class="legend">
+  <span><i style="background:#5b8cff"></i> ichki chaqiruv (backend tomonidan boshqariladi)</span>
+  <span><i style="background:#eab308"></i> mobil ilova to'g'ridan-to'g'ri tashqi servisga murojaat qiladi</span>
+</div>
+
+<div class="grid2">
+<div class="card">
+<h4>Texnologiya to'plami</h4>
+<table>
+<tr><td>Backend</td><td>FastAPI (Python), SQLAlchemy 2.0 async, Alembic</td></tr>
+<tr><td>DB</td><td>PostgreSQL 17 (<code>docker-compose.prod.yml</code>)</td></tr>
+<tr><td>Cache/queue</td><td>Redis 7</td></tr>
+<tr><td>Object storage</td><td>MinIO (S3-compatible)</td></tr>
+<tr><td>Mobile</td><td>Flutter + flutter_riverpod ^3.3.1, dio ^5.9.2</td></tr>
+<tr><td>Admin panel</td><td>Vanilla JS, framework yo'q (<code>admin_web/index.html</code>, 1227 qator)</td></tr>
+<tr><td>Auth</td><td>JWT (access 15 daq + refresh rotation), Telegram login</td></tr>
+</table>
+</div>
+<div class="card">
+<h4>Miqyos (bu hujjatda hisoblangan)</h4>
+<table>
+<tr><td>Backend endpoint</td><td>100 REST + 2 WebSocket, 21 router fayl</td></tr>
+<tr><td>DB jadval</td><td>26 ta, 20 Alembic migratsiya</td></tr>
+<tr><td>mobile_user ekran</td><td>25 ta</td></tr>
+<tr><td>mobile_seller ekran</td><td>9 ta</td></tr>
+</table>
+</div>
+</div>
+
+<div class="note warn"><strong>Roadmap eslatmasi:</strong> CLAUDE.md bo'yicha 1-bosqich (Avgust 2026 MVP) faqat o'quv qurollari monodo'koni faol bo'lishi kerak, taksi/AI 2-bosqich. Bu hujjat kod bilan solishtirganda bir nechta joyda kod roadmap'dan <strong>oldinda</strong> ketganini topdi (masalan taksi/haydovchi oqimi to'liq ishlaydi) — tafsilotlar <a href="#techdebt">7-bo'lim</a>da.</div>
+
+</section>
+
+<section class="doc-section" id="backend">
+<h2>2. Backend</h2>
+<p>FastAPI, <code>backend/app/main.py</code>. 21 router <code>app.include_router()</code> orqali <strong>hech qanday global prefiks'siz</strong> ulanadi (main.py:68-89) — quyidagi to'liq yo'l = shu faylning o'z <code>APIRouter(prefix=...)</code> + route path. Jami <strong>100 REST + 2 WebSocket</strong> endpoint.</p>
+
+<h3 id="backend-endpoints">Endpoint jadvali <span class="badge dim">100 REST</span></h3>
+<p class="toc-hint">Ustun sarlavhasini bosib saralang. Yon paneldagi qidiruv maydoni bu jadvalni ham filtrlaydi.</p>
+<div class="tbl-wrap">
+<table class="sortable wide" id="endpointTable">
+<thead><tr><th>Metod</th><th>Yo'l</th><th>Vazifasi</th><th>Auth</th><th>Fayl:qator</th></tr></thead>
+<tbody>
+<tr><td><span class="method POST">POST</span></td><td class="path">/auth/register</td><td>Telefon+parol bilan ro'yxatdan o'tish (eski, backwards-compat)</td><td>—</td><td class="file-ref">auth.py:36</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/auth/login</td><td>Telefon+parol bilan login</td><td>—</td><td class="file-ref">auth.py:64</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/auth/refresh</td><td>Refresh token orqali yangi access+refresh (rotation)</td><td>refresh token</td><td class="file-ref">auth.py:88</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/auth/logout</td><td>Refresh tokenni serverda bekor qilish</td><td>login</td><td class="file-ref">auth.py:128</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/auth/me</td><td>Joriy foydalanuvchi profili</td><td>login</td><td class="file-ref">auth.py:143</td></tr>
+<tr><td><span class="method PATCH">PATCH</span></td><td class="path">/auth/me</td><td>Profilni yangilash (full_name)</td><td>login</td><td class="file-ref">auth.py:148</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/auth/me/phone</td><td>Telegram orqali kirgan userga telefon qo'shish</td><td>login</td><td class="file-ref">auth.py:162</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/auth/change-password</td><td>Parolni o'zgartirish</td><td>login</td><td class="file-ref">auth.py:189</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/auth/forgot-password</td><td>Parol tiklash so'rovi (admin qo'lda tiklaydi)</td><td>—</td><td class="file-ref">auth.py:216</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/auth/telegram/session</td><td>Telegram login sessiyasi yaratish</td><td>—</td><td class="file-ref">telegram_auth.py:43</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/auth/telegram/session/{session_id}</td><td>Sessiya holatini polling qilish → JWT</td><td>—</td><td class="file-ref">telegram_auth.py:72</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/auth/telegram/webhook/{secret}</td><td>Telegram bot webhook (production)</td><td>secret path-param</td><td class="file-ref">telegram_auth.py:158</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/shops</td><td>Faol+tasdiqlangan do'konlar ro'yxati</td><td>—</td><td class="file-ref">shops.py:15</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/shops</td><td>Yangi do'kon yaratish</td><td>seller/admin</td><td class="file-ref">shops.py:28</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/shops/{shop_id}</td><td>Bitta do'kon ma'lumoti</td><td>—</td><td class="file-ref">shops.py:46</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/categories</td><td>Barcha kategoriyalar</td><td>—</td><td class="file-ref">categories.py:16</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/categories</td><td>Yangi kategoriya</td><td>admin</td><td class="file-ref">categories.py:22</td></tr>
+<tr><td><span class="method DELETE">DELETE</span></td><td class="path">/categories/{category_id}</td><td>Kategoriyani o'chirish</td><td>admin</td><td class="file-ref">categories.py:44</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/products</td><td>Katalog ro'yxati (qidirish/filtr/sort/pagination)</td><td>—</td><td class="file-ref">products.py:84</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/products/{product_id}</td><td>Bitta mahsulot (variantlari bilan)</td><td>—</td><td class="file-ref">products.py:163</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/products</td><td>Mahsulot yaratish (+avtomatik default variant)</td><td>do'kon egasi/admin</td><td class="file-ref">products.py:192</td></tr>
+<tr><td><span class="method PATCH">PATCH</span></td><td class="path">/products/{product_id}</td><td>Mahsulotni yangilash</td><td>do'kon egasi/admin</td><td class="file-ref">products.py:223</td></tr>
+<tr><td><span class="method DELETE">DELETE</span></td><td class="path">/products/{product_id}</td><td>Mahsulotni o'chirish</td><td>do'kon egasi/admin</td><td class="file-ref">products.py:275</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/products/{product_id}/variants</td><td>Qo'shimcha variant yaratish <span class="badge warn">klient chaqirmaydi</span></td><td>do'kon egasi/admin</td><td class="file-ref">products.py:291</td></tr>
+<tr><td><span class="method PATCH">PATCH</span></td><td class="path">/products/{product_id}/variants/{variant_id}</td><td>Variantni yangilash <span class="badge warn">klient chaqirmaydi</span></td><td>do'kon egasi/admin</td><td class="file-ref">products.py:323</td></tr>
+<tr><td><span class="method DELETE">DELETE</span></td><td class="path">/products/{product_id}/variants/{variant_id}</td><td>Variantni o'chirish <span class="badge warn">klient chaqirmaydi</span></td><td>do'kon egasi/admin</td><td class="file-ref">products.py:345</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/products/{product_id}/image</td><td>Asosiy rasm yuklash (eskisini almashtiradi)</td><td>do'kon egasi/admin</td><td class="file-ref">products.py:396</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/products/{product_id}/images</td><td>Qo'shimcha rasmlar ro'yxati <span class="badge warn">klient chaqirmaydi</span></td><td>—</td><td class="file-ref">products.py:447</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/products/{product_id}/images</td><td>Qo'shimcha rasm qo'shish <span class="badge warn">klient chaqirmaydi</span></td><td>do'kon egasi/admin</td><td class="file-ref">products.py:456</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/cart</td><td>Joriy foydalanuvchi savatchasi</td><td>login</td><td class="file-ref">cart.py:109</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/cart</td><td>Savatga qo'shish</td><td>login</td><td class="file-ref">cart.py:155</td></tr>
+<tr><td><span class="method PATCH">PATCH</span></td><td class="path">/cart/{item_id}</td><td>Miqdorni o'zgartirish (0 = o'chirish)</td><td>login</td><td class="file-ref">cart.py:211</td></tr>
+<tr><td><span class="method DELETE">DELETE</span></td><td class="path">/cart/{item_id}</td><td>Savatdan o'chirish</td><td>login</td><td class="file-ref">cart.py:231</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/orders</td><td>Checkout — <code>Idempotency-Key</code> qo'llab-quvvatlanadi <span class="badge ok">idempotent</span></td><td>login</td><td class="file-ref">cart.py:252</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/orders/{order_id}/cancel</td><td>Faqat <code>pending</code> buyurtmani bekor qilish</td><td>login</td><td class="file-ref">cart.py:364</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/orders</td><td>Joriy foydalanuvchining buyurtmalari</td><td>login</td><td class="file-ref">cart.py:383</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/addresses</td><td>Saqlangan manzillar</td><td>login</td><td class="file-ref">addresses.py:60</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/addresses</td><td>Yangi manzil</td><td>login</td><td class="file-ref">addresses.py:68</td></tr>
+<tr><td><span class="method PATCH">PATCH</span></td><td class="path">/addresses/{address_id}</td><td>Manzilni yangilash</td><td>login</td><td class="file-ref">addresses.py:90</td></tr>
+<tr><td><span class="method DELETE">DELETE</span></td><td class="path">/addresses/{address_id}</td><td>Manzilni o'chirish</td><td>login</td><td class="file-ref">addresses.py:109</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/favorites</td><td>Sevimlilar ro'yxati</td><td>login</td><td class="file-ref">favorites.py:16</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/favorites/{product_id}</td><td>Sevimlilarga qo'shish</td><td>login</td><td class="file-ref">favorites.py:44</td></tr>
+<tr><td><span class="method DELETE">DELETE</span></td><td class="path">/favorites/{product_id}</td><td>Sevimlilardan o'chirish</td><td>login</td><td class="file-ref">favorites.py:64</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/favorites/check/{product_id}</td><td>Sevimlida bormi tekshirish</td><td>login</td><td class="file-ref">favorites.py:78</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/reviews/product/{product_id}</td><td>Sharhlar + o'rtacha reyting</td><td>—</td><td class="file-ref">reviews.py:21</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/reviews/product/{product_id}</td><td>Sharh qoldirish/yangilash (upsert)</td><td>login</td><td class="file-ref">reviews.py:54</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/seller/shops</td><td>O'z do'konlari (status'dan qat'iy nazar)</td><td>seller/admin</td><td class="file-ref">seller.py:23</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/seller/orders</td><td>O'z do'konlariga tegishli buyurtmalar</td><td>seller/admin</td><td class="file-ref">seller.py:35</td></tr>
+<tr><td><span class="method PATCH">PATCH</span></td><td class="path">/seller/orders/{order_id}/status</td><td>Buyurtma holatini o'zgartirish (+push/WS)</td><td>seller/admin + egalik</td><td class="file-ref">seller.py:62</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/seller/stats</td><td>Sotuvchi analitikasi</td><td>seller/admin</td><td class="file-ref">seller.py:108</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/rides/estimate</td><td>Narxni oldindan hisoblash</td><td>—</td><td class="file-ref">rides.py:27</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/rides</td><td>Taksi chaqirish (yangi ride)</td><td>login</td><td class="file-ref">rides.py:62</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/rides/my</td><td>Yo'lovchi sifatida sayohatlar</td><td>login</td><td class="file-ref">rides.py:95</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/rides/{ride_id}/cancel</td><td>Sayohatni bekor qilish</td><td>login + egalik</td><td class="file-ref">rides.py:112</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/rides/driver/profile</td><td>Haydovchi profili yaratish/yangilash</td><td>seller/admin</td><td class="file-ref">rides.py:144</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/rides/driver/online</td><td>Onlayn/oflayn holatini almashtirish</td><td>login + DriverProfile</td><td class="file-ref">rides.py:175</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/rides/driver/available</td><td>"searching" holatidagi sayohatlar</td><td>login + is_online</td><td class="file-ref">rides.py:192</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/rides/{ride_id}/accept</td><td>Haydovchi sayohatni qabul qiladi</td><td>login + DriverProfile</td><td class="file-ref">rides.py:209</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/rides/{ride_id}/status</td><td>Holat yangilash (arrived/in_progress/completed)</td><td>driver egaligi</td><td class="file-ref">rides.py:254</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/rides/{ride_id}</td><td>Sayohat tafsilotlari <span class="badge warn">klient chaqirmaydi</span></td><td>passenger/driver egaligi</td><td class="file-ref">rides.py:294</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/ride-ratings/{ride_id}</td><td>Haydovchiga baho qo'yish (upsert)</td><td>login + passenger + completed</td><td class="file-ref">ride_ratings.py:21</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/ride-ratings/driver/{driver_id}</td><td>Haydovchining o'rtacha reytingi <span class="badge warn">klient chaqirmaydi</span></td><td>—</td><td class="file-ref">ride_ratings.py:53</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/chat/conversations</td><td>Suhbatlar ro'yxati (oxirgi xabar bilan)</td><td>login</td><td class="file-ref">chat.py:24</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/chat/messages/{user_id}</td><td>Ikki user orasidagi xabarlar (o'qilgan belgilanadi)</td><td>login</td><td class="file-ref">chat.py:62</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/chat/send</td><td>Xabar yuborish (30/daqiqa rate-limit)</td><td>login</td><td class="file-ref">chat.py:98</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/news</td><td>E'lonlangan yangiliklar (paginated)</td><td>—</td><td class="file-ref">news.py:24</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/news/{news_id}</td><td>Bitta yangilik <span class="badge warn">klient chaqirmaydi</span></td><td>—</td><td class="file-ref">news.py:57</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/news</td><td>Yangilik yaratish</td><td>admin</td><td class="file-ref">news.py:71</td></tr>
+<tr><td><span class="method DELETE">DELETE</span></td><td class="path">/news/{news_id}</td><td>Yangilikni o'chirish</td><td>admin</td><td class="file-ref">news.py:85</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/news/{news_id}/like</td><td>Like toggle</td><td>login</td><td class="file-ref">news.py:101</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/news/{news_id}/liked</td><td>Like qo'yganmi tekshirish <span class="badge warn">klient chaqirmaydi</span></td><td>login</td><td class="file-ref">news.py:120</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/news/{news_id}/comments</td><td>Izohlar ro'yxati</td><td>—</td><td class="file-ref">news.py:138</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/news/{news_id}/comments</td><td>Izoh qo'shish</td><td>login</td><td class="file-ref">news.py:159</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/notifications</td><td>Bildirishnomalar ro'yxati</td><td>login</td><td class="file-ref">notifications.py:14</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/notifications/unread-count</td><td>O'qilmagan soni</td><td>login</td><td class="file-ref">notifications.py:40</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/notifications/{notification_id}/read</td><td>Bittasini o'qilgan belgilash</td><td>login + egalik</td><td class="file-ref">notifications.py:55</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/notifications/read-all</td><td>Hammasini o'qilgan belgilash</td><td>login</td><td class="file-ref">notifications.py:67</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/feed/banners</td><td>Faol bannerlar</td><td>—</td><td class="file-ref">feed.py:26</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/feed/banners</td><td>Yangi banner (fayl yoki URL)</td><td>admin</td><td class="file-ref">feed.py:45</td></tr>
+<tr><td><span class="method PATCH">PATCH</span></td><td class="path">/feed/banners/{banner_id}</td><td>Bannerni tahrirlash</td><td>admin</td><td class="file-ref">feed.py:98</td></tr>
+<tr><td><span class="method DELETE">DELETE</span></td><td class="path">/feed/banners/{banner_id}</td><td>Bannerni o'chirish (fayl ham diskdan)</td><td>admin</td><td class="file-ref">feed.py:125</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/feed/banners/all</td><td>Barcha bannerlar (aktiv+noaktiv)</td><td>admin</td><td class="file-ref">feed.py:148</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/announcements</td><td>Faol e'lonlar</td><td>—</td><td class="file-ref">announcements.py:24</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/announcements</td><td>E'lon yaratish (urgent bo'lsa push)</td><td>admin</td><td class="file-ref">announcements.py:50</td></tr>
+<tr><td><span class="method DELETE">DELETE</span></td><td class="path">/announcements/{ann_id}</td><td>E'lonni o'chirish</td><td>admin</td><td class="file-ref">announcements.py:87</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/push/register</td><td>FCM tokenni ro'yxatdan o'tkazish</td><td>login</td><td class="file-ref">push.py:20</td></tr>
+<tr><td><span class="method DELETE">DELETE</span></td><td class="path">/push/unregister</td><td>Logout'da FCM tokenni o'chirish</td><td>login</td><td class="file-ref">push.py:44</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/admin/users</td><td>Foydalanuvchilar ro'yxati</td><td>admin</td><td class="file-ref">admin.py:28</td></tr>
+<tr><td><span class="method PATCH">PATCH</span></td><td class="path">/admin/users/{user_id}</td><td>Rol/aktivlikni o'zgartirish</td><td>admin</td><td class="file-ref">admin.py:53</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/admin/orders</td><td>Barcha buyurtmalar</td><td>admin</td><td class="file-ref">admin.py:76</td></tr>
+<tr><td><span class="method PATCH">PATCH</span></td><td class="path">/admin/orders/{order_id}</td><td>Buyurtma statusi (bekor→stock qaytadi)</td><td>admin</td><td class="file-ref">admin.py:100</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/admin/stats</td><td>Umumiy statistika</td><td>admin</td><td class="file-ref">admin.py:118</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/admin/shops</td><td>Do'konlar ro'yxati</td><td>admin</td><td class="file-ref">admin.py:180</td></tr>
+<tr><td><span class="method PATCH">PATCH</span></td><td class="path">/admin/shops/{shop_id}</td><td>Do'kon KYC tasdiqlash/rad etish</td><td>admin</td><td class="file-ref">admin.py:202</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/admin/broadcast</td><td>Barcha/tanlangan userlarga xabar+push</td><td>admin</td><td class="file-ref">admin.py:230</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/app-config</td><td>Barcha sozlamalar (startup'da chaqiriladi)</td><td>—</td><td class="file-ref">app_config.py:36</td></tr>
+<tr><td><span class="method GET">GET</span></td><td class="path">/app-config/admin</td><td>Admin uchun to'liq ro'yxat</td><td>admin</td><td class="file-ref">app_config.py:42</td></tr>
+<tr><td><span class="method PUT">PUT</span></td><td class="path">/app-config/{key}</td><td>Bitta sozlamani yangilash</td><td>admin</td><td class="file-ref">app_config.py:66</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/app-config/bulk</td><td>Bir nechta sozlamani birga yangilash <span class="badge warn">klient chaqirmaydi</span></td><td>admin</td><td class="file-ref">app_config.py:86</td></tr>
+<tr><td><span class="method POST">POST</span></td><td class="path">/profile/avatar</td><td>Profil avatarini yuklash</td><td>login</td><td class="file-ref">profile.py:18</td></tr>
+<tr><td><span class="method WS">WS</span></td><td class="path">/ws/chat</td><td>Real-time chat (query-param JWT)</td><td>access token (query)</td><td class="file-ref">ws.py:79</td></tr>
+<tr><td><span class="method WS">WS</span></td><td class="path">/ws/ride/{ride_id}</td><td>Sayohat lokatsiya/status broadcast</td><td>access token + egalik</td><td class="file-ref">ws.py:154</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note warn">
+<strong>Ikki xil auth oqimi parallel yashaydi.</strong> CLAUDE.md "STATIC_OTP butunlay olib tashlandi, uchala klient ham Telegram login ishlatadi" deydi, lekin eski telefon+parol oqimi (<code>/auth/register</code>, <code>/auth/login</code>) hali kod bazasida ishlaydi va hech qaysi klient tomonidan chaqirilmaydi (tekshirildi — <a href="#techdebt">7-bo'lim</a>). Xavfsiz o'chirish yoki kamida "deprecated" deb belgilash kerak.
+</div>
+
+<h4>Router'lar bo'yicha so'rov/javob sxemalari</h4>
+<p>Har bir Pydantic model — fayl:qator bilan. Response model ko'rsatilmagan joylarda (ko'p endpoint qo'lda <code>dict</code> qaytaradi) shunday deb belgilangan.</p>
+
+<div class="grid2">
+<div class="card">
+<h4><code>auth.py</code> / <code>telegram_auth.py</code></h4>
+<table class="wide">
+<tr><td><code>UserRegister</code></td><td>schemas/auth.py:13 — phone, password, full_name?, role</td></tr>
+<tr><td><code>UserLogin</code></td><td>schemas/auth.py:45 — phone, password</td></tr>
+<tr><td><code>TokenResponse</code></td><td>schemas/auth.py:50 — access_token, refresh_token, token_type</td></tr>
+<tr><td><code>RefreshTokenRequest</code></td><td>schemas/auth.py:56 — refresh_token</td></tr>
+<tr><td><code>UserOut</code></td><td>schemas/auth.py:90 — id, phone, full_name, role, avatar_url, is_active, created_at</td></tr>
+<tr><td><code>TelegramSessionResponse</code></td><td>schemas/auth.py:104 — session_id, bot_url</td></tr>
+<tr><td><code>TelegramSessionStatusResponse</code></td><td>schemas/auth.py:109 — status, access_token?, refresh_token?, token_type</td></tr>
+</table>
+</div>
+<div class="card">
+<h4><code>products.py</code> / <code>cart.py</code></h4>
+<table class="wide">
+<tr><td><code>ProductCreate</code></td><td>marketplace.py:82 — shop_id, category_id?, name, description?, price, stock=0</td></tr>
+<tr><td><code>ProductOut</code></td><td>marketplace.py:103 — id, shop_id, name, slug, image_url, is_active, variants[], min/max_price, total_stock</td></tr>
+<tr><td><code>VariantCreate</code>/<code>VariantOut</code></td><td>marketplace.py:44 / :66 — variant_name, price, old_price?, stock, sku, attributes(dict)</td></tr>
+<tr><td><code>CartItemAdd</code></td><td>marketplace.py:128 — variant_id? or product_id?, quantity=1</td></tr>
+<tr><td><code>CheckoutRequest</code></td><td>cart.py:24 (inline) — payment_method=cash, delivery_address?, delivery_address_id?</td></tr>
+<tr><td><code>OrderOut</code>/<code>OrderItemOut</code></td><td>marketplace.py:170 / :157 — total, status, payment_method, items[]</td></tr>
+</table>
+</div>
+<div class="card">
+<h4><code>rides.py</code> / <code>ride_ratings.py</code></h4>
+<table class="wide">
+<tr><td><code>RideRequest</code></td><td>schemas/ride.py:10 — pickup/destination address+lat/lng</td></tr>
+<tr><td><code>RideOut</code></td><td>schemas/ride.py:19 — status, fare, driver_name/phone, car_*, driver_lat/lng (doim null — faqat WS orqali)</td></tr>
+<tr><td><code>DriverProfileCreate</code>/<code>Out</code></td><td>schemas/ride.py:47 / :53 — car_model, car_number, car_color?, is_online</td></tr>
+<tr><td><code>RatingCreate</code></td><td>ride_ratings.py:16 (inline) — rating(1-5), comment?</td></tr>
+</table>
+</div>
+<div class="card">
+<h4>Response-model'siz endpoint'lar (qo'l bilan dict)</h4>
+<table class="wide">
+<tr><td>addresses.py</td><td><code>_out()</code> helper (:37) — Pydantic model yo'q</td></tr>
+<tr><td>favorites.py, reviews.py, chat.py, notifications.py, news.py, feed.py, announcements.py</td><td>bevosita dict/list qaytaradi, response_model yo'q</td></tr>
+<tr><td>seller.py <code>/stats</code></td><td>dict: shops, products, orders, revenue</td></tr>
+</table>
+</div>
+</div>
+
+<h3 id="backend-middleware">Middleware zanjiri</h3>
+<p>Tartib bo'yicha, <code>backend/app/main.py</code> va <code>backend/app/core/middleware.py</code>:</p>
+<ol class="step-list">
+<li><strong>SecurityHeadersMiddleware</strong> <span class="file-ref">core/middleware.py:29-67</span> — har javobga <code>X-Frame-Options: DENY</code>, <code>X-Content-Type-Options: nosniff</code>, <code>Content-Security-Policy</code> (self-only), <code>Permissions-Policy</code>, production'da <code>Strict-Transport-Security</code> qo'shadi.</li>
+<li><strong>CORSMiddleware</strong> <span class="file-ref">main.py:56-62</span> — <code>settings.cors_origins</code> bo'yicha; <code>DEBUG=true</code> bo'lsa wildcard <code>*</code> (credentials avtomatik o'chadi).</li>
+<li><strong>Rate limiter (slowapi)</strong> <span class="file-ref">core/middleware.py:22-26,92-93</span> — Redis-backed, default <code>RATE_LIMIT_PER_MINUTE</code>/daqiqa; <code>chat.py:99</code>da alohida 30/daqiqa override.</li>
+<li><strong>Static mount</strong> <span class="file-ref">main.py:66</span> — <code>/static</code> → <code>UPLOAD_ROOT</code> (mahalliy disk).</li>
+<li><strong>21 router include</strong> <span class="file-ref">main.py:68-89</span> — prefiks qo'shilmaydi.</li>
+<li><strong>admin_web static mount</strong> <span class="file-ref">main.py:92-93</span> — <code>/admin-web</code> → <code>admin_web/</code> papkasi, same-origin (CORS muammosi yo'q).</li>
+</ol>
+
+<h3 id="backend-errors">Xatolarni ushlash</h3>
+<div class="grid2">
+<div class="card">
+<h4>Global exception handler</h4>
+<p><code>global_exception_handler()</code> <span class="file-ref">core/middleware.py:70-83</span> — kutilmagan har qanday <code>Exception</code>ni ushlaydi, log yozadi, va <strong>production'da (<code>DEBUG=false</code>) ichki xato tafsilotini yashiradi</strong> (<code>"Ichki server xatosi"</code> generic javob), faqat DEBUG rejimida haqiqiy xabarni ko'rsatadi.</p>
+</div>
+<div class="card">
+<h4>Rate-limit xatosi</h4>
+<p><code>RateLimitExceeded</code> → slowapi'ning standart <code>_rate_limit_exceeded_handler</code> <span class="file-ref">core/middleware.py:93</span> — 429 qaytaradi.</p>
+</div>
+</div>
+<div class="note">Endpoint darajasida xatolar odatiy FastAPI <code>HTTPException</code> orqali (403/404/409/422) — masalan idempotency konflikt uchun 409 (<code>cart.py</code>), egalik tekshiruvida 403 (<code>products.py:_ensure_shop_owner</code>, <code>seller.py</code>, <code>rides.py</code>).</div>
+
+</section>
+
+<section class="doc-section" id="database">
+<h2>3. Ma'lumotlar bazasi</h2>
+<p>PostgreSQL, SQLAlchemy 2.0 async ORM. <strong>26 jadval</strong>, model fayllari <code>backend/app/models/*.py</code>. Bitta chiziqli Alembic zanjiri, 20 migratsiya.</p>
+
+<div class="note warn"><strong>Bug: <code>AppConfig</code> modeli Alembic'dan ko'rinmaydi.</strong> <code>backend/app/models/__init__.py:5-26</code> 21 tadan 22 model faylini import qiladi — <code>app_config.py</code> yetishmaydi. Natijada <code>backend/alembic/env.py:12</code> orqali <code>Base.metadata</code>ga <code>AppConfig</code> hech qachon qo'shilmaydi, DB'da jadval bor (migratsiya <code>a2c4e6f8b012</code> orqali yaratilgan) lekin Alembic buni "bilmaydi". Kelgusi <code>alembic revision --autogenerate</code> chaqiruvi <code>app_config</code> jadvalini noto'g'ri o'chirishni taklif qilishi mumkin. <strong>Tuzatish:</strong> <code>__init__.py</code>ga <code>from app.models.app_config import AppConfig</code> qo'shish.</div>
+
+<h3 id="db-tables">Jadvallar</h3>
+<div class="tbl-wrap">
+<table class="sortable wide" id="dbTable">
+<thead><tr><th>Jadval</th><th>Model klassi</th><th>Muhim ustunlar</th><th>FK / Indeks</th><th>Fayl:qator</th></tr></thead>
+<tbody>
+<tr><td>users</td><td>User</td><td>phone(unique), telegram_id(unique,BigInteger), role(enum), hashed_password?</td><td>—</td><td class="file-ref">user.py:22</td></tr>
+<tr><td>shops</td><td>Shop</td><td>owner_id, status(enum: pending/approved/rejected), admin_note</td><td>FK owner_id→users(idx)</td><td class="file-ref">shop.py:20</td></tr>
+<tr><td>categories</td><td>Category</td><td>name, slug(unique,idx), parent_id (self-FK)</td><td>FK parent_id→categories(idx)</td><td class="file-ref">category.py:8</td></tr>
+<tr><td>products</td><td>Product</td><td>shop_id, category_id?, name, slug(unique,idx) — price/stock ko'chirilgan (variantga)</td><td>FK shop_id(idx), category_id(idx)</td><td class="file-ref">product.py:11</td></tr>
+<tr><td>product_variants</td><td>ProductVariant</td><td>product_id, sku(unique,idx), price(Integer, CHECK&gt;0), stock(CHECK≥0), attributes(JSONB+GIN idx)</td><td>FK product_id(idx)</td><td class="file-ref">product_variant.py:25</td></tr>
+<tr><td>product_images</td><td>ProductImage</td><td>product_id, image_url, sort_order</td><td>FK product_id(idx)</td><td class="file-ref">product_image.py:11</td></tr>
+<tr><td>product_sets</td><td>ProductSet</td><td>name, grade_level? — FK yo'q</td><td>—</td><td class="file-ref">product_set.py:15</td></tr>
+<tr><td>product_set_items</td><td>ProductSetItem</td><td>set_id, variant_id, quantity</td><td>FK set_id(idx), variant_id(idx)</td><td class="file-ref">product_set.py:30</td></tr>
+<tr><td>cart_items</td><td>CartItem</td><td>user_id, variant_id, quantity — UNIQUE(user_id,variant_id)</td><td>FK user_id(idx), variant_id(idx)</td><td class="file-ref">cart.py:8</td></tr>
+<tr><td>orders</td><td>Order</td><td>user_id, total(Numeric12,2), status(enum,idx), payment_method(enum), delivery_address_id?</td><td>FK user_id(idx); <span class="badge warn">delivery_address_id FK indeks yo'q</span></td><td class="file-ref">order.py:29</td></tr>
+<tr><td>order_items</td><td>OrderItem</td><td>order_id, variant_id, quantity, price_at_purchase</td><td>FK order_id(idx), variant_id(idx, ON DELETE RESTRICT)</td><td class="file-ref">order.py:64</td></tr>
+<tr><td>favorites</td><td>Favorite</td><td>user_id, product_id — UNIQUE(user_id,product_id)</td><td>FK user_id(idx), product_id(idx)</td><td class="file-ref">favorite.py:11</td></tr>
+<tr><td>reviews</td><td>Review</td><td>user_id, product_id, rating — UNIQUE(user_id,product_id)</td><td>FK user_id(idx), product_id(idx)</td><td class="file-ref">review.py:11</td></tr>
+<tr><td>saved_addresses</td><td>SavedAddress</td><td>user_id, label, region?, district?, lat?, lng?, is_default</td><td>FK user_id(idx)</td><td class="file-ref">saved_address.py:8</td></tr>
+<tr><td>driver_profiles</td><td>DriverProfile</td><td>user_id(unique,idx), car_model, car_number, is_online, lat?, lng?</td><td>FK user_id(idx)</td><td class="file-ref">ride.py:14</td></tr>
+<tr><td>rides</td><td>Ride</td><td>passenger_id, driver_id?, status(enum,idx), fare?, pickup/dest coords</td><td>FK passenger_id(idx), driver_id(idx)</td><td class="file-ref">ride.py:43</td></tr>
+<tr><td>ride_ratings</td><td>RideRating</td><td>ride_id(unique,idx), passenger_id, driver_id, rating</td><td>FK ride_id(idx); <span class="badge warn">passenger_id, driver_id FK indeks yo'q</span></td><td class="file-ref">ride_rating.py:11</td></tr>
+<tr><td>messages</td><td>Message</td><td>sender_id, receiver_id, text, context_type?, context_id?(polymorphic, FK yo'q)</td><td>FK sender_id(idx), receiver_id(idx)</td><td class="file-ref">message.py:11</td></tr>
+<tr><td>notifications</td><td>Notification</td><td>user_id, title, body, type, ref_id?(polymorphic, FK yo'q), is_read</td><td>FK user_id(idx)</td><td class="file-ref">notification.py:11</td></tr>
+<tr><td>fcm_tokens</td><td>FcmToken</td><td>user_id, token(unique), platform</td><td>FK user_id(idx)</td><td class="file-ref">fcm_token.py:11</td></tr>
+<tr><td>news_posts</td><td>NewsPost</td><td>author_id, title, body, is_published</td><td>FK author_id(idx)</td><td class="file-ref">news.py:11</td></tr>
+<tr><td>news_likes</td><td>NewsLike</td><td>user_id, news_id — UNIQUE(user_id,news_id)</td><td>FK user_id(idx), news_id(idx)</td><td class="file-ref">news_interaction.py:11</td></tr>
+<tr><td>news_comments</td><td>NewsComment</td><td>user_id, news_id, text</td><td>FK user_id(idx), news_id(idx)</td><td class="file-ref">news_interaction.py:21</td></tr>
+<tr><td>announcements</td><td>Announcement</td><td>author_id, title, type, priority, event_date?</td><td><span class="badge warn">author_id FK indeks yo'q</span></td><td class="file-ref">announcement.py:11</td></tr>
+<tr><td>banners</td><td>Banner</td><td>title, media_url, link_url?, sort_order — FK yo'q</td><td>—</td><td class="file-ref">banner.py:11</td></tr>
+<tr><td>app_config</td><td>AppConfig <span class="badge warn">__init__.py'da yo'q</span></td><td>key(PK,String), value, description</td><td>—</td><td class="file-ref">app_config.py:11</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="db-er">ER sxema</h3>
+<div class="svg-wrap">
+<svg viewBox="0 0 1120 760" xmlns="http://www.w3.org/2000/svg">
+<style>
+  .t{fill:#1c202b;stroke:#2a2f3d;stroke-width:1.2}
+  .tn{fill:#e6e8ee;font-size:12px;font-weight:700;font-family:monospace}
+  .fk{stroke:#5b8cff;stroke-width:1.3;fill:none;marker-end:url(#a2)}
+  .fkwarn{stroke:#ef4444;stroke-width:1.3;stroke-dasharray:3 3;fill:none;marker-end:url(#a2)}
+</style>
+<defs><marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto"><path d="M0,0 L0,5 L7,2.5 z" fill="#5b8cff"/></marker></defs>
+
+<rect class="t" x="470" y="20" width="120" height="34"/><text class="tn" x="530" y="42" text-anchor="middle">users</text>
+
+<rect class="t" x="470" y="110" width="120" height="34"/><text class="tn" x="530" y="132" text-anchor="middle">shops</text>
+<rect class="t" x="290" y="110" width="140" height="34"/><text class="tn" x="360" y="132" text-anchor="middle">saved_addresses</text>
+<rect class="t" x="650" y="110" width="140" height="34"/><text class="tn" x="720" y="132" text-anchor="middle">driver_profiles</text>
+<rect class="t" x="850" y="110" width="120" height="34"/><text class="tn" x="910" y="132" text-anchor="middle">fcm_tokens</text>
+
+<rect class="t" x="470" y="200" width="120" height="34"/><text class="tn" x="530" y="222" text-anchor="middle">products</text>
+<rect class="t" x="290" y="200" width="140" height="34"/><text class="tn" x="360" y="222" text-anchor="middle">categories</text>
+<rect class="t" x="650" y="200" width="120" height="34"/><text class="tn" x="710" y="222" text-anchor="middle">rides</text>
+<rect class="t" x="850" y="200" width="140" height="34"/><text class="tn" x="920" y="222" text-anchor="middle">ride_ratings</text>
+
+<rect class="t" x="330" y="290" width="130" height="34"/><text class="tn" x="395" y="312" text-anchor="middle">product_variants</text>
+<rect class="t" x="620" y="290" width="130" height="34"/><text class="tn" x="685" y="312" text-anchor="middle">product_images</text>
+
+<rect class="t" x="150" y="380" width="110" height="34"/><text class="tn" x="205" y="402" text-anchor="middle">cart_items</text>
+<rect class="t" x="330" y="380" width="110" height="34"/><text class="tn" x="385" y="402" text-anchor="middle">favorites</text>
+<rect class="t" x="490" y="380" width="100" height="34"/><text class="tn" x="540" y="402" text-anchor="middle">reviews</text>
+<rect class="t" x="640" y="380" width="140" height="34"/><text class="tn" x="710" y="402" text-anchor="middle">product_set_items</text>
+<rect class="t" x="850" y="380" width="120" height="34"/><text class="tn" x="910" y="402" text-anchor="middle">product_sets</text>
+
+<rect class="t" x="150" y="470" width="110" height="34"/><text class="tn" x="205" y="492" text-anchor="middle">orders</text>
+<rect class="t" x="150" y="560" width="110" height="34"/><text class="tn" x="205" y="582" text-anchor="middle">order_items</text>
+
+<rect class="t" x="330" y="470" width="120" height="34"/><text class="tn" x="390" y="492" text-anchor="middle">messages</text>
+<rect class="t" x="490" y="470" width="130" height="34"/><text class="tn" x="555" y="492" text-anchor="middle">notifications</text>
+<rect class="t" x="660" y="470" width="120" height="34"/><text class="tn" x="720" y="492" text-anchor="middle">news_posts</text>
+<rect class="t" x="820" y="470" width="130" height="34"/><text class="tn" x="885" y="492" text-anchor="middle">announcements</text>
+
+<rect class="t" x="660" y="560" width="110" height="34"/><text class="tn" x="715" y="582" text-anchor="middle">news_likes</text>
+<rect class="t" x="800" y="560" width="130" height="34"/><text class="tn" x="865" y="582" text-anchor="middle">news_comments</text>
+
+<rect class="t" x="990" y="380" width="110" height="34" fill="#3a3316"/><text class="tn" x="1045" y="402" text-anchor="middle">banners</text>
+<rect class="t" x="990" y="470" width="110" height="34" fill="#3a1a1a"/><text class="tn" x="1045" y="492" text-anchor="middle">app_config</text>
+
+<path class="fk" d="M530,54 L530,110"/>
+<path class="fk" d="M470,127 L430,127"/>
+<path class="fk" d="M590,127 L650,127"/>
+<path class="fk" d="M770,127 C820,127 850,127 850,127"/>
+<path class="fk" d="M530,144 L530,200"/>
+<path class="fk" d="M470,217 L430,217"/>
+<path class="fk" d="M710,144 L710,200"/>
+<path class="fk" d="M770,217 C810,217 850,217 850,217"/>
+<path class="fk" d="M500,234 C460,260 420,270 395,290"/>
+<path class="fk" d="M560,234 C600,260 650,270 685,290"/>
+<path class="fk" d="M395,324 C300,350 230,360 205,380"/>
+<path class="fk" d="M395,324 L385,380"/>
+<path class="fk" d="M395,324 L540,380"/>
+<path class="fk" d="M685,324 C700,350 705,360 710,380"/>
+<path class="fk" d="M685,324 C780,350 870,365 910,380"/>
+<path class="fk" d="M205,414 L205,470"/>
+<path class="fk" d="M205,504 L205,560"/>
+<path class="fk" d="M530,54 C440,180 380,440 390,470"/>
+<path class="fk" d="M530,54 C550,220 555,440 555,470"/>
+<path class="fk" d="M530,54 C650,220 700,440 720,470"/>
+<path class="fk" d="M530,54 C800,200 870,440 885,470"/>
+<path class="fk" d="M720,504 L715,560"/>
+<path class="fk" d="M720,504 C780,530 830,545 865,560"/>
+<path class="fkwarn" d="M205,504 C260,530 300,545 330,470" transform="translate(0,0)"/>
+
+<text x="20" y="700" fill="#9aa1b2" font-size="12">Diagram soddalashtirilgan — barcha 26 jadvalning FK'lari to'liq ro'yxati yuqoridagi jadvalda.</text>
+<text x="20" y="720" fill="#ef4444" font-size="12">Qizil chiziq = FK indekssiz (orders.delivery_address_id, ride_ratings.passenger_id/driver_id, announcements.author_id)</text>
+</svg>
+</div>
+
+<h3 id="db-migrations">Migratsiya holati</h3>
+<p>Bitta chiziqli zanjir (branch yo'q), <code>backend/alembic/versions/</code>, 20 ta fayl. Boshidan oxirigacha: <code class="mono">42efb165522a</code> (users) → <code class="mono">9f9a99913935</code> → <code class="mono">68e8bfd1f6ce</code> → <code class="mono">8294e31b2e72</code> → <code class="mono">b1dedab64de9</code> (taxi) → <code class="mono">4ae942faeba6</code> (news) → <code class="mono">0356278f7c34</code> (favorites/reviews) → <code class="mono">b589bd84728c</code> (images/addresses/ratings) → <code class="mono">e4a05f7dd8c4</code> (messages) → <code class="mono">fb91199c9352</code> → <code class="mono">01143fc2d16b</code> (notifications) → <code class="mono">be93df809a4b</code> (fcm_tokens) → <code class="mono">89937d21df2d</code> (news likes/comments) → <code class="mono">9b8db5998420</code> (announcements) → <code class="mono">c3a1f9d2e781</code> → <code class="mono">d4f7e2a1b903</code> (order payment) → <code class="mono">e1f9c3b2a407</code> (shop KYC) → <code class="mono">a2c4e6f8b012</code> (app_config) → <code class="mono">f1a2b3c4d5e6</code> (telegram) → <strong><code class="mono">a9c1d3e5f708</code> (product_variants) — HEAD</strong>.</p>
+<div class="note">Kichik topilma: <code>c3a1f9d2e781_otp_login_hashed_password_nullable.py:4</code> docstring'ida <code>Revises: b589bd84728c</code> deyilgan, lekin haqiqiy <code>down_revision</code> (:11) <code>9b8db5998420</code>. Alembic kod o'zgaruvchisiga qaraydi, zanjir to'g'ri ishlaydi — faqat docstring eskirgan.</div>
+
+</section>
+
+<section class="doc-section" id="mobile-user">
+<h2>4. Mobile User (xaridor ilovasi)</h2>
+<p>Flutter, <code>mobile_user/lib/</code>. State: <strong>flutter_riverpod ^3.3.1</strong>. HTTP: dio ^5.9.2. 25 ekran.</p>
+
+<h3 id="mu-screens">Ekranlar jadvali</h3>
+<div class="tbl-wrap">
+<table class="sortable wide" id="muScreenTable">
+<thead><tr><th>Ekran</th><th>Fayl</th><th>Backend chaqiruvlari</th><th>Asosiy provider(lar)</th></tr></thead>
+<tbody>
+<tr><td>SplashScreen</td><td class="file-ref">splash/splash_screen.dart:4</td><td>—</td><td>—</td></tr>
+<tr><td>OnboardingScreen</td><td class="file-ref">onboarding/onboarding_screen.dart:7</td><td>—</td><td>— <span class="badge warn">PageController dispose qilinmaydi</span></td></tr>
+<tr><td>TelegramLoginScreen</td><td class="file-ref">auth/telegram_login_screen.dart:13</td><td>POST /auth/telegram/session, GET /auth/telegram/session/{id}</td><td>authControllerProvider</td></tr>
+<tr><td>HomeFeedScreen</td><td class="file-ref">home/home_feed_screen.dart:60</td><td>GET /feed/banners, /categories, /products, /announcements; POST /news/{id}/like, GET/POST /news/{id}/comments</td><td>bannersProvider, categoriesProvider, topProductsProvider, announcementsProvider, unreadCountProvider, newsProvider</td></tr>
+<tr><td>ProductGroupsScreen</td><td class="file-ref">marketplace/product_groups_screen.dart:74</td><td>GET /products?limit=200</td><td>productGroupsProvider</td></tr>
+<tr><td>MarketplaceScreen</td><td class="file-ref">marketplace/marketplace_screen.dart:144</td><td>GET /products; POST /cart; POST/DELETE /favorites/{id}</td><td>marketFilterProvider, paginatedProductsProvider, cartProvider</td></tr>
+<tr><td>SearchScreen</td><td class="file-ref">search/search_screen.dart:78</td><td>GET /products, GET /shops?q=</td><td>searchQueryProvider, searchFilterProvider, searchProductsProvider, searchShopsProvider</td></tr>
+<tr><td>ShopsListScreen <span class="badge warn">orphan</span></td><td class="file-ref">shops/shops_list_screen.dart:11</td><td>GET /shops (shopsProvider)</td><td>shopsProvider</td></tr>
+<tr><td>ShopDetailScreen</td><td class="file-ref">shops/shop_detail_screen.dart:25</td><td>GET /shops/{id}, GET /products?shop_id=</td><td>shopDetailProvider, shopProductsProvider</td></tr>
+<tr><td>ProductDetailScreen</td><td class="file-ref">products/product_detail_screen.dart:38</td><td>GET /products/{id}; GET /favorites/check/{id}; GET /reviews/product/{id}; POST /cart; POST/DELETE /favorites; POST /reviews</td><td>productDetailProvider, isFavoriteProvider, productReviewsProvider, cartProvider</td></tr>
+<tr><td>CartScreen</td><td class="file-ref">cart/cart_screen.dart:28</td><td>GET /cart; PATCH/DELETE /cart/{id}; POST /orders (Idempotency-Key)</td><td>cartProvider, addressesProvider</td></tr>
+<tr><td>FavoritesScreen</td><td class="file-ref">favorites/favorites_screen.dart:17</td><td>GET /favorites; DELETE /favorites/{id}</td><td>favoritesProvider</td></tr>
+<tr><td>AddressesScreen</td><td class="file-ref">addresses/addresses_screen.dart:45</td><td>GET/POST/PATCH/DELETE /addresses</td><td>addressesProvider</td></tr>
+<tr><td>OrdersScreen</td><td class="file-ref">orders/orders_screen.dart:24</td><td>GET /orders</td><td>myOrdersProvider</td></tr>
+<tr><td>OrderDetailScreen</td><td class="file-ref">orders/order_detail_screen.dart:16</td><td>POST /orders/{id}/cancel</td><td>invalidates myOrdersProvider</td></tr>
+<tr><td>TaxiScreen</td><td class="file-ref">taxi/taxi_screen.dart:173</td><td>GET /rides/my; GET /rides/estimate; POST /rides; POST /rides/{id}/cancel; POST /ride-ratings/{id}; WS /ws/ride/{id}</td><td>activeRideProvider, addressesProvider</td></tr>
+<tr><td>ConversationsScreen <span class="badge warn">only via push</span></td><td class="file-ref">chat/conversations_screen.dart:16</td><td>GET /chat/conversations</td><td>conversationsProvider</td></tr>
+<tr><td>ChatScreen</td><td class="file-ref">chat/chat_screen.dart:22</td><td>GET /chat/messages/{id}; POST /chat/send (HTTP fallback); WS /ws/chat (asosiy)</td><td>— (chatMessagesProvider e'lon qilingan lekin ishlatilmaydi)</td></tr>
+<tr><td>NotificationsScreen</td><td class="file-ref">notifications/notifications_screen.dart:10</td><td>GET /notifications; POST /notifications/read-all; POST /notifications/{id}/read</td><td>notificationsProvider</td></tr>
+<tr><td>NewsListScreen</td><td class="file-ref">news/news_screen.dart:20</td><td>GET /news?limit=30</td><td>newsProvider</td></tr>
+<tr><td>StoryViewerScreen</td><td class="file-ref">stories/story_viewer_screen.dart:67</td><td>—</td><td>—</td></tr>
+<tr><td>HelpScreen</td><td class="file-ref">help/help_screen.dart:7</td><td>— (statik FAQ)</td><td>—</td></tr>
+<tr><td>LegalScreen</td><td class="file-ref">legal/legal_screen.dart:7</td><td>— (statik matn)</td><td>—</td></tr>
+<tr><td>AiAssistantScreen <span class="badge mock">MOCK</span></td><td class="file-ref">ai_assistant/ai_assistant_screen.dart:11</td><td>Yo'q — kalit-so'z asosidagi qat'iy qoidali javob generatori</td><td>—</td></tr>
+<tr><td>ProfileScreen</td><td class="file-ref">profile/profile_screen.dart:28</td><td>PATCH /auth/me; POST /profile/avatar</td><td>authControllerProvider, themeModeProvider</td></tr>
+</tbody>
+</table>
+</div>
+<div class="note mock"><strong>🟡 MOCK:</strong> <code>AiAssistantScreen</code> (<span class="file-ref">ai_assistant_screen.dart:9-11,79-147</span>) — hech qanday API/LLM chaqiruvi yo'q, javoblar <code>_generateReply()</code>dagi <code>if q.contains(...)</code> kalit-so'z moslashtirish bilan generatsiya qilinadi, "yozyapti" effekti sun'iy <code>Future.delayed</code> bilan taqlid qilinadi. CLAUDE.md roadmap'ga ko'ra bu 2-bosqich funksiyasi — hozircha kutilgan holat, lekin foydalanuvchiga "AI" deb ko'rsatilishi chalg'ituvchi bo'lishi mumkin.</div>
+
+<h3 id="mu-nav">Navigatsiya daraxti</h3>
+<div class="svg-wrap">
+<svg viewBox="0 0 1080 520" xmlns="http://www.w3.org/2000/svg">
+<style>.n{fill:#1c202b;stroke:#2a2f3d;stroke-width:1.1} .nl{fill:#e6e8ee;font-size:11px;font-weight:600} .e{stroke:#5b8cff;stroke-width:1.2;fill:none;marker-end:url(#a3)} .ew{stroke:#eab308;stroke-width:1.2;fill:none;stroke-dasharray:3 2;marker-end:url(#a3)}</style>
+<defs><marker id="a3" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto"><path d="M0,0 L0,5 L7,2.5 z" fill="#5b8cff"/></marker></defs>
+
+<rect class="n" x="20" y="20" width="150" height="30"/><text class="nl" x="95" y="40" text-anchor="middle">Splash → Onboarding</text>
+<rect class="n" x="200" y="20" width="150" height="30"/><text class="nl" x="275" y="40" text-anchor="middle">TelegramLoginScreen</text>
+<rect class="n" x="400" y="20" width="260" height="34" fill="#232842"/><text class="nl" x="530" y="42" text-anchor="middle">AppShell — 5 tab (bottom nav)</text>
+
+<rect class="n" x="60" y="100" width="130" height="30"/><text class="nl" x="125" y="120" text-anchor="middle">0 ProductGroups</text>
+<rect class="n" x="220" y="100" width="110" height="30"/><text class="nl" x="275" y="120" text-anchor="middle">1 Taxi</text>
+<rect class="n" x="360" y="100" width="130" height="30" fill="#232842"/><text class="nl" x="425" y="120" text-anchor="middle">2 Home (default)</text>
+<rect class="n" x="520" y="100" width="140" height="30"/><text class="nl" x="590" y="120" text-anchor="middle">3 AiAssistant 🟡</text>
+<rect class="n" x="690" y="100" width="120" height="30"/><text class="nl" x="750" y="120" text-anchor="middle">4 Profile</text>
+
+<rect class="n" x="20" y="180" width="130" height="28"/><text class="nl" x="85" y="199" text-anchor="middle">Search</text>
+<rect class="n" x="170" y="180" width="150" height="28"/><text class="nl" x="245" y="199" text-anchor="middle">MarketplaceScreen</text>
+<rect class="n" x="340" y="180" width="150" height="28"/><text class="nl" x="415" y="199" text-anchor="middle">NewsListScreen</text>
+<rect class="n" x="510" y="180" width="150" height="28"/><text class="nl" x="585" y="199" text-anchor="middle">NotificationsScreen</text>
+<rect class="n" x="680" y="180" width="150" height="28"/><text class="nl" x="755" y="199" text-anchor="middle">ProductDetailScreen</text>
+
+<rect class="n" x="170" y="250" width="150" height="28"/><text class="nl" x="245" y="269" text-anchor="middle">CartScreen</text>
+<rect class="n" x="20" y="250" width="130" height="28"/><text class="nl" x="85" y="269" text-anchor="middle">ShopDetailScreen</text>
+<rect class="n" x="360" y="320" width="150" height="28" fill="#3a1a1a"/><text class="nl" x="435" y="339" text-anchor="middle">ShopsListScreen (orphan)</text>
+
+<rect class="n" x="690" y="250" width="150" height="28"/><text class="nl" x="765" y="269" text-anchor="middle">CartScreen (checkout)</text>
+
+<rect class="n" x="360" y="180" width="0" height="0"/>
+<rect class="n" x="60" y="400" width="140" height="28"/><text class="nl" x="130" y="419" text-anchor="middle">OrdersScreen</text>
+<rect class="n" x="230" y="400" width="150" height="28"/><text class="nl" x="305" y="419" text-anchor="middle">OrderDetailScreen</text>
+<rect class="n" x="410" y="400" width="140" height="28"/><text class="nl" x="480" y="419" text-anchor="middle">FavoritesScreen</text>
+<rect class="n" x="580" y="400" width="150" height="28"/><text class="nl" x="655" y="419" text-anchor="middle">AddressesScreen</text>
+<rect class="n" x="760" y="400" width="150" height="28"/><text class="nl" x="835" y="419" text-anchor="middle">HelpScreen / LegalScreen</text>
+
+<rect class="n" x="60" y="460" width="150" height="28" fill="#3a1a1a"/><text class="nl" x="135" y="479" text-anchor="middle">ConversationsScreen</text>
+<rect class="n" x="240" y="460" width="130" height="28"/><text class="nl" x="305" y="479" text-anchor="middle">ChatScreen</text>
+
+<path class="e" d="M170,35 L200,35"/>
+<path class="e" d="M350,35 L400,35"/>
+<path class="e" d="M480,54 L125,100"/>
+<path class="e" d="M480,54 L275,100"/>
+<path class="e" d="M480,54 L425,100"/>
+<path class="e" d="M480,54 L590,100"/>
+<path class="e" d="M480,54 L750,100"/>
+<path class="e" d="M425,130 L85,180"/>
+<path class="e" d="M425,130 L245,180"/>
+<path class="e" d="M425,130 L415,180"/>
+<path class="e" d="M425,130 L585,180"/>
+<path class="e" d="M425,130 L755,180"/>
+<path class="e" d="M245,208 L245,250"/>
+<path class="e" d="M85,208 L85,250"/>
+<path class="ew" d="M85,278 L435,320"/>
+<path class="e" d="M750,208 L765,250"/>
+<path class="e" d="M750,130 L130,400"/>
+<path class="e" d="M750,130 L305,400"/>
+<path class="e" d="M750,130 L480,400"/>
+<path class="e" d="M750,130 L655,400"/>
+<path class="e" d="M750,130 L835,400"/>
+<path class="ew" d="M655,455 C500,470 300,470 135,460"/>
+<path class="e" d="M135,488 L240,470"/>
+
+<text x="20" y="10" fill="#7d859a" font-size="10">FCM push tap → OrdersScreen / ConversationsScreen / NotificationsScreen (sariq chiziq = faqat push orqali yetiladi)</text>
+</svg>
+</div>
+
+<h3 id="mu-state">State management</h3>
+<p>Barchasi <code>flutter_riverpod</code>. Muhim topilmalar:</p>
+<div class="tbl-wrap">
+<table class="wide">
+<thead><tr><th>Provider</th><th>Turi</th><th>Fayl:qator</th><th>Nima uchun</th></tr></thead>
+<tbody>
+<tr><td>authControllerProvider</td><td>NotifierProvider</td><td class="file-ref">auth_providers.dart:141</td><td>joriy user, login/logout/telegram-session</td></tr>
+<tr><td>dioProvider</td><td>Provider&lt;Dio&gt;</td><td class="file-ref">api_client.dart:24</td><td>auth-header + 401-refresh interceptor</td></tr>
+<tr><td>cartProvider</td><td>own</td><td class="file-ref">cart_screen.dart:23</td><td>savat holati</td></tr>
+<tr><td>paginatedProductsProvider</td><td>NotifierProvider</td><td class="file-ref">marketplace_screen.dart:138</td><td>infinite-scroll katalog</td></tr>
+<tr><td>activeRideProvider</td><td>own</td><td class="file-ref">taxi_screen.dart:123</td><td>faol taksi holati, WS orqali invalidate</td></tr>
+<tr><td>chatMessagesProvider <span class="badge warn">dead</span></td><td>.family</td><td class="file-ref">chat_screen.dart:14</td><td>e'lon qilingan, lekin hech qayerda <code>ref.watch</code> qilinmaydi — ChatScreen o'z lokal <code>_messages</code> ro'yxatini ishlatadi</td></tr>
+</tbody>
+</table>
+</div>
+<p class="toc-hint">To'liq ro'yxat (30+ provider) tadqiqot bosqichida chiqarilgan — bu yerda faqat e'tiborga molik holatlar ko'rsatilgan.</p>
+
+<h3 id="mu-storage">Lokal saqlash</h3>
+<div class="tbl-wrap">
+<table class="wide">
+<thead><tr><th>Kalit</th><th>Mexanizm</th><th>Ma'lumot</th><th>Yozish</th><th>O'qish</th></tr></thead>
+<tbody>
+<tr><td>access_token</td><td>flutter_secure_storage</td><td>JWT access (15 daq)</td><td class="file-ref">auth_providers.dart:60</td><td class="file-ref">api_client.dart:42,69</td></tr>
+<tr><td>refresh_token</td><td>flutter_secure_storage</td><td>JWT refresh</td><td class="file-ref">auth_providers.dart:62</td><td class="file-ref">api_client.dart:99</td></tr>
+<tr><td>is_dark_mode</td><td>shared_preferences</td><td>bool, tema</td><td class="file-ref">main.dart:72</td><td class="file-ref">main.dart:65</td></tr>
+<tr><td>onboarding_done</td><td>shared_preferences</td><td>bool</td><td class="file-ref">onboarding_screen.dart:43</td><td class="file-ref">main.dart:144</td></tr>
+<tr><td>recent_searches</td><td>shared_preferences</td><td>List&lt;String&gt;, max 10</td><td class="file-ref">search_screen.dart:121</td><td class="file-ref">search_screen.dart:109</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="doc-section" id="mobile-seller">
+<h2>5. Mobile Seller (sotuvchi + haydovchi ilovasi)</h2>
+<p>Flutter, <code>mobile_seller/lib/</code>. Xuddi shu stack: riverpod, dio, flutter_secure_storage. 9 ekran. <strong>Alohida shell fayli yo'q</strong> — navigatsiya <code>main.dart</code> ichida (<code>_BiznesShell</code>, <code>_SellerShell</code>, <code>_DriverShell</code>, <code>_RoleRouter</code> private klasslar) amalga oshirilgan.</p>
+
+<h3 id="ms-screens">Ekranlar jadvali</h3>
+<div class="tbl-wrap">
+<table class="sortable wide" id="msScreenTable">
+<thead><tr><th>Ekran</th><th>Fayl</th><th>Backend chaqiruvlari</th><th>Asosiy provider(lar)</th></tr></thead>
+<tbody>
+<tr><td>TelegramLoginScreen</td><td class="file-ref">auth/telegram_login_screen.dart:13</td><td>POST /auth/telegram/session; GET /auth/telegram/session/{id}</td><td>authControllerProvider</td></tr>
+<tr><td>DashboardScreen</td><td class="file-ref">dashboard/dashboard_screen.dart:20</td><td>GET /seller/stats</td><td>sellerStatsProvider, authControllerProvider, sellerOrdersProvider, myShopProvider</td></tr>
+<tr><td>DriverScreen <span class="badge warn">taksi to'liq ishlaydi</span></td><td class="file-ref">driver/driver_screen.dart:26</td><td>POST /rides/driver/online, /rides/driver/profile; GET /rides/my, /rides/driver/available; POST /rides/{id}/accept, /rides/{id}/status; WS /ws/ride/{id}</td><td>availableRidesProvider</td></tr>
+<tr><td>LegalScreen</td><td class="file-ref">legal/legal_screen.dart:6</td><td>— (statik matn)</td><td>—</td></tr>
+<tr><td>SellerOrdersScreen</td><td class="file-ref">orders/seller_orders_screen.dart:17</td><td>GET /seller/orders; PATCH /seller/orders/{id}/status</td><td>sellerOrdersProvider</td></tr>
+<tr><td>AddProductScreen</td><td class="file-ref">products/add_product_screen.dart:12</td><td>POST /products; POST /products/{id}/image</td><td>—</td></tr>
+<tr><td>EditProductScreen</td><td class="file-ref">products/edit_product_screen.dart:14</td><td>PATCH /products/{id}; POST /products/{id}/image</td><td>—</td></tr>
+<tr><td>ProductsScreen</td><td class="file-ref">products/products_screen.dart:14</td><td>GET /products?shop_id=; DELETE /products/{id}</td><td>myShopProvider, shopProductsProvider(family)</td></tr>
+<tr><td>MyShopScreen</td><td class="file-ref">shop/my_shop_screen.dart:13</td><td>GET /seller/shops; POST /seller/shops</td><td>authControllerProvider, myShopProvider</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note warn"><strong>Roadmap'dan oldinda: <code>DriverScreen</code> to'liq ishlaydi.</strong> CLAUDE.md 1-bosqichda taksi "tez orada" holatida bo'lishi kerak deydi, lekin <span class="file-ref">driver_screen.dart</span> — real forma validatsiyasi, 6 ta real backend endpoint, WebSocket orqali 3 soniyada bir GPS broadcast (<code>geolocator</code> paketi bilan) — to'liq ishlaydigan haydovchi oqimi, mock yoki "tez orada" belgisi yo'q. <code>availableRidesProvider</code> (<span class="file-ref">driver_screen.dart:21-22</span>) tarmoq xatosini bo'sh ro'yxat sifatida yutib yuboradi — bu alohida kichik nuqson.</div>
+
+<h3 id="ms-nav">Navigatsiya daraxti</h3>
+<div class="svg-wrap">
+<svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+<style>.n{fill:#1c202b;stroke:#2a2f3d;stroke-width:1.1} .nl{fill:#e6e8ee;font-size:11px;font-weight:600} .e{stroke:#5b8cff;stroke-width:1.2;fill:none;marker-end:url(#a4)}</style>
+<defs><marker id="a4" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto"><path d="M0,0 L0,5 L7,2.5 z" fill="#5b8cff"/></marker></defs>
+<rect class="n" x="20" y="20" width="220" height="30"/><text class="nl" x="130" y="40" text-anchor="middle">main.dart _Root → tryAutoLogin</text>
+<rect class="n" x="280" y="20" width="220" height="30"/><text class="nl" x="390" y="40" text-anchor="middle">TelegramLoginScreen</text>
+<rect class="n" x="540" y="20" width="220" height="30"/><text class="nl" x="650" y="40" text-anchor="middle">_RoleRouter (SharedPrefs 'biznes_role')</text>
+
+<rect class="n" x="440" y="100" width="180" height="30"/><text class="nl" x="530" y="120" text-anchor="middle">_DriverShell → DriverScreen</text>
+<rect class="n" x="650" y="100" width="200" height="34" fill="#232842"/><text class="nl" x="750" y="122" text-anchor="middle">_SellerShell (bottom nav, 3 tab)</text>
+
+<rect class="n" x="620" y="190" width="150" height="28"/><text class="nl" x="695" y="209" text-anchor="middle">0 DashboardScreen</text>
+<rect class="n" x="620" y="240" width="150" height="28"/><text class="nl" x="695" y="259" text-anchor="middle">1 SellerOrdersScreen</text>
+<rect class="n" x="620" y="290" width="150" height="28"/><text class="nl" x="695" y="309" text-anchor="middle">2 ProductsScreen</text>
+
+<rect class="n" x="420" y="190" width="150" height="28"/><text class="nl" x="495" y="209" text-anchor="middle">MyShopScreen</text>
+<rect class="n" x="240" y="290" width="150" height="28"/><text class="nl" x="315" y="309" text-anchor="middle">AddProductScreen</text>
+<rect class="n" x="60" y="290" width="150" height="28"/><text class="nl" x="135" y="309" text-anchor="middle">EditProductScreen</text>
+
+<path class="e" d="M240,35 L280,35"/>
+<path class="e" d="M500,35 L540,35"/>
+<path class="e" d="M620,50 L530,100"/>
+<path class="e" d="M700,50 L750,100"/>
+<path class="e" d="M695,134 L695,190"/>
+<path class="e" d="M695,204 C650,220 600,240 695,240"/>
+<path class="e" d="M620,240 C450,260 500,190 495,204"/>
+<path class="e" d="M620,304 L390,304"/>
+<path class="e" d="M620,304 L210,304"/>
+</svg>
+</div>
+
+<h3 id="ms-state">State management</h3>
+<div class="tbl-wrap">
+<table class="wide">
+<thead><tr><th>Provider</th><th>Turi</th><th>Fayl:qator</th><th>Nima uchun</th></tr></thead>
+<tbody>
+<tr><td>authControllerProvider</td><td>NotifierProvider</td><td class="file-ref">auth_providers.dart:138</td><td>login/logout, Telegram sessiya</td></tr>
+<tr><td>myShopProvider</td><td>FutureProvider</td><td class="file-ref">shop_providers.dart:45</td><td>GET /seller/shops (birinchisi yoki null)</td></tr>
+<tr><td>shopProductsProvider</td><td>FutureProvider.family&lt;int&gt;</td><td class="file-ref">products_providers.dart:38</td><td>GET /products?shop_id=</td></tr>
+<tr><td>availableRidesProvider</td><td>FutureProvider</td><td class="file-ref">driver_screen.dart:15</td><td>GET /rides/driver/available (xatoni yutadi)</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="ms-storage">Lokal saqlash</h3>
+<div class="tbl-wrap">
+<table class="wide">
+<thead><tr><th>Kalit</th><th>Mexanizm</th><th>Yozish</th><th>O'qish</th></tr></thead>
+<tbody>
+<tr><td>access_token</td><td>flutter_secure_storage</td><td class="file-ref">auth_providers.dart:64</td><td class="file-ref">api_client.dart:40,52</td></tr>
+<tr><td>refresh_token</td><td>flutter_secure_storage</td><td class="file-ref">auth_providers.dart:66</td><td class="file-ref">api_client.dart:81</td></tr>
+<tr><td>biznes_role</td><td>shared_preferences</td><td class="file-ref">main.dart:216</td><td class="file-ref">main.dart:206</td></tr>
+</tbody>
+</table>
+</div>
+<div class="note">mobile_user bilan farq: mobile_seller'ning <code>dioProvider</code> refresh-interceptorida <code>_isRefreshing</code>/<code>_refreshCompleter</code> guard yo'q (mobile_user'da bor, <span class="file-ref">mobile_user/api_client.dart:20-22</span>) — bir vaqtda bir nechta 401 kelsa parallel refresh chaqiruvlari yuz berishi mumkin. ⚠️ Amalda kuzatilgan xato sifatida tasdiqlanmagan, faqat statik o'qishda topilgan.</div>
+</section>
+
+<section class="doc-section" id="flows">
+<h2>6. Asosiy oqimlar</h2>
+
+<h3 id="flow-login">Telegram login (mobile_user, mobile_seller bir xil, faqat rol farq qiladi)</h3>
+<div class="svg-wrap">
+<svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg">
+<style>.ll{stroke:#2a2f3d;stroke-width:1} .lbl2{fill:#e6e8ee;font-size:11.5px;font-weight:600} .arr{stroke:#5b8cff;stroke-width:1.3;marker-end:url(#a5)} .arrd{stroke:#eab308;stroke-width:1.3;stroke-dasharray:3 2;marker-end:url(#a5)} .stx{fill:#9aa1b2;font-size:10.5px}</style>
+<defs><marker id="a5" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto"><path d="M0,0 L0,5 L7,2.5 z" fill="#5b8cff"/></marker></defs>
+<text class="lbl2" x="80" y="18" text-anchor="middle">Mobile</text><line class="ll" x1="80" y1="26" x2="80" y2="245"/>
+<text class="lbl2" x="290" y="18" text-anchor="middle">Backend /auth/telegram</text><line class="ll" x1="290" y1="26" x2="290" y2="245"/>
+<text class="lbl2" x="500" y="18" text-anchor="middle">Redis</text><line class="ll" x1="500" y1="26" x2="500" y2="245"/>
+<text class="lbl2" x="700" y="18" text-anchor="middle">Telegram Bot API</text><line class="ll" x1="700" y1="26" x2="700" y2="245"/>
+
+<path class="arr" d="M80,45 L290,45"/><text class="stx" x="90" y="41">1. POST /session</text>
+<path class="arr" d="M290,60 L500,60"/><text class="stx" x="300" y="56">2. SETEX tg_session:id (300s)</text>
+<path class="arr" d="M290,75 L80,75"/><text class="stx" x="100" y="71">3. bot_url qaytadi</text>
+<path class="arrd" d="M80,95 L700,95"/><text class="stx" x="300" y="91">4. deep-link / tg://resolve ochiladi, user "Start" bosadi</text>
+<path class="arr" d="M700,115 L290,115"/><text class="stx" x="300" y="111">5. webhook yoki long-polling → process_telegram_update()</text>
+<path class="arr" d="M290,130 L500,130"/><text class="stx" x="300" y="126">6. sessiya "confirmed" deb belgilanadi</text>
+<path class="arr" d="M80,150 L290,150"/><text class="stx" x="90" y="146">7. GET /session/{id} (2s polling)</text>
+<path class="arr" d="M290,165 L500,165"/><text class="stx" x="300" y="161">8. status o'qiladi, key o'chiriladi</text>
+<path class="arr" d="M290,180 L80,180"/><text class="stx" x="100" y="176">9. access+refresh JWT qaytadi</text>
+<path class="arr" d="M80,200 L80,200"/><text class="stx" x="90" y="200">10. secure_storage'ga yoziladi, GET /auth/me, AppShell'ga o'tadi</text>
+</svg>
+</div>
+<ol class="step-list">
+<li><span class="file-ref">telegram_login_screen.dart:110,31,36</span> — tugma bosilganda <code>startTelegramLogin()</code> → <span class="file-ref">auth_providers.dart:70</span> <code>POST /auth/telegram/session</code>.</li>
+<li><span class="file-ref">telegram_auth.py:43-69</span> <code>create_session()</code> — Redis'da <code>tg_session:{id}</code> (TTL 300s), <code>bot_url</code> qaytaradi.</li>
+<li><span class="file-ref">telegram_login_screen.dart:43-58</span> — <code>tg://resolve</code> deep-link, fallback <code>https://t.me/...</code>; <span class="file-ref">:68-83</span> <code>Timer.periodic(2s)</code> polling boshlanadi.</li>
+<li>Telegram → <span class="file-ref">telegram_auth.py:158</span> webhook yoki <span class="file-ref">core/telegram_polling.py:24</span> long-polling → <span class="file-ref">telegram_auth.py:97</span> <code>process_telegram_update()</code>: user topiladi/yaratiladi (<code>ADMIN_TELEGRAM_IDS</code> bo'lsa admin roli), Redis sessiya "confirmed".</li>
+<li><span class="file-ref">auth_providers.dart:85-99</span> <code>pollTelegramSession()</code> → <span class="file-ref">telegram_auth.py:72-94</span> <code>poll_session()</code> — <code>create_access_token()</code>/<code>create_refresh_token()</code> (<span class="file-ref">core/security.py:31-59</span>, 15 daq access).</li>
+<li><span class="file-ref">auth_providers.dart:90-91,58</span> — tokenlar <code>secure_storage</code>ga yoziladi, <span class="file-ref">:113-122</span> <code>_loadMe()</code> → <code>GET /auth/me</code>, push init.</li>
+<li><span class="file-ref">main.dart:202-204</span> — <code>authControllerProvider</code> reaktiv rebuild, <code>AppShell</code>ga o'tadi.</li>
+</ol>
+
+<h3 id="flow-refresh">Access token muddati tugashi + avtomatik yangilash</h3>
+<ol class="step-list">
+<li><span class="file-ref">api_client.dart:41-47</span> — har so'rovga <code>Authorization: Bearer</code> qo'shiladi.</li>
+<li>Access token 15 daq'dan keyin eskiradi (<span class="file-ref">core/security.py:33-34</span>) → 401.</li>
+<li><span class="file-ref">api_client.dart:53-64</span> — <code>_isRefreshing</code>/<code>_refreshCompleter</code> guard bilan faqat bitta refresh, boshqa so'rovlar kutadi.</li>
+<li><span class="file-ref">api_client.dart:95-121</span> <code>_tryRefreshToken()</code> → <code>POST /auth/refresh</code>.</li>
+<li><span class="file-ref">auth.py:88-125</span> — <code>type=="refresh"</code> tekshiriladi, <code>is_refresh_token_active()</code> (Redis) orqali <code>jti</code> tekshiriladi, eski <code>jti</code> <strong>rotation</strong> bilan bekor qilinadi, yangi juftlik qaytadi.</li>
+<li><span class="file-ref">api_client.dart:107-117</span> — yangi tokenlar saqlanadi, asl so'rov <code>dio.fetch()</code> bilan qayta yuboriladi (chaqiruvchi buni sezmaydi).</li>
+<li>Muvaffaqiyatsiz bo'lsa: <span class="file-ref">api_client.dart:76-90</span> — tokenlar o'chiriladi, <code>navigatorKey</code> orqali <code>TelegramLoginScreen</code>ga majburiy o'tish.</li>
+<li>Logout: <span class="file-ref">auth_providers.dart:124-138</span> → <code>POST /auth/logout</code> → <span class="file-ref">auth.py:128-140</span> <code>revoke_refresh_token()</code> (server-side revocation, o'g'irlangan refresh token boshqa qurilmada ishlamay qoladi).</li>
+</ol>
+
+<h3 id="flow-checkout">Savatdan to'lovgacha (checkout)</h3>
+<ol class="step-list">
+<li><span class="file-ref">cart_screen.dart:346-361</span> — "To'lash" tugmasi → <code>_PaymentSheet</code> (usul+manzil tanlash) → klient-tomonlama idempotency key generatsiya qilinadi → <code>POST /orders</code> + <code>Idempotency-Key</code> header.</li>
+<li><span class="file-ref">cart.py:252-345</span> <code>checkout()</code> — Redis <code>SETNX</code> bilan idempotency key claim qilinadi (pending TTL 30s); parallel takroriy so'rov bo'lsa keshlangan natija qaytadi yoki 409.</li>
+<li><span class="file-ref">cart.py:300-323</span> — har savat qatori uchun <code>ProductVariant</code> <code>SELECT ... FOR UPDATE</code> bilan qulflanadi, stock tekshiriladi va kamaytiriladi, <code>price_at_purchase</code> saqlanadi.</li>
+<li><span class="file-ref">cart.py:325-339</span> — <strong>bitta</strong> <code>Order</code> yaratiladi (barcha do'konlar uchun umumiy), savat tozalanadi.</li>
+<li><span class="file-ref">cart.py:350-359</span> — har distinct do'kon egasiga alohida push (<code>notify_new_order</code>) yuboriladi.</li>
+<li><span class="file-ref">cart_screen.dart:362-395</span> — 201 javobida <code>cartProvider</code> invalidate, muvaffaqiyat dialogi (alohida tasdiqlash ekrani yo'q).</li>
+</ol>
+<div class="note warn"><strong>CLAUDE.md'dan chetlanish:</strong> Arxitektura tamoyili #5 ko'p sotuvchili savat parent+child order'larga bo'linishini talab qiladi (mustaqil lifecycle state machine bilan). Bu <strong>amalga oshirilmagan</strong> — <span class="file-ref">backend/app/models/order.py:29-61</span>da <code>parent_order_id</code> yo'q, <code>Order</code>da <code>shop_id</code> yo'q, savatdagi barcha do'konlar bitta flat <code>Order</code>ga tushadi. Ko'p-sotuvchi bo'linishining yagona izi — har sotuvchiga alohida push yuborish (kosmetik, real state machine emas).</div>
+
+<h3 id="flow-product">Sotuvchi mahsulot qo'shishi → xaridorda ko'rinishi</h3>
+<ol class="step-list">
+<li><span class="file-ref">add_product_screen.dart:48-66</span> — "Saqlash" → <code>createProduct()</code> (<span class="file-ref">products_providers.dart:47-65</span>) → <code>POST /products</code>.</li>
+<li><span class="file-ref">products.py:192-220</span> <code>create_product()</code> — <code>_ensure_shop_owner()</code> (do'kon <code>approved</code> bo'lishi shart, admin bo'lmasa), <code>Product</code> + avtomatik "Standart" <code>ProductVariant</code> (narx/stock shu yerda saqlanadi, <code>Product</code>da emas).</li>
+<li><span class="file-ref">add_product_screen.dart:67-69</span> — rasm tanlangan bo'lsa <code>POST /products/{id}/image</code> (multipart).</li>
+<li><span class="file-ref">products.py:396-444</span> — content-type + magic-byte tekshiruvi, 5MB limit, <strong>to'g'ridan-to'g'ri lokal diskka</strong> yoziladi (<code>PRODUCTS_DIR</code>) — <code>core/storage.py</code>ning S3 abstraksiyasi bu yerda <strong>ishlatilmaydi</strong>.</li>
+<li>Xaridor tomoni: <span class="file-ref">product_groups_screen.dart:39-45</span> (bir marta fetch, client-side guruhlash) yoki <span class="file-ref">marketplace_screen.dart:138-139,206-218</span> (<code>paginatedProductsProvider</code>, pull-to-refresh) → <code>GET /products</code> (<span class="file-ref">products.py:84-160</span>).</li>
+<li><strong>Kechikish:</strong> push/WebSocket bildirishnoma yo'q — xaridor yangi mahsulotni faqat qo'lda yangilash (pull-to-refresh) yoki ekranga qayta kirish orqali ko'radi.</li>
+</ol>
+<div class="note warn"><strong>Storage abstraksiyasi chetlab o'tilgan:</strong> <span class="file-ref">backend/app/core/storage.py</span> S3-yoki-lokal abstraksiyasini ta'minlaydi, lekin mahsulot rasm yuklash endpoint'i (<span class="file-ref">products.py:396-444</span>) uni chetlab o'tib to'g'ridan-to'g'ri diskka yozadi — production'da bir nechta backend instance (shared disk'siz) ishlatilsa bu buziladi. ⚠️ ANIQLANMADI: boshqa yuklash endpoint'lari (avatar, news, banner) <code>storage.py</code>ni to'g'ri ishlatadimi — tekshirilmagan.</div>
+
+</section>
+
+<section class="doc-section" id="techdebt">
+<h2>7. Muammolar va texnik qarz</h2>
+<p>Bu bo'lim eng qimmatlisi — har biri fayl:qator bilan, keyingi qadam bilan.</p>
+
+<h3>🟡 MOCK ma'lumotlar</h3>
+<div class="tbl-wrap"><table class="wide"><thead><tr><th>Joyi</th><th>Nima qilish kerak</th></tr></thead><tbody>
+<tr><td class="file-ref">mobile_user/ai_assistant_screen.dart:9-11,79-147</td><td>"AI Assistant" aslida kalit-so'z chatbot (LLM emas) — nomini neytral qilish yoki chindan LLM ulanguncha ogohlantirish qo'yish.</td></tr>
+<tr><td class="file-ref">backend/app/api/auth.py:233</td><td><code># TODO: Real SMS xizmatini ulash</code> — forgot-password oqimida real SMS yo'q, hozircha admin qo'lda yordam beradi.</td></tr>
+</tbody></table></div>
+
+<h3>⚠️ Ikkita/uchta ziddiyatli <code>AppColors</code></h3>
+<p>Kutuku dizayn migratsiyasi to'liq tugallanmagan — 3 ta mustaqil rang tizimi bir vaqtda yashaydi:</p>
+<div class="tbl-wrap"><table class="wide">
+<thead><tr><th>Token</th><th>(A) mobile_user legacy <span class="file-ref">core/theme.dart</span></th><th>(B) mobile_user Kutuku <span class="file-ref">core/theme/app_colors.dart</span></th><th>(C) mobile_seller <span class="file-ref">core/theme.dart</span></th></tr></thead>
+<tbody>
+<tr><td>background</td><td>#212842</td><td>#FFFFFF (light)</td><td>#1A1D2E</td></tr>
+<tr><td>textPrimary</td><td>#EDE9F5</td><td>#1D1E20</td><td>#EDE9F5</td></tr>
+<tr><td>success</td><td>#5CB07A</td><td>#00D261</td><td>#22C55E</td></tr>
+<tr><td>error</td><td>#D96B6B</td><td>#E5484D</td><td>#EF4444</td></tr>
+</tbody></table></div>
+<p>(A) 20 faylda hali import qilinadi (dark, legacy), (B) 17 faylda (light, yangi Kutuku), (C) mobile_seller'ning butunlay uchinchi palitrasi. <strong>Tavsiya:</strong> (A)ni butunlay olib tashlab qolgan 20 faylni (B)ga ko'chirish, so'ng mobile_seller'ni ham bitta umumiy tizimga o'tkazish.</p>
+
+<h3>Dead code</h3>
+<div class="tbl-wrap"><table class="wide"><thead><tr><th>Joyi</th><th>Nima qilish kerak</th></tr></thead><tbody>
+<tr><td class="file-ref">mobile_user/core/widgets/app_card.dart:9</td><td><code>AppCard</code> hech qayerda ishlatilmaydi — o'chirish yoki Kutuku ekranlariga qo'llash.</td></tr>
+<tr><td class="file-ref">mobile_user/core/widgets/app_input.dart:10</td><td><code>AppInput</code> hech qayerda chaqirilmaydi — xuddi shu tavsiya.</td></tr>
+<tr><td class="file-ref">mobile_user/core/widgets.dart:123</td><td>legacy <code>EmptyStateWidget</code> ishlatilmaydi (<code>AppEmptyState</code> uni almashtirgan, 7 ekranda) — o'chirish mumkin.</td></tr>
+<tr><td class="file-ref">mobile_user/shops/shops_list_screen.dart</td><td><code>ShopsListScreen</code>ga hech qanday ekrandan kirish yo'q (orphan) — navigatsiya qo'shish yoki ekranni olib tashlash.</td></tr>
+<tr><td class="file-ref">mobile_user/chat/chat_screen.dart:14</td><td><code>chatMessagesProvider</code> e'lon qilingan, lekin <code>ref.watch</code> qilinmaydi — o'chirish yoki haqiqiy state'ga bog'lash.</td></tr>
+</tbody></table></div>
+
+<h3>Hardcoded qiymatlar</h3>
+<div class="tbl-wrap"><table class="wide"><thead><tr><th>Joyi</th><th>Nima qilish kerak</th></tr></thead><tbody>
+<tr><td class="file-ref">mobile_seller/core/config.dart:8</td><td><code>defaultValue: 'http://192.168.43.210:8000'</code> — shaxsiy LAN IP build-default sifatida qattiq yozilgan, HTTP (shifrlanmagan); production build'da <code>--dart-define=API_URL</code> majburiyligini CI'da tekshirish kerak.</td></tr>
+<tr><td class="file-ref">mobile_user/core/config.dart:10</td><td><code>defaultValue: 'http://localhost:8000'</code> — kamroq xavfli, lekin baribir HTTP.</td></tr>
+</tbody></table></div>
+
+<h3><code>dispose()</code> qilinmagan controller'lar</h3>
+<div class="tbl-wrap"><table class="wide"><thead><tr><th>Joyi</th><th>Nima qilish kerak</th></tr></thead><tbody>
+<tr><td class="file-ref">mobile_user/onboarding/onboarding_screen.dart:16</td><td><code>PageController</code> e'lon qilingan, <code>dispose()</code> metodi umuman yo'q — qo'shish kerak.</td></tr>
+<tr><td class="file-ref">mobile_user/profile/profile_screen.dart:283</td><td><code>_showEditNameSheet</code>dagi lokal <code>TextEditingController</code> dispose qilinmaydi.</td></tr>
+<tr><td class="file-ref">mobile_user/profile/profile_screen.dart:361</td><td><code>_showAddPhoneSheet</code>dagi lokal controller dispose qilinmaydi.</td></tr>
+<tr><td class="file-ref">mobile_user/products/product_detail_screen.dart:97</td><td><code>_editQuantity</code>dagi lokal controller dispose qilinmaydi.</td></tr>
+</tbody></table></div>
+
+<h3>Yakunlanmagan TODO/FIXME</h3>
+<p><span class="file-ref">backend/app/api/auth.py:233</span> — real SMS xizmati ulanmagan (yuqorida MOCK bo'limida ham qayd etilgan).</p>
+
+<h3>Backend'da bor, mobilda ishlatilmaydigan endpoint'lar</h3>
+<div class="tbl-wrap"><table class="wide"><thead><tr><th>Endpoint</th><th>Izoh</th></tr></thead><tbody>
+<tr><td class="path">POST /auth/register, POST /auth/login</td><td>Telegram login'ga o'tilgani uchun eskirgan — xavfsiz o'chirish yoki deprecated deb belgilash mumkin.</td></tr>
+<tr><td class="path">POST /auth/change-password, POST /auth/forgot-password</td><td>Hech qaysi klient chaqirmaydi.</td></tr>
+<tr><td class="path">POST /app-config/bulk</td><td>Chaqirilmaydi.</td></tr>
+<tr><td class="path">GET /news/{id}, GET /news/{id}/liked</td><td>Chaqirilmaydi.</td></tr>
+<tr><td class="path">GET /ride-ratings/driver/{id}, GET /rides/{id}</td><td>Chaqirilmaydi.</td></tr>
+<tr><td class="path">POST /shops</td><td>mobile_seller'da do'kon yaratish UI'si mavjud (<code>my_shop_screen.dart</code>) — bu aslida <code>POST /seller/shops</code> orqali chaqiriladi, <code>POST /shops</code>ning o'zi ishlatilmaydi (dublikat funksionallik).</td></tr>
+<tr><td class="path">POST/PATCH/DELETE /products/{id}/variants*, GET/POST /products/{id}/images</td><td>Backend tayyor, lekin mobile_seller'da variant yaratish/ko'p rasm yuklash UI'si yo'q — backend frontend'dan oldinda.</td></tr>
+</tbody></table></div>
+<div class="note warn"><strong>Buzilgan klient chaqiruvi:</strong> <span class="file-ref">admin_web/index.html:720</span> — <code>api('GET', '/rides')</code> chaqiradi, lekin backendda parametrsiz <code>GET /rides</code> (ro'yxat) route'i yo'q. Admin panelning "Taksi buyurtmalar" bo'limi 404 bilan ishlamaydi. Backendga <code>GET /admin/rides</code> qo'shish kerak.</div>
+
+<h3>Boshqa arxitektura topilmalari</h3>
+<div class="tbl-wrap"><table class="wide"><thead><tr><th>Joyi</th><th>Muammo</th></tr></thead><tbody>
+<tr><td class="file-ref">backend/app/models/__init__.py:5-26</td><td><code>AppConfig</code> import qilinmagan — Alembic autogenerate'dan ko'rinmaydi (<a href="#database">3-bo'lim</a>ga qarang).</td></tr>
+<tr><td class="file-ref">announcements.author_id, orders.delivery_address_id, ride_ratings.passenger_id/driver_id</td><td>FK ustunlarida indeks yo'q.</td></tr>
+<tr><td class="file-ref">backend/app/api/ws.py:15,17</td><td><code>_chat_connections</code>/<code>_ride_connections</code> — jarayon-ichi Python dict, tashqi broker (Redis pub/sub, NATS) yo'q. Ko'p-worker deploy'da bir process ulangan userga boshqa process orqali xabar yetmaydi.</td></tr>
+<tr><td class="file-ref">backend/app/api/products.py:396-444</td><td>Rasm yuklash <code>core/storage.py</code>ning S3 abstraksiyasini chetlab o'tib to'g'ridan-to'g'ri diskka yozadi.</td></tr>
+<tr><td class="file-ref">mobile_seller — driver_screen.dart</td><td>CLAUDE.md 1-bosqich rejasiga qaramay taksi/haydovchi oqimi to'liq ishlaydi (yuqoriga, <a href="#mobile-seller">5-bo'lim</a>ga qarang).</td></tr>
+<tr><td class="file-ref">Order splitting (CLAUDE.md tamoyil #5)</td><td>Amalga oshirilmagan — bitta flat <code>Order</code>, parent/child yo'q (<a href="#flow-checkout">6-bo'lim</a>ga qarang).</td></tr>
+<tr><td class="file-ref">mobile_seller/products_providers.dart</td><td>Mahsulot yaratishda <code>category_id</code> yuborilmaydi — barcha sotuvchi mahsulotlari kategoriyasiz qoladi, xaridor tomonidagi kategoriya filtri buziladi.</td></tr>
+</tbody></table></div>
+
+</section>
+
+<section class="doc-section" id="where">
+<h2>8. Qayerdan o'zgartiraman?</h2>
+<div class="tbl-wrap">
+<table class="wide">
+<thead><tr><th>Nimani o'zgartirmoqchi</th><th>Qaysi fayllarga tegish kerak</th></tr></thead>
+<tbody>
+<tr><td>Mahsulot kartochkasi ko'rinishi (xaridor)</td><td><code class="mono">mobile_user/lib/features/marketplace/marketplace_screen.dart</code> (grid item widget), <code class="mono">product_detail_screen.dart</code> (batafsil sahifa)</td></tr>
+<tr><td>Yangi backend endpoint qo'shish</td><td>Tegishli <code class="mono">backend/app/api/*.py</code> routerga funksiya qo'shish + <code class="mono">backend/app/schemas/*.py</code>ga so'rov/javob modeli + agar yangi router bo'lsa <code class="mono">backend/app/main.py:68-89</code>ga <code>include_router</code></td></tr>
+<tr><td>Rang/shrift o'zgartirish (xaridor)</td><td><code class="mono">mobile_user/lib/core/theme/app_colors.dart</code> (yangi Kutuku tizimi — <strong>bu faylni</strong> ishlating, <code>core/theme.dart</code> legacy va bekor qilinishi kerak)</td></tr>
+<tr><td>Rang/shrift o'zgartirish (sotuvchi)</td><td><code class="mono">mobile_seller/lib/core/theme.dart</code> — hozircha mustaqil, mobile_user'nikidan farqli qiymatlar (<a href="#techdebt">7-bo'lim</a>)</td></tr>
+<tr><td>Yangi ekran qo'shish (xaridor)</td><td><code class="mono">mobile_user/lib/features/&lt;domen&gt;/&lt;nom&gt;_screen.dart</code> yaratish, agar bottom-nav tab kerak bo'lsa <code class="mono">mobile_user/lib/features/shell/app_shell.dart:41</code>ga qo'shish, aks holda mavjud ekrandan <code>Navigator.push</code></td></tr>
+<tr><td>Yangi ekran qo'shish (sotuvchi)</td><td><code class="mono">mobile_seller/lib/features/&lt;domen&gt;/&lt;nom&gt;_screen.dart</code> yaratish, <code class="mono">mobile_seller/lib/main.dart</code>dagi <code>_BiznesShell</code>/<code>_SellerShell</code>ga qo'shish (alohida shell fayli yo'q)</td></tr>
+<tr><td>To'lov usuli qo'shish</td><td><code class="mono">backend/app/models/order.py:22-25</code> <code>PaymentMethod</code> enum, <code class="mono">backend/app/api/cart.py</code> checkout mantiqi, <code class="mono">mobile_user/lib/features/cart/cart_screen.dart</code> <code>_PaymentSheet</code> — <strong>haqiqiy gateway integratsiyasi hali yo'q</strong>, faqat enum skeleti bor</td></tr>
+<tr><td>Jadvalga ustun qo'shish</td><td><code class="mono">backend/app/models/&lt;jadval&gt;.py</code>ga ustun qo'shish → <code class="mono">cd backend && alembic revision --autogenerate -m "..."</code> → migratsiyani tekshirish → <code>alembic upgrade head</code>; <strong>eslatma:</strong> <code>app_config</code> jadvali uchun avval <code class="mono">backend/app/models/__init__.py</code>ga import qo'shish kerak (aks holda autogenerate uni ko'rmaydi)</td></tr>
+<tr><td>Auth/login mantiqini o'zgartirish</td><td><code class="mono">backend/app/api/telegram_auth.py</code> (asosiy oqim), <code class="mono">backend/app/core/security.py</code> (JWT), <code class="mono">backend/app/api/deps.py</code> (dependency'lar), mobil tomonda <code class="mono">*/lib/features/auth/auth_providers.dart</code></td></tr>
+<tr><td>Push notification matnini o'zgartirish</td><td><code class="mono">backend/app/core/push.py</code> (FCM yuborish), chaqiruvchi joylar: <code class="mono">seller.py</code>, <code class="mono">rides.py</code>, <code class="mono">announcements.py</code>, <code class="mono">admin.py</code> (broadcast)</td></tr>
+<tr><td>WebSocket xabar formatini o'zgartirish</td><td><code class="mono">backend/app/api/ws.py</code> (server), <code class="mono">mobile_user/lib/core/ws_service.dart</code> va <code class="mono">mobile_seller/lib/core/ws_service.dart</code> (klient)</td></tr>
+<tr><td>Admin panelga bo'lim qo'shish</td><td><code class="mono">admin_web/index.html</code> — bitta fayl, yangi <code>&lt;section&gt;</code> + JS <code>fetch()</code> chaqiruvi qo'shish, backend tomonida <code class="mono">backend/app/api/admin.py</code> (barcha route <code>require_admin</code> ostida, admin.py:24)</td></tr>
+<tr><td>Taksi narx formulasini o'zgartirish</td><td><code class="mono">backend/app/core/geo.py</code> — <code>BASE_FARE</code>, <code>PER_KM_RATE</code>, <code>MIN_FARE</code> konstantalar</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="doc-section" id="verify">
+<h2>Tekshiruv (Bosqich 3)</h2>
+<div class="grid2">
+<div class="card">
+<h4>Qamrov</h4>
+<table>
+<tr><td>Hujjatlashtirilgan endpoint</td><td>100 REST + 2 WebSocket — kodda topilgan barcha 100+2 ta bilan bir xil (main.py:68-89dagi 21 router to'liq qamrab olindi)</td></tr>
+<tr><td>Hujjatlashtirilgan ekran</td><td>mobile_user 25/25, mobile_seller 9/9 — <code>find lib/features -iname "*screen*.dart"</code> natijasi bilan bir xil</td></tr>
+<tr><td>Hujjatlashtirilgan DB jadval</td><td>26/26 (<code>__tablename__</code> grep bilan tasdiqlangan)</td></tr>
+</table>
+</div>
+<div class="card">
+<h4>Belgilar soni</h4>
+<table>
+<tr><td>⚠️ ANIQLANMADI</td><td>~6 ta (masalan: mobile_seller'ning post-login navigatsiyasi push-based ekanligi, <code>upload_utils.py</code>ning boshqa endpoint'larda ishlatilishi, chat 401-refresh race'ning amalda kuzatilgani)</td></tr>
+<tr><td>🟡 MOCK</td><td>2 ta (<code>AiAssistantScreen</code>, forgot-password SMS yo'qligi)</td></tr>
+</table>
+</div>
+</div>
+<div class="note warn">
+<strong>Eng ishonchsiz qism:</strong> ER sxema SVG'si (3-bo'lim) — 26 jadvalning barcha FK bog'lanishlarini bitta o'qilishi mumkin diagrammaga sig'dirish uchun soddalashtirilgan (ba'zi kam muhim FK chiziqlar chizilmagan). To'liq va aniq FK ro'yxati jadvallar bo'limidagi matnda, SVG faqat vizual xarita sifatida qaraladi. Navigatsiya daraxti SVG'lari ham xuddi shunday — to'liq adjacency-list matn ko'rinishida joylashtirilishi kerak edi, ammo maydon cheklovi tufayli SVG'da faqat asosiy yo'llar ko'rsatilgan; screens jadvalidagi "Navigatsiya" ustuni (agar kerak bo'lsa kelgusi versiyada qo'shiladi) to'liqroq bo'lardi.
+</div>
+</section>
+
+</main>
+</div>
+<footer class="page-footer">Fargonam arxitektura hujjati — 2026-08-14 holatiga ko'ra generatsiya qilingan, real kod asosida. Yangilash uchun ushbu Claude Code loyihasida qayta so'rang.</footer>
+<script>
+(function(){
+  // Sidebar search: filters table rows across all sortable tables + highlights matches
+  var box = document.getElementById('searchBox');
+  var countEl = document.getElementById('searchCount');
+  var allRows = Array.prototype.slice.call(document.querySelectorAll('table tbody tr'));
+
+  function clearMarks(el){
+    el.querySelectorAll('mark').forEach(function(m){
+      var parent = m.parentNode;
+      parent.replaceChild(document.createTextNode(m.textContent), m);
+      parent.normalize();
+    });
+  }
+
+  function highlight(el, term){
+    Array.prototype.forEach.call(el.childNodes, function(node){
+      if(node.nodeType === 3){
+        var idx = node.textContent.toLowerCase().indexOf(term);
+        if(idx >= 0){
+          var span = document.createElement('span');
+          var before = node.textContent.slice(0, idx);
+          var match = node.textContent.slice(idx, idx+term.length);
+          var after = node.textContent.slice(idx+term.length);
+          span.appendChild(document.createTextNode(before));
+          var mk = document.createElement('mark');
+          mk.textContent = match;
+          span.appendChild(mk);
+          span.appendChild(document.createTextNode(after));
+          node.parentNode.replaceChild(span, node);
+        }
+      } else if(node.nodeType === 1 && node.tagName !== 'MARK'){
+        highlight(node, term);
+      }
+    });
+  }
+
+  box.addEventListener('input', function(){
+    var term = box.value.trim().toLowerCase();
+    var shown = 0;
+    allRows.forEach(function(row){
+      clearMarks(row);
+      if(!term){ row.classList.remove('hidden-by-search'); return; }
+      var text = row.textContent.toLowerCase();
+      if(text.indexOf(term) !== -1){
+        row.classList.remove('hidden-by-search');
+        highlight(row, term);
+        shown++;
+      } else {
+        row.classList.add('hidden-by-search');
+      }
+    });
+    if(term){
+      countEl.style.display = 'block';
+      countEl.textContent = shown + ' natija topildi';
+    } else {
+      countEl.style.display = 'none';
+    }
+  });
+
+  // Sortable tables
+  document.querySelectorAll('table.sortable').forEach(function(table){
+    var thead = table.querySelector('thead');
+    if(!thead) return;
+    var ths = thead.querySelectorAll('th');
+    ths.forEach(function(th, colIdx){
+      th.addEventListener('click', function(){
+        var tbody = table.querySelector('tbody');
+        var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+        var asc = !th.classList.contains('sort-asc');
+        ths.forEach(function(t){ t.classList.remove('sort-asc','sort-desc'); });
+        th.classList.add(asc ? 'sort-asc' : 'sort-desc');
+        rows.sort(function(a, b){
+          var av = a.children[colIdx] ? a.children[colIdx].textContent.trim().toLowerCase() : '';
+          var bv = b.children[colIdx] ? b.children[colIdx].textContent.trim().toLowerCase() : '';
+          if(av < bv) return asc ? -1 : 1;
+          if(av > bv) return asc ? 1 : -1;
+          return 0;
+        });
+        rows.forEach(function(r){ tbody.appendChild(r); });
+      });
+    });
+  });
+
+  // Sidebar active-link highlight on scroll
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.doc-section, section.doc-section h2, section.doc-section h3'));
+})();
+</script>
+</body>
+</html>

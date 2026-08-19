@@ -5,7 +5,7 @@ import secrets
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,6 +33,7 @@ class CheckoutRequest(BaseModel):
     # Ixtiyoriy — saqlangan manzildan tanlansa, uning matni delivery_address'ga
     # "surat" sifatida yoziladi (agar delivery_address alohida berilmasa)
     delivery_address_id: int | None = None
+    note: str | None = Field(default=None, max_length=500)
 
 router = APIRouter(tags=["cart-orders"])
 
@@ -81,8 +82,13 @@ async def restore_order_stock(order: Order, db: AsyncSession) -> None:
 # ── Buyurtma holati state machine ───────────────────────────
 # cancelled va delivered — terminal, ulardan chiquvchi o'tish yo'q.
 ALLOWED_TRANSITIONS: dict[OrderStatus, set[OrderStatus]] = {
-    OrderStatus.pending: {OrderStatus.paid, OrderStatus.cancelled},
-    OrderStatus.paid: {OrderStatus.shipped, OrderStatus.cancelled},
+    # Qabul qilindi -> Tayyorlanmoqda -> Tayyor -> Kuryerda -> Yetkazildi
+    OrderStatus.pending: {OrderStatus.preparing, OrderStatus.cancelled},
+    OrderStatus.paid: {OrderStatus.shipped, OrderStatus.cancelled},  # eski oqim, endi yaratilmaydi
+    OrderStatus.preparing: {OrderStatus.ready, OrderStatus.cancelled},
+    # pickup buyurtmalarda kuryer bosqichi yo'q — "Tayyor"dan to'g'ridan-to'g'ri
+    # "Topshirildi"ga o'tadi; delivery buyurtmalarda "Kuryerda" orqali o'tadi
+    OrderStatus.ready: {OrderStatus.shipped, OrderStatus.delivered, OrderStatus.cancelled},
     OrderStatus.shipped: {OrderStatus.delivered},
     OrderStatus.delivered: set(),
     OrderStatus.cancelled: set(),
@@ -219,6 +225,7 @@ async def enrich_order(order: Order, db: AsyncSession, include_phone: bool = Fal
         delivery_address_id=order.delivery_address_id,
         pickup_code=order.pickup_code,
         cancel_reason=order.cancel_reason,
+        note=order.note,
         customer_phone=customer.phone if customer else None,
         customer_name=customer.full_name if customer else None,
         created_at=order.created_at,
@@ -470,6 +477,7 @@ async def checkout(
             delivery_address=delivery_address,
             delivery_address_id=delivery_address_id,
             pickup_code=pickup_code,
+            note=payload.note,
         )
         db.add(order)
 

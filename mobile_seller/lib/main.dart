@@ -1,3 +1,6 @@
+import 'dart:ui' as dart_ui;
+
+import 'package:fargonam_ui/fargonam_ui.dart' as ui;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -5,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api_client.dart' show navigatorKey, onTokenExpired, secureStorageProvider;
@@ -14,10 +18,14 @@ import 'core/theme.dart';
 import 'core/ws_service.dart';
 import 'features/auth/auth_providers.dart';
 import 'features/auth/telegram_login_screen.dart';
-import 'features/dashboard/dashboard_screen.dart';
 import 'features/driver/driver_screen.dart';
+import 'features/home/seller_home_screen.dart';
+import 'features/dashboard/seller_stats_screen.dart';
 import 'features/orders/seller_orders_screen.dart';
 import 'features/products/products_screen.dart';
+import 'features/profile/seller_profile_screen.dart';
+import 'features/shop/my_shop_screen.dart';
+import 'features/shop/shop_providers.dart' show myShopProvider;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +40,13 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase init xato: $e');
   }
-  runApp(const ProviderScope(child: FargonamBiznesApp()));
+  runApp(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      builder: (context, child) => const ProviderScope(child: FargonamBiznesApp()),
+    ),
+  );
 }
 
 class FargonamBiznesApp extends ConsumerWidget {
@@ -51,7 +65,7 @@ class FargonamBiznesApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Fargonam Biznes',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: ui.AppTheme.lightTheme,
       navigatorKey: navigatorKey,
       home: const _Root(),
     );
@@ -451,27 +465,15 @@ class _SellerShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return _BiznesShell(
-      pages: const [
-        DashboardScreen(),
-        SellerOrdersScreen(),
-        ProductsScreen(),
-      ],
-      destinations: const [
-        NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard'),
-        NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: 'Buyurtmalar'),
-        NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: 'Mahsulotlar'),
+      // Tartib HANDOFF.md 4-bo'lim: Market | Buyurtmalar | Bosh sahifa | Statistika | Profil
+      pages: [
+        const ProductsScreen(),
+        const SellerOrdersScreen(),
+        const SellerHomeScreen(),
+        const SellerStatsScreen(),
+        SellerProfileScreen(onLogout: () => onLogout(ref)),
       ],
       ordersTabIndex: 1,
-      onLogout: () => onLogout(ref),
     );
   }
 }
@@ -512,15 +514,10 @@ class _DriverShell extends ConsumerWidget {
 class _BiznesShell extends ConsumerStatefulWidget {
   const _BiznesShell({
     required this.pages,
-    required this.destinations,
-    required this.onLogout,
     this.ordersTabIndex,
   });
   final List<Widget> pages;
-  final List<NavigationDestination> destinations;
-  final VoidCallback onLogout;
   // Push bosilganda/WS orqali yangi buyurtma kelganda o'tiladigan tab.
-  // Faqat _SellerShell beradi (driver shell'da buyurtma tabi yo'q).
   final int? ordersTabIndex;
 
   @override
@@ -528,7 +525,7 @@ class _BiznesShell extends ConsumerStatefulWidget {
 }
 
 class _BiznesShellState extends ConsumerState<_BiznesShell> with WidgetsBindingObserver {
-  int _index = 0;
+  int _index = 2; // Bosh sahifa default
   SellerOrderEventsWsService? _orderWs;
 
   @override
@@ -580,18 +577,145 @@ class _BiznesShellState extends ConsumerState<_BiznesShell> with WidgetsBindingO
     super.dispose();
   }
 
+  void _go(int i) {
+    HapticFeedback.selectionClick();
+    setState(() => _index = i);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final shopAsync = ref.watch(myShopProvider);
+    final shop = shopAsync.when(data: (v) => v, error: (_, _) => null, loading: () => null);
+    if (shopAsync.hasValue && shop == null) {
+      // Hali do'kon yaratilmagan — savdo qilishdan oldin shu shart
+      return const MyShopScreen();
+    }
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: ui.AppColors.bg,
       body: IndexedStack(index: _index, children: widget.pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) {
-          HapticFeedback.selectionClick();
-          setState(() => _index = i);
-        },
-        destinations: widget.destinations,
+      bottomNavigationBar: ClipRect(
+        child: BackdropFilter(
+          filter: dart_ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            height: ui.AppSizes.bottomNav.h,
+            decoration: const BoxDecoration(
+              color: Color(0xF5FFFFFF),
+              border: Border(top: BorderSide(color: ui.AppColors.border)),
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(left: 8.w, right: 8.w, top: 8.h, bottom: 24.h),
+                  child: Row(
+                    children: [
+                      _SellerNavItem(
+                        icon: Icons.storefront_outlined,
+                        activeIcon: Icons.storefront,
+                        label: 'Market',
+                        isActive: _index == 0,
+                        onTap: () => _go(0),
+                      ),
+                      _SellerNavItem(
+                        icon: Icons.receipt_long_outlined,
+                        activeIcon: Icons.receipt_long,
+                        label: 'Buyurtmalar',
+                        isActive: _index == 1,
+                        onTap: () => _go(1),
+                      ),
+                      const Expanded(child: SizedBox()),
+                      _SellerNavItem(
+                        icon: Icons.insights_outlined,
+                        activeIcon: Icons.insights,
+                        label: 'Statistika',
+                        isActive: _index == 3,
+                        onTap: () => _go(3),
+                      ),
+                      _SellerNavItem(
+                        icon: Icons.person_outline,
+                        activeIcon: Icons.person,
+                        label: 'Profil',
+                        isActive: _index == 4,
+                        onTap: () => _go(4),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: -18.h,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: GestureDetector(
+                      onTap: () => _go(2),
+                      behavior: HitTestBehavior.opaque,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 52.w,
+                            height: 52.w,
+                            decoration: BoxDecoration(
+                              gradient: _index == 2 ? ui.AppGradients.primary : null,
+                              color: _index == 2 ? null : ui.AppColors.textSecondary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: ui.AppColors.surface, width: 4),
+                              boxShadow: ui.AppShadows.fab,
+                            ),
+                            child: const Icon(Icons.home_rounded, color: Colors.white, size: 22),
+                          ),
+                          SizedBox(height: 3.h),
+                          Text(
+                            'Bosh sahifa',
+                            style: ui.AppTextStyles.small.copyWith(
+                              color: _index == 2 ? ui.AppColors.text : ui.AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SellerNavItem extends StatelessWidget {
+  const _SellerNavItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isActive ? ui.AppColors.text : ui.AppColors.textSecondary;
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: EdgeInsets.only(top: 6.h),
+          child: Column(
+            children: [
+              Icon(isActive ? activeIcon : icon, color: color, size: 22),
+              SizedBox(height: 3.h),
+              Text(label, style: ui.AppTextStyles.small.copyWith(color: color)),
+            ],
+          ),
+        ),
       ),
     );
   }

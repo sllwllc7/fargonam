@@ -1,8 +1,7 @@
-"""Product modeli — do'kondagi mahsulot."""
+"""Product modeli — parent mahsulot (umumiy nom). Narx/stok endi ProductVariant'da."""
 from datetime import datetime
-from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -20,10 +19,11 @@ class Product(Base):
         ForeignKey("categories.id", ondelete="SET NULL"), nullable=True, index=True
     )
     name: Mapped[str] = mapped_column(String(200))
+    slug: Mapped[str | None] = mapped_column(String(220), unique=True, nullable=True, index=True)
+    brand: Mapped[str | None] = mapped_column(String(100), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    # Narx — so'mda, butun son ham, kasrli ham bo'lishi mumkin
-    price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
-    stock: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # Parent darajasidagi "asosiy" rasm (kartochka uchun) — variantlar o'z rasmini
+    # bersa shuni bekor qiladi, aks holda shu ko'rsatiladi
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

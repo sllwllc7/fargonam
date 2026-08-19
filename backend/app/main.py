@@ -23,6 +23,7 @@ from app.api import auth as auth_api
 from app.api import chat as chat_api
 from app.api import favorites as favorites_api
 from app.api import feed as feed_api
+from app.api import kits as kits_api
 from app.api import news as news_api
 from app.api import notifications as notifications_api
 from app.api import profile as profile_api
@@ -84,6 +85,7 @@ app.include_router(announcements_api.router)
 app.include_router(chat_api.router)
 app.include_router(favorites_api.router)
 app.include_router(feed_api.router)
+app.include_router(kits_api.router)
 app.include_router(news_api.router)
 app.include_router(notifications_api.router)
 app.include_router(profile_api.router)

@@ -4,15 +4,19 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'core/app_config_service.dart';
 import 'core/navigator_key.dart';
 import 'core/push_service.dart';
-import 'core/theme.dart';
+import 'core/theme/app_colors.dart';
+// Yangi Kutuku ThemeData — MaterialApp shuni ishlatadi. Ikkalasida ham
+// `AppTheme`/`AppColors` nomi bor bo'lgani uchun prefiks bilan import qilingan.
+import 'core/theme/app_theme.dart' as kutuku;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'features/auth/auth_providers.dart';
-import 'features/auth/login_screen.dart';
+import 'features/auth/telegram_login_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/shell/app_shell.dart';
 import 'features/splash/splash_screen.dart';
@@ -35,7 +39,13 @@ void main() async {
   // Rasm keshi — 200 MB, 1000 ta rasm
   PaintingBinding.instance.imageCache.maximumSizeBytes = 200 * 1024 * 1024;
   PaintingBinding.instance.imageCache.maximumSize = 1000;
-  runApp(const ProviderScope(child: FargonamApp()));
+  runApp(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      builder: (context, child) => const ProviderScope(child: FargonamApp()),
+    ),
+  );
 }
 
 /// Tema rejimi (light/dark) — global provider.
@@ -44,12 +54,12 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
   @override
   ThemeMode build() {
     _loadSaved();
-    return ThemeMode.dark;
+    return ThemeMode.light;
   }
 
   Future<void> _loadSaved() async {
     final prefs = await SharedPreferences.getInstance();
-    final isDark = prefs.getBool('is_dark_mode') ?? true;
+    final isDark = prefs.getBool('is_dark_mode') ?? false;
     state = isDark ? ThemeMode.dark : ThemeMode.light;
   }
 
@@ -71,7 +81,7 @@ class FargonamApp extends ConsumerWidget {
     onTokenExpired = () {
       ref.read(authControllerProvider.notifier).logout();
       navigatorKey.currentState?.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const TelegramLoginScreen()),
         (route) => false,
       );
     };
@@ -79,8 +89,8 @@ class FargonamApp extends ConsumerWidget {
       title: 'Fargonam',
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: kutuku.AppTheme.lightTheme,
+      darkTheme: kutuku.AppTheme.darkTheme,
       themeMode: themeMode,
       home: const _Root(),
     );
@@ -160,12 +170,12 @@ class _RootState extends ConsumerState<_Root> with WidgetsBindingObserver {
       builder: (_) => PopScope(
         canPop: false,
         child: AlertDialog(
-          backgroundColor: AppColors.surface,
+          backgroundColor: AppColorsDark.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text('Yangilanish kerak'),
           content: const Text(
             'Ilovaning yangi versiyasi chiqdi. Davom etish uchun yangilang.',
-            style: TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: AppColorsDark.textSecondary),
           ),
           actions: [
             FilledButton(
@@ -187,7 +197,7 @@ class _RootState extends ConsumerState<_Root> with WidgetsBindingObserver {
     }
     if (!_authChecked) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final user = ref.watch(authControllerProvider).user;
-    if (user == null) return const LoginScreen();
+    if (user == null) return const TelegramLoginScreen();
     return AppShell(key: appShellKey);
   }
 }
@@ -199,7 +209,7 @@ class _MaintenanceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColorsDark.background,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -211,11 +221,11 @@ class _MaintenanceScreen extends StatelessWidget {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceHigh,
+                    color: AppColorsDark.surfaceAlt,
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: const Icon(Icons.build_outlined,
-                      size: 52, color: AppColors.cream),
+                      size: 52, color: AppColorsDark.primary),
                 ),
                 const SizedBox(height: 28),
                 const Text(
@@ -223,7 +233,7 @@ class _MaintenanceScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: AppColorsDark.textPrimary,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -234,7 +244,7 @@ class _MaintenanceScreen extends StatelessWidget {
                       : 'Texnik ishlar olib borilmoqda.\nTez orada qaytamiz.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: AppColors.textSecondary,
+                    color: AppColorsDark.textSecondary,
                     fontSize: 15,
                     height: 1.5,
                   ),

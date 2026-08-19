@@ -75,9 +75,21 @@ class UpdateProfileRequest(BaseModel):
     full_name: str | None = Field(default=None, max_length=120)
 
 
+class AddPhoneRequest(BaseModel):
+    phone: str = Field(min_length=9, max_length=20)
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, v: str) -> str:
+        cleaned = v.strip().replace(" ", "").replace("-", "")
+        if not _PHONE_RE.match(cleaned):
+            raise ValueError("Telefon raqam formati noto'g'ri (masalan: +998901234567)")
+        return cleaned
+
+
 class UserOut(BaseModel):
     id: int
-    phone: str
+    phone: str | None
     full_name: str | None
     role: UserRole
     avatar_url: str | None = None
@@ -85,3 +97,17 @@ class UserOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ── Telegram login ──────────────────────────────────────────────
+
+class TelegramSessionResponse(BaseModel):
+    session_id: str
+    bot_url: str
+
+
+class TelegramSessionStatusResponse(BaseModel):
+    status: str  # "pending" | "confirmed"
+    access_token: str | None = None
+    refresh_token: str | None = None
+    token_type: str = "bearer"

@@ -37,6 +37,7 @@ class CategoryOut(BaseModel):
     name: str
     slug: str
     parent_id: int | None
+    product_count: int = 0
     model_config = {"from_attributes": True}
 
 
@@ -83,6 +84,7 @@ class ProductCreate(BaseModel):
     shop_id: int
     category_id: int | None = None
     name: str = Field(min_length=1, max_length=200)
+    brand: str | None = Field(default=None, max_length=100)
     description: str | None = None
     # mobile_seller joriy UI shu ikkitasini yuboradi — avtomatik "default"
     # variant yaratiladi (backend/app/api/products.py: create_product)
@@ -92,6 +94,7 @@ class ProductCreate(BaseModel):
 
 class ProductUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=200)
+    brand: str | None = Field(default=None, max_length=100)
     description: str | None = None
     # Berilsa — "default" variant yangilanadi (mobile_seller moslik)
     price: Decimal | None = Field(default=None, gt=0)
@@ -106,6 +109,7 @@ class ProductOut(BaseModel):
     category_id: int | None
     name: str
     slug: str | None = None
+    brand: str | None = None
     description: str | None
     image_url: str | None
     is_active: bool
@@ -183,6 +187,7 @@ class OrderOut(BaseModel):
     # xaridorni topib, savatni topshiradi
     pickup_code: str | None = None
     cancel_reason: str | None = None
+    note: str | None = None
     # Faqat buyurtma sotuvchisi, admin va xaridorning o'ziga ko'rinadi —
     # OrderOut faqat shu uch tomon uchun scoped endpoint'larda ishlatiladi
     # (GET /orders, GET /seller/orders, GET /admin/orders)
@@ -190,4 +195,53 @@ class OrderOut(BaseModel):
     customer_name: str | None = None
     created_at: datetime
     items: list[OrderItemOut]
+    model_config = {"from_attributes": True}
+
+
+# ========== Kit (ProductSet) — "Sinf to'plami" ==========
+class KitItemCreate(BaseModel):
+    variant_id: int
+    quantity: int = Field(ge=1, default=1)
+
+
+class KitItemOut(BaseModel):
+    id: int
+    variant_id: int
+    quantity: int
+    product_name: str | None = None
+    variant_name: str | None = None
+    price: int | None = None
+    line_total: int | None = None
+
+
+class KitCreate(BaseModel):
+    shop_id: int
+    name: str = Field(min_length=1, max_length=120)
+    grade_level: str | None = Field(default=None, max_length=20)
+    description: str | None = None
+    image_url: str | None = None
+    items: list[KitItemCreate] = Field(min_length=1)
+
+
+class KitUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    grade_level: str | None = Field(default=None, max_length=20)
+    description: str | None = None
+    image_url: str | None = None
+    is_active: bool | None = None
+    # Berilsa — barcha itemlar shu ro'yxat bilan almashtiriladi
+    items: list[KitItemCreate] | None = None
+
+
+class KitOut(BaseModel):
+    id: int
+    shop_id: int | None
+    name: str
+    grade_level: str | None
+    description: str | None
+    image_url: str | None
+    is_active: bool
+    created_at: datetime
+    items: list[KitItemOut] = Field(default_factory=list)
+    total: int = 0
     model_config = {"from_attributes": True}

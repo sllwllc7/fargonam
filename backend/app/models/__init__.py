@@ -12,6 +12,8 @@ from app.models.news import NewsPost
 from app.models.news_interaction import NewsComment, NewsLike
 from app.models.notification import Notification
 from app.models.product_image import ProductImage
+from app.models.product_variant import ProductVariant
+from app.models.product_set import ProductSet, ProductSetItem
 from app.models.review import Review
 from app.models.ride_rating import RideRating
 from app.models.saved_address import SavedAddress
@@ -34,6 +36,9 @@ __all__ = [
     "NewsPost",
     "Notification",
     "ProductImage",
+    "ProductVariant",
+    "ProductSet",
+    "ProductSetItem",
     "Review",
     "RideRating",
     "SavedAddress",

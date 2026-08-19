@@ -1,13 +1,16 @@
-import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../core/theme.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_gradients.dart';
+import '../../core/theme/app_text_styles.dart';
 
-/// Fargonam AI assistent — oddiy qoida asosida ishlovchi chatbot.
-/// Kelajakda Claude/OpenAI API bilan yaxshilanadi.
+/// Fargonam AI assistent — HANDOFF.md 2-bo'lim, 12-band. Qoida asosidagi
+/// chatbot (kelajakda backend proxy orqali Gemini bilan almashtiriladi —
+/// API kaliti hech qachon ilova kodiga qo'yilmaydi).
 class AiAssistantScreen extends StatefulWidget {
   const AiAssistantScreen({super.key});
 
@@ -24,11 +27,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
   @override
   void initState() {
     super.initState();
-    // Xush kelibsiz xabari
     _messages.add(_Message(
-      text: 'Salom! Men Fargonam AI yordamchisiman. '
-          'Sizga marketplace, taxi, buyurtmalar haqida yordam bera olaman.\n\n'
-          'Qanday yordam kerak?',
+      text: 'Assalomu alaykum! Men Fargonam AI yordamchisiman. Mahsulot tanlash, sinf '
+          'to\'plamlari yoki buyurtmangiz haqida so\'rashingiz mumkin.',
       isUser: false,
     ));
   }
@@ -40,21 +41,19 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     super.dispose();
   }
 
-  Future<void> _send() async {
-    final text = _ctrl.text.trim();
-    if (text.isEmpty || _typing) return;
+  Future<void> _send([String? text]) async {
+    final value = (text ?? _ctrl.text).trim();
+    if (value.isEmpty || _typing) return;
     HapticFeedback.lightImpact();
     setState(() {
-      _messages.add(_Message(text: text, isUser: true));
+      _messages.add(_Message(text: value, isUser: true));
       _ctrl.clear();
       _typing = true;
     });
     _scrollToBottom();
 
-    // Qoida asosidagi javob (100-500ms kechikish bilan tabiiy ko'rinadi)
-    await Future.delayed(
-        Duration(milliseconds: 400 + Random().nextInt(700)));
-    final reply = _generateReply(text);
+    await Future.delayed(Duration(milliseconds: 400 + Random().nextInt(700)));
+    final reply = _generateReply(value);
     if (!mounted) return;
     setState(() {
       _messages.add(_Message(text: reply, isUser: false));
@@ -66,261 +65,142 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollCtrl.hasClients) {
-        _scrollCtrl.animateTo(
-          _scrollCtrl.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+        _scrollCtrl.animateTo(_scrollCtrl.position.maxScrollExtent, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
       }
     });
   }
 
-  /// Oddiy kalit so'z asosidagi javob — keyinroq LLM bilan almashtiriladi
   String _generateReply(String input) {
     final q = input.toLowerCase();
-
-    // Taxi
-    if (q.contains('taksi') ||
-        q.contains('taxi') ||
-        q.contains('mashina')) {
-      return 'Taxi chaqirish uchun pastdagi "Taxi" tabini bosing. '
-          'Keyin manzilni kiriting yoki xaritada tanlang. '
-          'Narx avtomatik hisoblanadi.';
+    if (q.contains('taksi') || q.contains('taxi') || q.contains('mashina')) {
+      return 'Taxi chaqirish uchun pastdagi "Taxi" tabini bosing. Hozircha bu bo\'lim "Tez orada" holatida — ishga tushganda sizga xabar beramiz.';
     }
-
-    // Buyurtma
+    if (q.contains('sinf') || q.contains('to\'plam') || q.contains('toplam')) {
+      return 'Market bo\'limidagi "Sinflar uchun tayyor mahsulotlar" qatoridan o\'z sinfingizga mos to\'plamni tanlashingiz mumkin — hammasi bitta to\'plamda, alohida qidirish shart emas.';
+    }
     if (q.contains('buyurtma') || q.contains('order')) {
-      return 'Buyurtma berish uchun: Marketplace\'dan mahsulotni tanlang → '
-          'savatga qo\'shing → "Buyurtma berish" tugmasini bosing. '
-          'Buyurtmalar tarixini Profil > Buyurtmalarim bo\'limida ko\'rishingiz mumkin.';
+      return 'Buyurtma berish uchun: Market\'dan mahsulotni tanlang → savatga qo\'shing → "Buyurtmani rasmiylashtirish"ni bosing. Holatini Profil → Buyurtmalarim bo\'limida kuzatishingiz mumkin.';
     }
-
-    // Do'kon / marketplace
-    if (q.contains('do\'kon') ||
-        q.contains('dokon') ||
-        q.contains('marketplace') ||
-        q.contains('mahsulot')) {
-      return 'Marketplace tabida Farg\'ona vodiysining barcha do\'konlari bor. '
-          'Qidiruvdan foydalaning yoki kategoriya tanlang. '
-          'Yoqqan mahsulotni ❤ tugmasi bilan sevimlilarga qo\'shing.';
+    if (q.contains('ruchka')) {
+      return 'Eng ommabop tanlov — Alfa ruchka. Premium sovg\'a uchun boshqa brendlar ham bor. Ruchka kategoriyasida ko\'plab mahsulot mavjud.';
     }
-
-    // Parol
-    if (q.contains('parol') || q.contains('login')) {
-      return 'Parolni Profil > "Parolni o\'zgartirish" bo\'limidan yangilashingiz mumkin. '
-          'Agar parolni unutgan bo\'lsangiz, qo\'llab-quvvatlash xizmatiga murojaat qiling.';
+    if (q.contains('do\'kon') || q.contains('dokon') || q.contains('market') || q.contains('mahsulot')) {
+      return 'Market tabida barcha kategoriyalar bor. Qidiruvdan foydalaning yoki kategoriya tanlang. Yoqqan mahsulotni ♥ tugmasi bilan sevimlilarga qo\'shing.';
     }
-
-    // Yetkazib berish
     if (q.contains('yetkaz') || q.contains('delivery')) {
-      return 'Yetkazib berish narxi va vaqti do\'konga bog\'liq. '
-          'Buyurtma berishdan oldin aniq narx va vaqt ko\'rsatiladi. '
-          'Yetkazib berish manzilini Profil > Manzillarim bo\'limida saqlab qo\'ying.';
+      return 'Yetkazib berish bepul. To\'lov kuryerga naqd yoki karta orqali. Manzilingizni Profil → Manzillarim bo\'limida saqlab qo\'ying.';
     }
-
-    // Sevimlilar
-    if (q.contains('sevimli') || q.contains('favorite') || q.contains('yoqqan')) {
-      return 'Mahsulot ustidagi ❤ tugmasini bosing — u sevimlilaringizga qo\'shiladi. '
-          'Sevimlilaringizni Profil > Sevimlilar bo\'limida ko\'rishingiz mumkin.';
+    if (q.contains('sevimli') || q.contains('yoqqan')) {
+      return 'Mahsulot ustidagi ♥ tugmasini bosing — sevimlilaringizga qo\'shiladi. Ularni Profil → Sevimlilar bo\'limida ko\'rasiz.';
     }
-
-    // Salomlashuv
-    if (q.contains('salom') || q.contains('hey') || q.contains('hi')) {
+    if (q.contains('salom') || q.contains('hey')) {
       return 'Va alaykum assalom! Sizga qanday yordam berishim mumkin?';
     }
-
-    // Rahmat
-    if (q.contains('rahmat') || q.contains('tashakkur') || q.contains('thanks')) {
+    if (q.contains('rahmat') || q.contains('tashakkur')) {
       return 'Sog\' bo\'ling! Yana savolingiz bo\'lsa, men shu yerdaman.';
     }
-
-    // Default
-    return 'Men hozir oddiy yordamchiman va barcha savollarga javob bera olmayman. '
-        'Lekin quyidagi mavzularda yordam bera olaman:\n\n'
-        '• 🛒 Marketplace va mahsulotlar\n'
-        '• 🚖 Taxi va sayohatlar\n'
-        '• 📦 Buyurtmalar\n'
-        '• ❤️ Sevimlilar\n'
-        '• 🔐 Parol va hisob\n'
-        '• 📍 Manzillar\n\n'
-        'Shulardan biri haqida so\'rang!';
+    return 'Bu demo javob — ilova serverga ulangach, AI orqali haqiqiy javoblar shu yerda ko\'rinadi. Hozircha mahsulotlar, sinf to\'plamlari va buyurtmalar haqida so\'rab ko\'ring.';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        surfaceTintColor: Colors.transparent,
-        title: Row(
+      body: SafeArea(
+        child: Column(
           children: [
             Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.cream, AppColors.creamDim],
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.cream.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.auto_awesome,
-                  color: AppColors.midnightIndigo, size: 22),
-            ),
-            const SizedBox(width: 12),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Fargonam AI',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  'Yordamchi',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-      body: Column(
-        children: [
-          // Xabarlar
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollCtrl,
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              itemCount: _messages.length + (_typing ? 1 : 0),
-              itemBuilder: (context, i) {
-                if (i == _messages.length && _typing) {
-                  return const _TypingBubble();
-                }
-                return _MessageBubble(message: _messages[i]);
-              },
-            ),
-          ),
-          // Tez so'rov chiplar (birinchi xabarda ko'rinadi)
-          if (_messages.length <= 1)
-            Container(
-              height: 44,
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 10.h),
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
+              child: Row(
                 children: [
-                  _QuickChip(
-                    label: '🛒 Marketplace',
-                    onTap: () {
-                      _ctrl.text = 'Marketplace qanday ishlaydi?';
-                      _send();
-                    },
+                  Container(
+                    width: 40.w,
+                    height: 40.w,
+                    decoration: BoxDecoration(gradient: AppGradients.primary, shape: BoxShape.circle),
+                    child: const Icon(Icons.auto_awesome, color: Colors.white, size: 19),
                   ),
-                  _QuickChip(
-                    label: '🚖 Taxi',
-                    onTap: () {
-                      _ctrl.text = 'Taxi qanday chaqiraman?';
-                      _send();
-                    },
-                  ),
-                  _QuickChip(
-                    label: '📦 Buyurtmalar',
-                    onTap: () {
-                      _ctrl.text = 'Buyurtma qanday beriladi?';
-                      _send();
-                    },
-                  ),
-                  _QuickChip(
-                    label: '📍 Manzil',
-                    onTap: () {
-                      _ctrl.text = 'Manzillarimni qanday saqlayman?';
-                      _send();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          // Input
-          Container(
-            padding: EdgeInsets.fromLTRB(
-                12, 10, 8, MediaQuery.of(context).padding.bottom + 10),
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              border: Border(
-                top: BorderSide(color: AppColors.divider, width: 0.5),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _ctrl,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary, fontSize: 15),
-                    decoration: InputDecoration(
-                      hintText: 'Savolingizni yozing...',
-                      hintStyle:
-                          const TextStyle(color: AppColors.textMuted),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: AppColors.surfaceHigh,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 12),
-                      isDense: true,
-                    ),
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _send(),
-                    maxLines: 4,
-                    minLines: 1,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: _send,
-                  child: Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColors.cream, AppColors.creamDim],
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.cream.withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Fargonam AI', style: AppTextStyles.cardTitle.copyWith(fontSize: 17)),
+                        Row(
+                          children: [
+                            Container(width: 7, height: 7, decoration: const BoxDecoration(color: AppColors.accent, shape: BoxShape.circle)),
+                            SizedBox(width: 5.w),
+                            Text('Onlayn · yordamga tayyor', style: AppTextStyles.small.copyWith(fontSize: 11.5, color: AppColors.textSecondary)),
+                          ],
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.send,
-                        color: AppColors.midnightIndigo, size: 20),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollCtrl,
+                padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+                itemCount: _messages.length + (_typing ? 1 : 0) + (_messages.length <= 1 ? 1 : 0),
+                itemBuilder: (context, i) {
+                  if (i < _messages.length) return _MessageBubble(message: _messages[i]);
+                  if (_typing && i == _messages.length) return const _TypingBubble();
+                  return Padding(
+                    padding: EdgeInsets.only(top: 6.h),
+                    child: Wrap(
+                      spacing: 8.w,
+                      runSpacing: 8.h,
+                      children: [
+                        _QuickChip(label: '1-sinf uchun nima kerak?', onTap: () => _send('1-sinf uchun nima kerak?')),
+                        _QuickChip(label: 'Qaysi ruchka yaxshi?', onTap: () => _send('Qaysi ruchka yaxshi?')),
+                        _QuickChip(label: 'Buyurtmam qayerda?', onTap: () => _send('Buyurtmam qayerda?')),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 12.h),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(999.r), border: Border.all(color: AppColors.borderStrong)),
+                      child: TextField(
+                        controller: _ctrl,
+                        style: AppTextStyles.body.copyWith(color: AppColors.primaryDark, fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: 'Savolingizni yozing...',
+                          hintStyle: AppTextStyles.body.copyWith(color: AppColors.textMuted, fontSize: 14),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 13.h),
+                          isDense: true,
+                        ),
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _send(),
+                        maxLines: 4,
+                        minLines: 1,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 9.w),
+                  GestureDetector(
+                    onTap: () => _send(),
+                    child: Container(
+                      width: 46.w,
+                      height: 46.w,
+                      decoration: BoxDecoration(gradient: AppGradients.primary, shape: BoxShape.circle, boxShadow: [const BoxShadow(color: Color(0x4D6D28D9), blurRadius: 14, offset: Offset(0, 6))]),
+                      child: const Icon(Icons.send, color: Colors.white, size: 18),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -332,78 +212,36 @@ class _Message {
   _Message({required this.text, required this.isUser});
 }
 
-class _MessageBubble extends StatefulWidget {
+class _MessageBubble extends StatelessWidget {
   const _MessageBubble({required this.message});
   final _Message message;
 
   @override
-  State<_MessageBubble> createState() => _MessageBubbleState();
-}
-
-class _MessageBubbleState extends State<_MessageBubble>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 280))
-      ..forward();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final isUser = widget.message.isUser;
-    return FadeTransition(
-      opacity: _ctrl,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: Offset(isUser ? 0.2 : -0.2, 0),
-          end: Offset.zero,
-        ).animate(
-            CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic)),
-        child: Align(
-          alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.78),
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(
-                horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: isUser ? AppColors.cream : AppColors.surfaceHigh,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(20),
-                topRight: const Radius.circular(20),
-                bottomLeft: Radius.circular(isUser ? 20 : 4),
-                bottomRight: Radius.circular(isUser ? 4 : 20),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+    final isUser = message.isUser;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
+      builder: (context, t, child) => Opacity(opacity: t, child: Transform.translate(offset: Offset(0, (1 - t) * 8), child: child)),
+      child: Align(
+        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+          margin: EdgeInsets.only(bottom: 10.h),
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 11.h),
+          decoration: BoxDecoration(
+            gradient: isUser ? AppGradients.primary : null,
+            color: isUser ? null : AppColors.surface,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(16),
+              topRight: const Radius.circular(16),
+              bottomLeft: Radius.circular(isUser ? 16 : 4),
+              bottomRight: Radius.circular(isUser ? 4 : 16),
             ),
-            child: Text(
-              widget.message.text,
-              style: TextStyle(
-                fontSize: 14.5,
-                height: 1.45,
-                color: isUser
-                    ? AppColors.midnightIndigo
-                    : AppColors.textPrimary,
-              ),
-            ),
+            boxShadow: const [BoxShadow(color: Color(0x0D171327), blurRadius: 2, offset: Offset(0, 1))],
           ),
+          child: Text(message.text, style: AppTextStyles.body.copyWith(fontSize: 14, height: 1.5, color: isUser ? Colors.white : AppColors.primaryDark)),
         ),
       ),
     );
@@ -412,21 +250,17 @@ class _MessageBubbleState extends State<_MessageBubble>
 
 class _TypingBubble extends StatefulWidget {
   const _TypingBubble();
-
   @override
   State<_TypingBubble> createState() => _TypingBubbleState();
 }
 
-class _TypingBubbleState extends State<_TypingBubble>
-    with SingleTickerProviderStateMixin {
+class _TypingBubbleState extends State<_TypingBubble> with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 900))
-      ..repeat();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat();
   }
 
   @override
@@ -440,41 +274,22 @@ class _TypingBubbleState extends State<_TypingBubble>
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceHigh,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-            bottomLeft: Radius.circular(4),
-            bottomRight: Radius.circular(20),
-          ),
-        ),
+        margin: EdgeInsets.only(bottom: 10.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 13.h),
+        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16.r), border: Border.all(color: AppColors.border)),
         child: AnimatedBuilder(
           animation: _ctrl,
-          builder: (_, _) {
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(3, (i) {
-                final phase = (_ctrl.value + i * 0.3) % 1.0;
-                final opacity = (sin(phase * pi * 2) + 1) / 2;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      color: AppColors.cream
-                          .withValues(alpha: 0.3 + opacity * 0.7),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                );
-              }),
-            );
-          },
+          builder: (_, _) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(3, (i) {
+              final phase = (_ctrl.value + i * 0.3) % 1.0;
+              final opacity = (sin(phase * pi * 2) + 1) / 2;
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 3.w),
+                child: Container(width: 7, height: 7, decoration: BoxDecoration(color: AppColors.textMuted.withValues(alpha: 0.3 + opacity * 0.7), shape: BoxShape.circle)),
+              );
+            }),
+          ),
         ),
       ),
     );
@@ -488,31 +303,15 @@ class _QuickChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceHigh,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-                color: AppColors.cream.withValues(alpha: 0.2)),
-          ),
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppColors.cream,
-            ),
-          ),
-        ),
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(999.r), border: Border.all(color: AppColors.borderStrong)),
+        child: Text(label, style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13, color: AppColors.text)),
       ),
     );
   }

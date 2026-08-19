@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
 import 'navigator_key.dart';
-import 'theme.dart';
+import 'theme/app_colors.dart';
 import '../features/chat/conversations_screen.dart';
 import '../features/notifications/notifications_screen.dart';
 import '../features/orders/orders_screen.dart';
@@ -194,10 +194,10 @@ class _InAppBannerState extends State<_InAppBanner> with SingleTickerProviderSta
   };
 
   Color get _color => switch (widget.type) {
-    'order' || 'seller_order' => AppColors.info,
-    'chat' => AppColors.success,
-    'ride' => AppColors.warning,
-    _ => AppColors.cream,
+    'order' || 'seller_order' => AppColorsDark.primary,
+    'chat' => AppColorsDark.success,
+    'ride' => const Color(0xFFC77B1E), // DESIGN.md warning
+    _ => AppColorsDark.primary,
   };
 
   @override
@@ -216,7 +216,7 @@ class _InAppBannerState extends State<_InAppBanner> with SingleTickerProviderSta
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: AppColorsDark.surface,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: _color.withValues(alpha: 0.3)),
                 boxShadow: [
@@ -246,12 +246,12 @@ class _InAppBannerState extends State<_InAppBanner> with SingleTickerProviderSta
                         Text(widget.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
                         if (widget.body.isNotEmpty)
                           Text(widget.body, maxLines: 2, overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                              style: const TextStyle(fontSize: 13, color: AppColorsDark.textSecondary)),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, size: 16, color: AppColors.textMuted),
+                    icon: Icon(Icons.close, size: 16, color: AppColorsDark.textSecondary.withValues(alpha: 0.7)),
                     onPressed: widget.onDismiss,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 28, minHeight: 28),

@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../core/theme.dart';
+import '../../core/theme/app_colors.dart';
 
 /// Nominatim (OpenStreetMap) orqali manzil qidirish
 class NominatimService {
@@ -141,14 +141,14 @@ class _AddressInputFieldState extends State<AddressInputField> {
       children: [
         TextField(
           controller: widget.controller,
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
+          style: const TextStyle(color: AppColorsDark.textPrimary, fontSize: 15),
           onChanged: _onChanged,
           onTap: () {
             if (_suggestions.isNotEmpty) setState(() => _showSuggestions = true);
           },
           decoration: InputDecoration(
             hintText: widget.hint,
-            hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+            hintStyle: TextStyle(color: AppColorsDark.textSecondary.withValues(alpha: 0.7), fontSize: 14),
             prefixIcon: Padding(
               padding: const EdgeInsets.all(14),
               child: Icon(widget.icon, color: widget.iconColor, size: 20),
@@ -167,9 +167,9 @@ class _AddressInputFieldState extends State<AddressInputField> {
             margin: const EdgeInsets.symmetric(horizontal: 8),
             constraints: const BoxConstraints(maxHeight: 180),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColorsDark.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.divider, width: 0.5),
+              border: Border.all(color: AppColorsDark.border, width: 0.5),
             ),
             child: ListView.builder(
               shrinkWrap: true,

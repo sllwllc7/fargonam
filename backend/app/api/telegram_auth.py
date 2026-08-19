@@ -61,6 +61,24 @@ async def create_session(request: Request, role: str = "buyer"):
         role = "buyer"
     session_id = uuid.uuid4().hex
     redis = get_redis()
+
+    if settings.DEBUG:
+        # Lokal dev'da bot tasdiqlashni talab qilmaymiz — sessiya darhol
+        # "confirmed" bo'ladi. Production'da DEBUG har doim majburan false
+        # (deploy_backend.sh), shu sababli bu bypass u yerda hech qachon
+        # ishlamaydi.
+        user_id = await _get_or_create_dev_user(role)
+        await redis.set(
+            f"{_SESSION_PREFIX}{session_id}",
+            json.dumps({"status": "confirmed", "user_id": user_id}),
+            ex=_SESSION_TTL,
+        )
+        logger.warning("DEBUG=true: Telegram tasdiqlash chetlab o'tildi (dev user_id=%s)", user_id)
+        return TelegramSessionResponse(
+            session_id=session_id,
+            bot_url=f"https://t.me/{settings.TELEGRAM_BOT_USERNAME}?start={session_id}",
+        )
+
     await redis.set(
         f"{_SESSION_PREFIX}{session_id}",
         json.dumps({"status": "pending", "role": role}),
@@ -95,6 +113,29 @@ async def poll_session(request: Request, session_id: str):
         access_token=create_access_token(user_id),
         refresh_token=await create_refresh_token(user_id),
     )
+
+
+_DEV_TELEGRAM_IDS = {"buyer": -1001, "seller": -1002}
+
+
+async def _get_or_create_dev_user(role: str) -> int:
+    """Faqat DEBUG=true rejimida chaqiriladi — sentinel telegram_id bilan
+    doimiy test foydalanuvchisini topadi yoki yaratadi."""
+    telegram_id = _DEV_TELEGRAM_IDS[role]
+    async with AsyncSessionLocal() as db:
+        user = await db.scalar(select(User).where(User.telegram_id == telegram_id))
+        if user is None:
+            user = User(
+                telegram_id=telegram_id,
+                phone=None,
+                full_name=f"Dev {role.capitalize()}",
+                role=UserRole(role),
+                hashed_password=None,
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+        return user.id
 
 
 async def process_telegram_update(update: dict, db: AsyncSession) -> None:
