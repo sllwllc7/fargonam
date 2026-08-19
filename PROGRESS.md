@@ -164,6 +164,8 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | 1 | LEGACY tokenlar bitta faylga yig'ildi, barrel'dan chiqarildi | `packages/fargonam_ui/lib/theme/legacy_tokens.dart` | — | 0/0/0 | ✅ |
 | 3 | `AppPageRoute`/`pushAppRoute` (320ms screenIn), `ScreenFadeIn`, `FadeUpItem` (stagger) — 5.4/5.2 umumiy vosita | `packages/fargonam_ui/lib/src/app_page_route.dart`, `widgets/{screen_fade_in,fade_up_item}.dart` | — | 0/0/0 | ✅ |
 | 3 | 1/17: Bosh sahifa (home) — to'liq qayta yozildi (dc.html aynan) | `mobile_user/lib/features/home/home_feed_screen.dart` | 11/11 yashil (3 yangi: render, FAB yo'q/bor+son) | 0/0/0 | ✅ |
+| 1 | `AppRadius.card` 17→18, `AppTypography.h1` -.9→-.8 (haqiqiy qurilma skrinshotida topilgan Phase 1 xatolari) | `packages/fargonam_ui/lib/src/{app_radius,app_typography}.dart` | — | 0/0/0 | ✅ |
+| 3 | 2/17: Market (catalog) — to'liq qayta yozildi (dc.html aynan, 18 ta kategoriya SVG ikonkasi, "Savatda N ta bor" yashil badge) | `mobile_user/lib/features/marketplace/catalog_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -233,10 +235,28 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   yozilgan-u, hech qayerda qo'llanilmagan edi — endi `ScreenFadeIn`/`FadeUpItem` orqali
   qo'llanadi. Bu uch tuzatish umumiy vosita sifatida qilingani uchun qolgan 16 ekranga
   ham avtomatik qo'llanadi.
+- [2026-08-19] Foydalanuvchi so'rovi bilan haqiqiy qurilmada (`adb screencap`) har bir tab
+  skrinshot qilindi. Topilgan haqiqiy xatolar (barchasi tuzatildi):
+  1. Tab bar 3px `RenderFlex` overflow (qizil-sariq chiziq pastda) — label matn balandligi
+     taxmindagidan baland edi. `floating_tab_bar.dart`da label `height:1.0` qilindi.
+  2. Bosh sahifa faol buyurtma kartasi xom `id`ni ko'rsatardi ("4"), boshqa barcha
+     ekranlar `FN-4` formatida — endi mos.
+  3. **Phase 1'ning o'zida xato topildi**: `AppRadius.card` 17 deb yozilgan edi, lekin
+     dc.html'da eng ko'p ishlatiladigan (va Bosh sahifa/Market qatorlarida haqiqatan
+     kerak bo'lgan) qiymat 18 ekan; `AppTypography.h1` letterSpacing -.9 deb yozilgan
+     edi, ikkala haqiqiy 28px sarlavha (`Kategoriyalar`, `Profil`) esa -.8 ishlatadi.
+     Ikkalasi ham to'g'irlandi, Bosh sahifadagi mos hardcode qiymatlar ham tokenga
+     o'tkazildi.
+  Market/Kategoriyalar bo'sh ko'rinishi **kod xatosi emas** — `GET /categories` haqiqatan
+  ham `[]` qaytaradi (dev bazada kategoriya yo'q). Bu backend/ma'lumot masalasi, mock
+  yozib "tuzatilmaydi" (5.0).
 
 ### Backend farqlari
-(2-bosqich hali bajarilmadi — `buildData()` va mavjud model/repository solishtiruvi shu
-yerga keyingi seansda yoziladi.)
+- [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),
+  garchi `products` jadvalida test mahsulotlari bor. Kategoriyasiz UI to'g'ri ishlaydi
+  (bo'sh holat ko'rsatiladi), lekin haqiqiy ko'rinish uchun kategoriya ma'lumoti kerak.
+(2-bosqich hali to'liq bajarilmadi — `buildData()` va mavjud model/repository to'liq
+solishtiruvi shu yerga keyingi seansda yoziladi.)
 
 ### APK
 user: `mobile_user/build/app/outputs/flutter-apk/app-debug.apk` (debug, muvaffaqiyatli)

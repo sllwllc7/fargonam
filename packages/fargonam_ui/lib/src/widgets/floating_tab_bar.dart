@@ -124,7 +124,7 @@ class _TabButtonState extends State<_TabButton> {
                 ),
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 1),
             AnimatedContainer(
               duration: AppMotion.tabTransform,
               curve: AppMotion.tabSpring,
@@ -134,6 +134,7 @@ class _TabButtonState extends State<_TabButton> {
                 curve: Curves.ease,
                 style: AppTypography.small.copyWith(
                   fontSize: 11,
+                  height: 1.0,
                   color: active ? AppColors.tabLabelActive : AppColors.tabLabelInactive,
                 ),
                 child: Text(widget.item.label),

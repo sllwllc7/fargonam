@@ -16,8 +16,8 @@ void main() {
       (child) => ProviderScope(
         overrides: [
           categoriesProvider.overrideWith((ref) async => [
-                CategoryItem(id: 1, name: 'Ruchka', productCount: 12),
-                CategoryItem(id: 2, name: 'Daftar', productCount: 8),
+                CategoryItem(id: 1, name: 'Ruchka', slug: 'ruchka', productCount: 12),
+                CategoryItem(id: 2, name: 'Daftar', slug: 'daftar', productCount: 8),
               ]),
           kitsProvider.overrideWith((ref) async => <Kit>[]),
           cartProvider.overrideWith((ref) async => <Map<String, dynamic>>[]),

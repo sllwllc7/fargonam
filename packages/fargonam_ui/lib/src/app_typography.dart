@@ -24,8 +24,8 @@ class AppTypography {
         color: color,
       );
 
-  /// Ekran sarlavhasi (katta) — 28px/w800/-.9px.
-  static TextStyle get h1 => _figtree(size: 28, weight: FontWeight.w800, letterSpacing: -0.9);
+  /// Ekran sarlavhasi (katta) — 28px/w800/-.8px.
+  static TextStyle get h1 => _figtree(size: 28, weight: FontWeight.w800, letterSpacing: -0.8);
 
   /// Ekran sarlavhasi (o'rta) — 23px/w800/-.6px.
   static TextStyle get h2 => _figtree(size: 23, weight: FontWeight.w800, letterSpacing: -0.6);

@@ -124,7 +124,7 @@ class HomeFeedScreen extends ConsumerWidget {
                       delayMs: 60,
                       iconSvg: _truckIconSvg,
                       iconColor: AppColors.textMuted,
-                      title: '${activeOrder['id']} · ${_statusLabel(activeOrder['status'] as String? ?? '')}',
+                      title: 'FN-${activeOrder['id']} · ${_statusLabel(activeOrder['status'] as String? ?? '')}',
                       subtitle: 'Buyurtmani kuzatish uchun bosing',
                       onTap: () {
                         HapticFeedback.lightImpact();
@@ -362,7 +362,7 @@ class _HeroMarketCardState extends State<_HeroMarketCard> {
                         end: Alignment.bottomCenter,
                         colors: [Colors.white, Color(0xFFEDF1F7)],
                       ),
-                      borderRadius: BorderRadius.circular(11),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                       border: Border.all(color: const Color(0x1F171327)),
                       boxShadow: const [BoxShadow(color: Color(0x401E0F05), blurRadius: 8, offset: Offset(0, 3))],
                     ),
@@ -423,7 +423,7 @@ class _RowCardState extends State<_RowCard> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: AppColors.border),
         boxShadow: AppShadows.card,
       ),
@@ -502,7 +502,7 @@ class _NewsCardState extends State<_NewsCard> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadius.card),
             border: Border.all(color: AppColors.border),
             boxShadow: AppShadows.card,
           ),
