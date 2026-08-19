@@ -1,4 +1,5 @@
 import 'package:fargonam_ui/fargonam_ui.dart';
+import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,11 +18,11 @@ class SellerStatsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(sellerStatsProvider);
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: LegacyColors.bg,
       body: SafeArea(
         child: RefreshIndicator(
-          color: AppColors.primary,
-          backgroundColor: AppColors.surface,
+          color: LegacyColors.primary,
+          backgroundColor: LegacyColors.surface,
           onRefresh: () async {
             HapticFeedback.lightImpact();
             ref.invalidate(sellerStatsProvider);
@@ -29,7 +30,7 @@ class SellerStatsScreen extends ConsumerWidget {
           child: ListView(
             padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
             children: [
-              Text('Statistika', style: AppTextStyles.h1.copyWith(color: AppColors.primaryDark, fontSize: 28)),
+              Text('Statistika', style: LegacyTextStyles.h1.copyWith(color: LegacyColors.primaryDark, fontSize: 28)),
               SizedBox(height: 18.h),
               statsAsync.when(
                 loading: () => const _StatsGridSkeleton(),
@@ -82,22 +83,22 @@ class SellerStatsScreen extends ConsumerWidget {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: LegacyColors.surface,
                   borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: LegacyColors.border),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 4.h),
                       decoration: BoxDecoration(color: const Color(0xFFEDE9FE), borderRadius: BorderRadius.circular(7.r)),
-                      child: Text('Tez orada', style: AppTextStyles.small.copyWith(color: AppColors.textMuted)),
+                      child: Text('Tez orada', style: LegacyTextStyles.small.copyWith(color: LegacyColors.textMuted)),
                     ),
                     SizedBox(width: 10.w),
                     Expanded(
                       child: Text(
                         'Kunlik/haftalik savdo va eng ko\'p sotilgan mahsulotlar tahlili',
-                        style: AppTextStyles.caption,
+                        style: LegacyTextStyles.caption,
                       ),
                     ),
                   ],
@@ -129,9 +130,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: LegacyColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: LegacyColors.border),
         boxShadow: AppShadows.card,
       ),
       child: Column(
@@ -141,13 +142,13 @@ class _StatCard extends StatelessWidget {
             width: 38.w,
             height: 38.w,
             decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-            child: Icon(icon, color: AppColors.text, size: 19.sp),
+            child: Icon(icon, color: LegacyColors.text, size: 19.sp),
           ),
           SizedBox(height: 12.h),
           Text(value,
-              maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.cardTitle.copyWith(fontSize: 16)),
+              maxLines: 1, overflow: TextOverflow.ellipsis, style: LegacyTextStyles.cardTitle.copyWith(fontSize: 16)),
           SizedBox(height: 2.h),
-          Text(label, style: AppTextStyles.caption),
+          Text(label, style: LegacyTextStyles.caption),
         ],
       ),
     );

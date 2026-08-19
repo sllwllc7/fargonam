@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
+import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -198,14 +199,14 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: LegacyColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: const Text('Mahsulotni o\'chirish'),
         content: Text('"${widget.product.name}" ni o\'chirmoqchimisiz?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Yo\'q')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            style: FilledButton.styleFrom(backgroundColor: LegacyColors.danger),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('O\'chirish'),
           ),
@@ -223,7 +224,7 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.response?.data['detail']?.toString() ?? 'O\'chirishda xato'),
-            backgroundColor: AppColors.danger,
+            backgroundColor: LegacyColors.danger,
           ),
         );
       }
@@ -235,15 +236,15 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: LegacyColors.bg,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        title: Text('Tahrirlash', style: AppTextStyles.title),
+        backgroundColor: LegacyColors.bg,
+        title: Text('Tahrirlash', style: LegacyTextStyles.title),
         actions: [
           IconButton(
             icon: _deleting
                 ? SizedBox(width: 18.w, height: 18.w, child: const CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.delete_outline, color: AppColors.danger),
+                : const Icon(Icons.delete_outline, color: LegacyColors.danger),
             onPressed: _deleting ? null : _deleteProduct,
           ),
         ],
@@ -259,9 +260,9 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
                 child: Container(
                   height: 160.h,
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: LegacyColors.surface,
                     borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: LegacyColors.border),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: Stack(
@@ -274,10 +275,10 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
                           '${AppConfig.apiBaseUrl}${widget.product.imageUrl}',
                           fit: BoxFit.cover,
                           errorBuilder: (_, _, _) =>
-                              Icon(Icons.image_not_supported_outlined, size: 36.sp, color: AppColors.textMuted),
+                              Icon(Icons.image_not_supported_outlined, size: 36.sp, color: LegacyColors.textMuted),
                         )
                       else
-                        Icon(Icons.image_outlined, size: 44.sp, color: AppColors.textMuted),
+                        Icon(Icons.image_outlined, size: 44.sp, color: LegacyColors.textMuted),
                       Positioned(
                         bottom: 8,
                         right: 8,
@@ -336,10 +337,10 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
                       children: [
                         Expanded(
                           child: Text(label,
-                              style: AppTextStyles.body
-                                  .copyWith(color: label == 'Tanlanmagan' ? AppColors.textMuted : AppColors.text)),
+                              style: LegacyTextStyles.body
+                                  .copyWith(color: label == 'Tanlanmagan' ? LegacyColors.textMuted : LegacyColors.text)),
                         ),
-                        Icon(Icons.expand_more, color: AppColors.textMuted, size: 20.sp),
+                        Icon(Icons.expand_more, color: LegacyColors.textMuted, size: 20.sp),
                       ],
                     );
                   }),
@@ -360,14 +361,14 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
                 Container(
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: AppColors.danger.withValues(alpha: 0.1),
+                    color: LegacyColors.danger.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppRadius.input),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: AppColors.danger, size: 18),
+                      const Icon(Icons.error_outline, color: LegacyColors.danger, size: 18),
                       SizedBox(width: 8.w),
-                      Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13))),
+                      Expanded(child: Text(_error!, style: const TextStyle(color: LegacyColors.danger, fontSize: 13))),
                     ],
                   ),
                 ),
@@ -378,7 +379,7 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
                 child: FilledButton(
                   onPressed: _loading ? null : _submit,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.sellerAccent,
+                    backgroundColor: LegacyColors.sellerAccent,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
                   ),
                   child: _loading

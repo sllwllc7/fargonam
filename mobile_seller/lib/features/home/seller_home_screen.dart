@@ -1,4 +1,5 @@
 import 'package:fargonam_ui/fargonam_ui.dart';
+import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,11 +24,11 @@ class SellerHomeScreen extends ConsumerWidget {
     final ordersAsync = ref.watch(sellerOrdersProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: LegacyColors.bg,
       body: SafeArea(
         child: RefreshIndicator(
-          color: AppColors.primary,
-          backgroundColor: AppColors.surface,
+          color: LegacyColors.primary,
+          backgroundColor: LegacyColors.surface,
           onRefresh: () async {
             HapticFeedback.lightImpact();
             ref.invalidate(sellerStatsProvider);
@@ -37,10 +38,10 @@ class SellerHomeScreen extends ConsumerWidget {
             padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
             children: [
               Text('ASSALOMU ALAYKUM 👋',
-                  style: AppTextStyles.sectionLabel.copyWith(fontSize: 12)),
+                  style: LegacyTextStyles.sectionLabel.copyWith(fontSize: 12)),
               SizedBox(height: 2.h),
               Text(user?.fullName ?? 'Sotuvchi',
-                  style: AppTextStyles.h1.copyWith(color: AppColors.primaryDark, fontSize: 27)),
+                  style: LegacyTextStyles.h1.copyWith(color: LegacyColors.primaryDark, fontSize: 27)),
               SizedBox(height: 4.h),
               shopAsync.when(
                 data: (shop) => Text(
@@ -49,7 +50,7 @@ class SellerHomeScreen extends ConsumerWidget {
                       : (shop.status == ShopStatus.approved
                           ? shop.name
                           : '${shop.name} · tasdiqlanishi kutilmoqda'),
-                  style: AppTextStyles.caption,
+                  style: LegacyTextStyles.caption,
                 ),
                 loading: () => const SizedBox.shrink(),
                 error: (_, _) => const SizedBox.shrink(),
@@ -95,31 +96,31 @@ class SellerHomeScreen extends ConsumerWidget {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 15.h),
                   decoration: BoxDecoration(
-                    color: AppColors.sellerAccentSoft,
+                    color: LegacyColors.sellerAccentSoft,
                     borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: AppColors.sellerAccent.withValues(alpha: 0.3)),
+                    border: Border.all(color: LegacyColors.sellerAccent.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
                       Container(
                         width: 38.w,
                         height: 38.w,
-                        decoration: const BoxDecoration(color: AppColors.sellerAccent, shape: BoxShape.circle),
+                        decoration: const BoxDecoration(color: LegacyColors.sellerAccent, shape: BoxShape.circle),
                         child: const Icon(Icons.add, color: Colors.white),
                       ),
                       SizedBox(width: 12.w),
                       Expanded(
                         child: Text('Yangi mahsulot qo\'shish',
-                            style: AppTextStyles.cardTitleSm.copyWith(color: AppColors.primaryDark)),
+                            style: LegacyTextStyles.cardTitleSm.copyWith(color: LegacyColors.primaryDark)),
                       ),
-                      Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 18.sp),
+                      Icon(Icons.chevron_right, color: LegacyColors.textSecondary, size: 18.sp),
                     ],
                   ),
                 ),
               ),
               SizedBox(height: 24.h),
 
-              Text('YANGI BUYURTMALAR', style: AppTextStyles.sectionLabel),
+              Text('YANGI BUYURTMALAR', style: LegacyTextStyles.sectionLabel),
               SizedBox(height: 10.h),
               ordersAsync.when(
                 loading: () => Column(
@@ -131,17 +132,17 @@ class SellerHomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                error: (_, _) => Text('Yuklanmadi', style: AppTextStyles.caption),
+                error: (_, _) => Text('Yuklanmadi', style: LegacyTextStyles.caption),
                 data: (orders) {
                   if (orders.isEmpty) {
                     return Container(
                       padding: EdgeInsets.all(20.w),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: LegacyColors.surface,
                         borderRadius: BorderRadius.circular(AppRadius.card),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: LegacyColors.border),
                       ),
-                      child: Center(child: Text('Hali buyurtma yo\'q', style: AppTextStyles.caption)),
+                      child: Center(child: Text('Hali buyurtma yo\'q', style: LegacyTextStyles.caption)),
                     );
                   }
                   final recent = orders.take(5).toList();
@@ -174,9 +175,9 @@ class _StatTile extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: LegacyColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: LegacyColors.border),
         boxShadow: AppShadows.card,
       ),
       child: Column(
@@ -186,15 +187,15 @@ class _StatTile extends StatelessWidget {
             width: 34.w,
             height: 34.w,
             decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-            child: Icon(icon, color: AppColors.text, size: 17.sp),
+            child: Icon(icon, color: LegacyColors.text, size: 17.sp),
           ),
           SizedBox(height: 10.h),
           Text(value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.cardTitle.copyWith(fontSize: 15.5)),
+              style: LegacyTextStyles.cardTitle.copyWith(fontSize: 15.5)),
           SizedBox(height: 2.h),
-          Text(label, style: AppTextStyles.caption.copyWith(fontSize: 11.5)),
+          Text(label, style: LegacyTextStyles.caption.copyWith(fontSize: 11.5)),
         ],
       ),
     );
@@ -225,9 +226,9 @@ class _RecentOrderTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 8.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: LegacyColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: LegacyColors.border),
       ),
       child: Row(
         children: [
@@ -235,23 +236,23 @@ class _RecentOrderTile extends StatelessWidget {
             width: 38.w,
             height: 38.w,
             decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-            child: Icon(Icons.receipt_outlined, color: AppColors.text, size: 18.sp),
+            child: Icon(Icons.receipt_outlined, color: LegacyColors.text, size: 18.sp),
           ),
           SizedBox(width: 10.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('#${order['id']} · ${items.length} mahsulot', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13)),
+                Text('#${order['id']} · ${items.length} mahsulot', style: LegacyTextStyles.cardTitleSm.copyWith(fontSize: 13)),
                 SizedBox(height: 2.h),
-                Text(formatSom(total), style: AppTextStyles.price.copyWith(fontSize: 13.5)),
+                Text(formatSom(total), style: LegacyTextStyles.price.copyWith(fontSize: 13.5)),
               ],
             ),
           ),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-            decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(7.r)),
-            child: Text(label, style: AppTextStyles.small.copyWith(fontSize: 10.5)),
+            decoration: BoxDecoration(color: LegacyColors.surfaceAlt, borderRadius: BorderRadius.circular(7.r)),
+            child: Text(label, style: LegacyTextStyles.small.copyWith(fontSize: 10.5)),
           ),
         ],
       ),

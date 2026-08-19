@@ -50,41 +50,21 @@ class AppColors {
     [Color(0xFFE7EDF6), Color(0xFF3A6EA5)],
   ];
 
-  // ───────────────────────── LEGACY (mobile_seller) ─────────────────────────
-  // mobile_seller hali eski "Warm Violet" qiymatlariga ko'plab ekranlarda
-  // to'g'ridan-to'g'ri bog'langan (10-bo'lim, 4-bosqich shu ekranlarni
-  // tuzatadi). Bu tokenlar shu bosqichgacha mobile_seller'ni vizual
-  // o'zgarishsiz build qilib turish uchun saqlanadi — mobile_user ULARDAN
-  // FOYDALANMAYDI.
-  static const bg = Color(0xFFF8F7F3);
-  static const text = Color(0xFF171327);
+  // mobile_user'ning bir nechta hali tuzatilmagan ekrani eski NOM bilan shu
+  // yerga murojaat qiladi — qiymat eskirmagan, joriy tokenlarga ishora
+  // qiladi (`AppColorsDark` kabi). 3-bosqichda ekranlar to'g'ridan-to'g'ri
+  // yuqoridagi nomlarga o'tkaziladi va bu aliaslar o'chiriladi.
+  static const bg = background;
+  static const text = textPrimary;
   static const error = danger;
-  static const accent = Color(0xFFF59E0B);
-  static const warning = Color(0xFFB45309);
-  static const surfaceAlt = bg;
-  static const sellerAccent = accent;
-  static const sellerAccentSoft = Color(0xFFFDE9CC);
+  static const accent = textPrimary;
+  static const surfaceAlt = background;
   static const successSoft = successTint;
   static const dangerSoft = dangerTint;
+
+  /// 3-bosqichda tegishli ekran o'qilganda dc.html'dan tasdiqlanadi.
+  static const warning = Color(0xFFB45309);
   static const warningSoft = Color(0xFFFEF3C7);
   static const borderStrong = Color(0xFFE0DCD4);
-
-  /// LEGACY — dc.html'da tasdiqlanmagan, faqat eski kod moslik uchun.
   static const rating = Color(0xFFFFC120);
-}
-
-/// LEGACY — prototipda dark-mode yo'q (7-bo'lim). `ThemeData.dark`
-/// referenslari buzilmasligi uchun `AppColors` bilan bir xil qiymatlar.
-class AppColorsDark {
-  static const primary = AppColors.primary;
-  static const primaryLight = AppColors.primaryLight;
-  static const background = AppColors.background;
-  static const surface = AppColors.surface;
-  static const surfaceAlt = AppColors.surfaceAlt;
-  static const border = AppColors.border;
-  static const textPrimary = AppColors.textPrimary;
-  static const textSecondary = AppColors.textSecondary;
-  static const success = AppColors.success;
-  static const rating = AppColors.rating;
-  static const error = AppColors.danger;
 }

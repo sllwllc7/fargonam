@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
+import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -139,14 +140,14 @@ class _AddKitScreenState extends ConsumerState<AddKitScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: LegacyColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: const Text('To\'plamni o\'chirish'),
         content: Text('"${widget.editingKit!.name}" ni o\'chirmoqchimisiz?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Yo\'q')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            style: FilledButton.styleFrom(backgroundColor: LegacyColors.danger),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('O\'chirish'),
           ),
@@ -166,16 +167,16 @@ class _AddKitScreenState extends ConsumerState<AddKitScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: LegacyColors.bg,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        title: Text(_isEditing ? 'To\'plamni tahrirlash' : 'Yangi to\'plam', style: AppTextStyles.title),
+        backgroundColor: LegacyColors.bg,
+        title: Text(_isEditing ? 'To\'plamni tahrirlash' : 'Yangi to\'plam', style: LegacyTextStyles.title),
         actions: [
           if (_isEditing)
             IconButton(
               icon: _deleting
                   ? SizedBox(width: 18.w, height: 18.w, child: const CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.delete_outline, color: AppColors.danger),
+                  : const Icon(Icons.delete_outline, color: LegacyColors.danger),
               onPressed: _deleting ? null : _delete,
             ),
         ],
@@ -186,7 +187,7 @@ class _AddKitScreenState extends ConsumerState<AddKitScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Sinf', style: AppTextStyles.cardTitleSm),
+              Text('Sinf', style: LegacyTextStyles.cardTitleSm),
               SizedBox(height: 8.h),
               Wrap(
                 spacing: 8.w,
@@ -218,21 +219,21 @@ class _AddKitScreenState extends ConsumerState<AddKitScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Mahsulotlar', style: AppTextStyles.cardTitleSm),
+                  Text('Mahsulotlar', style: LegacyTextStyles.cardTitleSm),
                   GestureDetector(
                     onTap: _pickProduct,
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                       decoration: BoxDecoration(
-                        color: AppColors.sellerAccentSoft,
+                        color: LegacyColors.sellerAccentSoft,
                         borderRadius: BorderRadius.circular(999.r),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.add, size: 16, color: AppColors.sellerAccent),
+                          const Icon(Icons.add, size: 16, color: LegacyColors.sellerAccent),
                           SizedBox(width: 4.w),
                           Text('Qo\'shish',
-                              style: AppTextStyles.small.copyWith(color: AppColors.sellerAccent, fontSize: 12.5)),
+                              style: LegacyTextStyles.small.copyWith(color: LegacyColors.sellerAccent, fontSize: 12.5)),
                         ],
                       ),
                     ),
@@ -244,11 +245,11 @@ class _AddKitScreenState extends ConsumerState<AddKitScreen> {
                 Container(
                   padding: EdgeInsets.all(20.w),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: LegacyColors.surface,
                     borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: LegacyColors.border),
                   ),
-                  child: Center(child: Text('Hali mahsulot qo\'shilmagan', style: AppTextStyles.caption)),
+                  child: Center(child: Text('Hali mahsulot qo\'shilmagan', style: LegacyTextStyles.caption)),
                 )
               else
                 for (var i = 0; i < _items.length; i++) _KitItemRow(item: _items[i], onRemove: () => setState(() => _items.removeAt(i))),
@@ -256,21 +257,21 @@ class _AddKitScreenState extends ConsumerState<AddKitScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: LegacyColors.surface,
                   borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: LegacyColors.border),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Jami', style: AppTextStyles.cardTitleSm),
-                    Text(formatSom(_total), style: AppTextStyles.price.copyWith(fontSize: 17)),
+                    Text('Jami', style: LegacyTextStyles.cardTitleSm),
+                    Text(formatSom(_total), style: LegacyTextStyles.price.copyWith(fontSize: 17)),
                   ],
                 ),
               ),
               if (_error != null) ...[
                 SizedBox(height: 10.h),
-                Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+                Text(_error!, style: const TextStyle(color: LegacyColors.danger, fontSize: 13)),
               ],
               SizedBox(height: 20.h),
               SizedBox(
@@ -278,7 +279,7 @@ class _AddKitScreenState extends ConsumerState<AddKitScreen> {
                 child: FilledButton(
                   onPressed: _loading ? null : _submit,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.sellerAccent,
+                    backgroundColor: LegacyColors.sellerAccent,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
                   ),
                   child: _loading
@@ -310,11 +311,11 @@ class _GradeChip extends StatelessWidget {
         height: 42.w,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppColors.text : AppColors.surfaceAlt,
+          color: selected ? LegacyColors.text : LegacyColors.surfaceAlt,
           shape: BoxShape.circle,
         ),
         child: Text(grade,
-            style: AppTextStyles.cardTitleSm.copyWith(color: selected ? Colors.white : AppColors.text, fontSize: 15)),
+            style: LegacyTextStyles.cardTitleSm.copyWith(color: selected ? Colors.white : LegacyColors.text, fontSize: 15)),
       ),
     );
   }
@@ -331,9 +332,9 @@ class _KitItemRow extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 8.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: LegacyColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.input),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: LegacyColors.border),
       ),
       child: Row(
         children: [
@@ -341,15 +342,15 @@ class _KitItemRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.label, style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13.5)),
+                Text(item.label, style: LegacyTextStyles.cardTitleSm.copyWith(fontSize: 13.5)),
                 SizedBox(height: 2.h),
-                Text(formatSom(item.price), style: AppTextStyles.caption),
+                Text(formatSom(item.price), style: LegacyTextStyles.caption),
               ],
             ),
           ),
-          Text('×${item.qty}', style: AppTextStyles.cardTitleSm),
+          Text('×${item.qty}', style: LegacyTextStyles.cardTitleSm),
           IconButton(
-            icon: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+            icon: const Icon(Icons.close, size: 18, color: LegacyColors.textSecondary),
             onPressed: onRemove,
           ),
         ],
@@ -369,23 +370,23 @@ class _ProductPickerSheet extends StatelessWidget {
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: LegacyColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(height: 10.h),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: LegacyColors.border, borderRadius: BorderRadius.circular(2))),
               Padding(
                 padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 4.h),
-                child: Align(alignment: Alignment.centerLeft, child: Text('Mahsulot tanlang', style: AppTextStyles.cardTitle)),
+                child: Align(alignment: Alignment.centerLeft, child: Text('Mahsulot tanlang', style: LegacyTextStyles.cardTitle)),
               ),
               Flexible(
                 child: products.isEmpty
                     ? Padding(
                         padding: EdgeInsets.symmetric(vertical: 32.h),
-                        child: Center(child: Text('Avval mahsulot qo\'shing', style: AppTextStyles.caption)),
+                        child: Center(child: Text('Avval mahsulot qo\'shing', style: LegacyTextStyles.caption)),
                       )
                     : ListView(
                         shrinkWrap: true,
@@ -399,8 +400,8 @@ class _ProductPickerSheet extends StatelessWidget {
                                   (variantId: v.id, label: v.variantName == 'Standart' ? p.name : '${p.name} · ${v.variantName}', price: v.price),
                                 ),
                                 title: Text(v.variantName == 'Standart' ? p.name : '${p.name} · ${v.variantName}',
-                                    style: AppTextStyles.body.copyWith(fontSize: 14)),
-                                trailing: Text(formatSom(v.price), style: AppTextStyles.caption),
+                                    style: LegacyTextStyles.body.copyWith(fontSize: 14)),
+                                trailing: Text(formatSom(v.price), style: LegacyTextStyles.caption),
                               ),
                         ],
                       ),

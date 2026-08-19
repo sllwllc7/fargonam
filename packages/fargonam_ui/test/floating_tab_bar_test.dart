@@ -27,4 +27,15 @@ void main() {
 
     expect(tapped, 0);
   });
+
+  testWidgets('faol tab bo\'rtmasi tepaga ko\'tariladi (translateY -24)', (tester) async {
+    await tester.pumpWidget(host(0, (_) {})); // Market faol
+    await tester.pumpAndSettle();
+
+    final lifted = tester
+        .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
+        .where((c) => c.transform?.getTranslation().y == -24);
+
+    expect(lifted.length, 1);
+  });
 }

@@ -156,11 +156,12 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | Bosqich | Ekran/Modul | Fayl | Testlar | Analyze | Holat |
 |---|---|---|---|---|---|
 | 1 | Dizayn tokenlari (rang, tipografika, motion, shadow, radius, spacing) | `packages/fargonam_ui/lib/src/*.dart` | — | 0/0/0 | ✅ |
-| 1 | Suzuvchi tab bar (spring `translateY(-24)`, `cubic-bezier(.3,1.6,.5,1)`) | `packages/fargonam_ui/lib/src/widgets/floating_tab_bar.dart` | 2/2 yashil | 0/0/0 | ✅ |
+| 1 | Suzuvchi tab bar (spring `translateY(-24)`, `cubic-bezier(.3,1.6,.5,1)`) | `packages/fargonam_ui/lib/src/widgets/floating_tab_bar.dart` | 3/3 yashil (render, onTap, bo'rtma ko'tarilishi) | 0/0/0 | ✅ |
 | 1 | Savat FAB, Toast (umumiy widget, hali hech ekranga ulanmagan) | `packages/fargonam_ui/lib/src/widgets/{cart_fab,toast}.dart` | — | 0/0/0 | ✅ (3-bosqichda ekranlarga ulanadi) |
 | 1 | mobile_user shell — yangi tab bar ulandi | `mobile_user/lib/features/shell/app_shell.dart` | 8/8 mavjud test yashil | 0/0/0 | ✅ |
 | 1 | 5.4 platforma: haptika (tab bar), status bar, ScrollBehavior, MediaQuery bottom-inset (tab bar/FAB/toast) | `mobile_user/lib/main.dart`, `floating_tab_bar.dart`, `cart_fab.dart`, `toast.dart` | — | 0/0/0 | ✅ qisman — `PageRouteBuilder`/klaviatura ekran darajasida, 3-bosqichda |
-| 1 | 5.5 ilova nomi/ikonka/splash (faqat mobile_user — 5.5 seller uchun 4-bosqichda) | `mobile_user/pubspec.yaml`, `android/app/src/main/res/**` | — | — | ✅ |
+| 1 | 5.5 ilova nomi/ikonka/splash — ikonka va splash bitta asset (fergana-gate.png) (faqat mobile_user — seller uchun 4-bosqichda) | `mobile_user/pubspec.yaml`, `android/app/src/main/res/**` | — | — | ✅ |
+| 1 | LEGACY tokenlar bitta faylga yig'ildi, barrel'dan chiqarildi | `packages/fargonam_ui/lib/theme/legacy_tokens.dart` | — | 0/0/0 | ✅ |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -183,16 +184,43 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   moslik alias'lari (eski nom → eski qiymat) saqlandi — `mobile_seller` va mobile_user'ning
   hali tuzatilmagan ekranlari o'zgarishsiz build bo'lishda davom etadi. → Sabab: 5.0/10-bo'lim
   "ekranlar 3/4-bosqichda tuzatiladi, hozir emas" deb aniq belgilagan; legacy alias'lar shu
-  chegarani buzmasdan `flutter analyze`ni 0 xatoga saqlaydi. 4-bosqichda (seller) va
-  3-bosqich oxirida (user) bu LEGACY bloklar olib tashlanadi.
+  chegarani buzmasdan `flutter analyze`ni 0 xatoga saqlaydi.
+  **[2026-08-19, chegaralandi]** Barcha LEGACY tokenlar bitta faylga —
+  `packages/fargonam_ui/lib/theme/legacy_tokens.dart` — yig'ildi va `fargonam_ui.dart`
+  barrel'idan ATAYLAB eksport qilinmaydi (fayl boshida sabab/o'chirish rejasi yozilgan).
+  Ikki xil moslik bor edi: (a) mobile_seller — asl "Warm Violet" QIYMATLARI kerak edi
+  (`LegacyColors`, `LegacyTextStyles`, `LegacyGradients`, `LegacyShadows`, `LegacySizes`);
+  (b) mobile_user'ning 2 ta shim fayli — faqat eski NOM kerak edi, qiymat joriy/to'g'ri
+  qoladi (`AppColorsDark`, `AppTextStylesDark`, `AppTextStyles`). Buni aniqlashda tekshiruv
+  shuni ham topdi: `AppColors.primary/primaryDark/textSecondary/border/textMuted` va
+  `AppShadows.fab` avval **noto'g'ri** — sellerga yangi (navy) qiymat sizib chiqayotgan edi
+  (compile xato bermagani uchun ilgari sezilmagan); endi `LegacyColors`/`LegacyShadows` orqali
+  to'g'irlandi.
+  **LEGACY'ga bog'langan fayllar (15 ta) — o'chirish rejasi:**
+  - `mobile_seller` (13 fayl, 4-bosqichda butunlay tuzatiladi va bu importlar olib
+    tashlanadi): `main.dart`; `features/{kits/add_kit_screen,kits/kit_management_screen,
+    home/seller_home_screen,products/category_picker,products/edit_product_screen,
+    products/add_product_screen,products/products_screen,products/sku_builder,
+    news/seller_news_screen,dashboard/seller_stats_screen,orders/seller_orders_screen,
+    profile/seller_profile_screen}.dart`
+  - `mobile_user` (2 fayl, 3-bosqich oxirida ekranlar to'g'ridan-to'g'ri `AppColors`/
+    `AppTypography`ga o'tkazilganda o'chiriladi): `core/theme/app_colors.dart` (faqat
+    `AppColorsDark`), `core/theme/app_text_styles.dart` (`AppTextStyles`,
+    `AppTextStylesDark`)
 - [2026-08-19] Savol: dc.html'da `fergana-gate.png`dan tashqari alohida logotip/marka
   belgisi yo'q — 5.5 "ikonka fergana-gate.png asosida, splash navy+oq logotip" deydi, lekin
   aniq logotip fayli ko'rsatilmagan. → Qaror: ikonka — fergana-gate.png kvadrat kesilib
-  navy fonga joylashtirildi (adaptive icon); splash — navy fon + oq "F" monogram (font orqali
-  generatsiya qilindi, alohida vektor asset yo'qligi sabab). `flutter_launcher_icons` /
-  `flutter_native_splash` dev-vositalari qo'shildi (runtime'ga kirmaydi). → Sabab: 9-bo'lim
-  ruxsat etilgan paketlar ro'yxati UI runtime qatlami haqida, build-vaqtidagi
-  ikonka-generator vositasi shu cheklovga kirmaydi.
+  navy fonga joylashtirildi (adaptive icon). `flutter_launcher_icons` / `flutter_native_splash`
+  dev-vositalari qo'shildi (runtime'ga kirmaydi). → Sabab: 9-bo'lim ruxsat etilgan paketlar
+  ro'yxati UI runtime qatlami haqida, build-vaqtidagi ikonka-generator vositasi shu
+  cheklovga kirmaydi.
+  **[2026-08-19, tuzatildi]** Splash uchun avval shrift orqali generatsiya qilingan "F"
+  monogram ishlatilgan edi — bu **6-bo'lim taqig'ini buzadi** (dc.html'da yo'q, o'ylab
+  topilgan yangi element). Tuzatildi: splash endi faqat navy `#16294A` fon + markazda xuddi
+  ikonkadagi bilan bir xil asset (`assets/icon/app_icon_foreground.png` — fergana-gate.png,
+  kvadrat kesilgan, oq emas, rasmning o'zi). Matn, spinner, ilova nomi yo'q.
+  `assets/icon/splash_logo.png` (F monogram) o'chirildi, `flutter_native_splash` qayta
+  ishga tushirildi.
 
 ### Backend farqlari
 (2-bosqich hali bajarilmadi — `buildData()` va mavjud model/repository solishtiruvi shu

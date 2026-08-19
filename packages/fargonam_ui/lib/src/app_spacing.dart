@@ -23,9 +23,7 @@ class AppSizes {
   static const tabBarSideInset = 12.0;
   static const primaryButton = 52.0;
 
-  /// LEGACY (mobile_seller, 4-bosqichgacha) — eski to'liq enli tab bar balandligi.
-  static const bottomNav = 84.0;
-
-  /// LEGACY (mobile_user eski ekranlar, 3-bosqichgacha).
+  /// mobile_user eski ekranida ishlatiladi (marketplace qidiruv) — 3-bosqichda
+  /// tegishli ekran o'qilganda dc.html'dan tasdiqlanadi.
   static const searchInput = 48.0;
 }

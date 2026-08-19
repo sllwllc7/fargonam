@@ -26,10 +26,7 @@ class AppGradients {
     colors: [AppColors.bubbleStart, AppColors.bubbleMid],
   );
 
-  // LEGACY (mobile_seller, 4-bosqichgacha) — app_colors.dart'dagi izohga qarang.
-  static const primary = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Color(0xFF6D28D9), Color(0xFF5B21B6)],
-  );
+  /// Eski nom, `cta` bilan bir xil — mobile_user'ning bir nechta hali
+  /// tuzatilmagan ekrani ishlatadi (3-bosqichda `cta`ga to'liq o'tkaziladi).
+  static const primary = cta;
 }

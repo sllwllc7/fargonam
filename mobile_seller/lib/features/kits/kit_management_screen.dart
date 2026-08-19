@@ -1,4 +1,5 @@
 import 'package:fargonam_ui/fargonam_ui.dart';
+import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,10 +18,10 @@ class KitManagementScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final shopAsync = ref.watch(myShopProvider);
     return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(backgroundColor: AppColors.bg, title: Text('Sinf to\'plamlari', style: AppTextStyles.title)),
+      backgroundColor: LegacyColors.bg,
+      appBar: AppBar(backgroundColor: LegacyColors.bg, title: Text('Sinf to\'plamlari', style: LegacyTextStyles.title)),
       body: shopAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        loading: () => const Center(child: CircularProgressIndicator(color: LegacyColors.primary)),
         error: (e, _) => ErrorRetryWidget(error: e, onRetry: () => ref.invalidate(myShopProvider)),
         data: (shop) {
           if (shop == null) return const SizedBox.shrink();
@@ -49,7 +50,7 @@ class _KitList extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.sellerAccent,
+        backgroundColor: LegacyColors.sellerAccent,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
         onPressed: addKit,
@@ -81,13 +82,13 @@ class _KitList extends ConsumerWidget {
                       width: 96.w,
                       height: 96.w,
                       decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-                      child: Icon(Icons.class_outlined, size: 42.sp, color: AppColors.textMuted),
+                      child: Icon(Icons.class_outlined, size: 42.sp, color: LegacyColors.textMuted),
                     ),
                     SizedBox(height: 20.h),
-                    Text('Hali to\'plam yo\'q', style: AppTextStyles.cardTitle),
+                    Text('Hali to\'plam yo\'q', style: LegacyTextStyles.cardTitle),
                     SizedBox(height: 8.h),
                     Text('Pastdagi tugma bilan birinchi sinf to\'plamini yarating',
-                        textAlign: TextAlign.center, style: AppTextStyles.body.copyWith(color: AppColors.textSecondary)),
+                        textAlign: TextAlign.center, style: LegacyTextStyles.body.copyWith(color: LegacyColors.textSecondary)),
                   ],
                 ),
               ),
@@ -124,9 +125,9 @@ class _KitTile extends ConsumerWidget {
       child: Container(
         padding: EdgeInsets.all(14.w),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: LegacyColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: LegacyColors.border),
           boxShadow: AppShadows.card,
         ),
         child: Row(
@@ -137,7 +138,7 @@ class _KitTile extends ConsumerWidget {
               decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
               child: Center(
                 child: Text(kit.gradeLevel ?? '?',
-                    style: AppTextStyles.cardTitle.copyWith(color: AppColors.text, fontSize: 18)),
+                    style: LegacyTextStyles.cardTitle.copyWith(color: LegacyColors.text, fontSize: 18)),
               ),
             ),
             SizedBox(width: 14.w),
@@ -145,13 +146,13 @@ class _KitTile extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(kit.name, style: AppTextStyles.cardTitleSm),
+                  Text(kit.name, style: LegacyTextStyles.cardTitleSm),
                   SizedBox(height: 4.h),
-                  Text('${kit.items.length} xil · ${formatSom(kit.total)}', style: AppTextStyles.caption),
+                  Text('${kit.items.length} xil · ${formatSom(kit.total)}', style: LegacyTextStyles.caption),
                 ],
               ),
             ),
-            Icon(Icons.edit_outlined, size: 18.sp, color: AppColors.textSecondary),
+            Icon(Icons.edit_outlined, size: 18.sp, color: LegacyColors.textSecondary),
           ],
         ),
       ),

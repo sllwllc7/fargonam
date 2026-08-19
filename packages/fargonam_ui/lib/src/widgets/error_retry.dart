@@ -26,18 +26,18 @@ class ErrorRetryWidget extends StatelessWidget {
             Icon(
               isOffline ? Icons.wifi_off : Icons.error_outline,
               size: 64,
-              color: isOffline ? AppColors.warning : AppColors.danger,
+              color: isOffline ? AppColors.primary : AppColors.danger,
             ),
             const SizedBox(height: 16),
             Text(
               isOffline ? 'Internet aloqasi yo\'q' : 'Xatolik yuz berdi',
-              style: AppTextStyles.cardTitle,
+              style: AppTypography.cardTitle,
             ),
             const SizedBox(height: 8),
             Text(
               isOffline ? 'Internetga ulanib, qayta urinib ko\'ring' : 'Server bilan bog\'lanishda muammo',
               textAlign: TextAlign.center,
-              style: AppTextStyles.caption,
+              style: AppTypography.caption,
             ),
             const SizedBox(height: 24),
             FilledButton.icon(

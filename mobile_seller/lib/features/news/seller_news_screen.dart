@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
+import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,7 +76,7 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
       ref.invalidate(_newsListProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('E\'lon joylandi'), backgroundColor: AppColors.success),
+          const SnackBar(content: Text('E\'lon joylandi'), backgroundColor: LegacyColors.success),
         );
       }
     } on DioException catch (e) {
@@ -90,8 +91,8 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
   Widget build(BuildContext context) {
     final newsAsync = ref.watch(_newsListProvider);
     return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(backgroundColor: AppColors.bg, title: Text('Yangiliklar', style: AppTextStyles.title)),
+      backgroundColor: LegacyColors.bg,
+      appBar: AppBar(backgroundColor: LegacyColors.bg, title: Text('Yangiliklar', style: LegacyTextStyles.title)),
       body: SafeArea(
         child: ListView(
           padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 32.h),
@@ -99,15 +100,15 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
             Container(
               padding: EdgeInsets.all(14.w),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: LegacyColors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.card),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: LegacyColors.border),
                 boxShadow: AppShadows.card,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Yangi e\'lon', style: AppTextStyles.cardTitleSm),
+                  Text('Yangi e\'lon', style: LegacyTextStyles.cardTitleSm),
                   SizedBox(height: 10.h),
                   TextField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Sarlavha')),
                   SizedBox(height: 10.h),
@@ -122,7 +123,7 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
                     child: Container(
                       height: 90.h,
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceAlt,
+                        color: LegacyColors.surfaceAlt,
                         borderRadius: BorderRadius.circular(AppRadius.input),
                       ),
                       child: _image != null
@@ -134,9 +135,9 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.image_outlined, size: 18.sp, color: AppColors.textMuted),
+                                  Icon(Icons.image_outlined, size: 18.sp, color: LegacyColors.textMuted),
                                   SizedBox(width: 6.w),
-                                  Text('Rasm qo\'shish (ixtiyoriy)', style: AppTextStyles.caption),
+                                  Text('Rasm qo\'shish (ixtiyoriy)', style: LegacyTextStyles.caption),
                                 ],
                               ),
                             ),
@@ -144,7 +145,7 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
                   ),
                   if (_error != null) ...[
                     SizedBox(height: 8.h),
-                    Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13)),
+                    Text(_error!, style: const TextStyle(color: LegacyColors.danger, fontSize: 13)),
                   ],
                   SizedBox(height: 12.h),
                   SizedBox(
@@ -152,7 +153,7 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
                     child: FilledButton(
                       onPressed: _posting ? null : _post,
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.sellerAccent,
+                        backgroundColor: LegacyColors.sellerAccent,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
                       ),
                       child: _posting
@@ -165,7 +166,7 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
               ),
             ),
             SizedBox(height: 22.h),
-            Text('SO\'NGGI YANGILIKLAR', style: AppTextStyles.sectionLabel),
+            Text('SO\'NGGI YANGILIKLAR', style: LegacyTextStyles.sectionLabel),
             SizedBox(height: 10.h),
             newsAsync.when(
               loading: () => Column(
@@ -177,9 +178,9 @@ class _SellerNewsScreenState extends ConsumerState<SellerNewsScreen> {
                   ),
                 ),
               ),
-              error: (_, _) => Text('Yuklanmadi', style: AppTextStyles.caption),
+              error: (_, _) => Text('Yuklanmadi', style: LegacyTextStyles.caption),
               data: (items) {
-                if (items.isEmpty) return Text('Hali yangilik yo\'q', style: AppTextStyles.caption);
+                if (items.isEmpty) return Text('Hali yangilik yo\'q', style: LegacyTextStyles.caption);
                 return Column(children: [for (final n in items) _NewsTile(item: n)]);
               },
             ),
@@ -201,9 +202,9 @@ class _NewsTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 8.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: LegacyColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: LegacyColors.border),
       ),
       child: Row(
         children: [
@@ -218,9 +219,9 @@ class _NewsTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['title'] as String? ?? '', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(item['title'] as String? ?? '', style: LegacyTextStyles.cardTitleSm.copyWith(fontSize: 13.5), maxLines: 1, overflow: TextOverflow.ellipsis),
                 SizedBox(height: 2.h),
-                Text(item['body'] as String? ?? '', style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(item['body'] as String? ?? '', style: LegacyTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),

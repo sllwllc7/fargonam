@@ -1,6 +1,7 @@
 import 'dart:ui' as dart_ui;
 
 import 'package:fargonam_ui/fargonam_ui.dart' as ui;
+import 'package:fargonam_ui/theme/legacy_tokens.dart' as legacy;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -591,16 +592,16 @@ class _BiznesShellState extends ConsumerState<_BiznesShell> with WidgetsBindingO
       return const MyShopScreen();
     }
     return Scaffold(
-      backgroundColor: ui.AppColors.bg,
+      backgroundColor: legacy.LegacyColors.bg,
       body: IndexedStack(index: _index, children: widget.pages),
       bottomNavigationBar: ClipRect(
         child: BackdropFilter(
           filter: dart_ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
           child: Container(
-            height: ui.AppSizes.bottomNav.h,
+            height: legacy.LegacySizes.bottomNav.h,
             decoration: const BoxDecoration(
               color: Color(0xF5FFFFFF),
-              border: Border(top: BorderSide(color: ui.AppColors.border)),
+              border: Border(top: BorderSide(color: legacy.LegacyColors.border)),
             ),
             child: Stack(
               clipBehavior: Clip.none,
@@ -656,19 +657,19 @@ class _BiznesShellState extends ConsumerState<_BiznesShell> with WidgetsBindingO
                             width: 52.w,
                             height: 52.w,
                             decoration: BoxDecoration(
-                              gradient: _index == 2 ? ui.AppGradients.primary : null,
-                              color: _index == 2 ? null : ui.AppColors.textSecondary,
+                              gradient: _index == 2 ? legacy.LegacyGradients.primary : null,
+                              color: _index == 2 ? null : legacy.LegacyColors.textSecondary,
                               shape: BoxShape.circle,
-                              border: Border.all(color: ui.AppColors.surface, width: 4),
-                              boxShadow: ui.AppShadows.fab,
+                              border: Border.all(color: legacy.LegacyColors.surface, width: 4),
+                              boxShadow: legacy.LegacyShadows.fab,
                             ),
                             child: const Icon(Icons.home_rounded, color: Colors.white, size: 22),
                           ),
                           SizedBox(height: 3.h),
                           Text(
                             'Bosh sahifa',
-                            style: ui.AppTextStyles.small.copyWith(
-                              color: _index == 2 ? ui.AppColors.text : ui.AppColors.textSecondary,
+                            style: legacy.LegacyTextStyles.small.copyWith(
+                              color: _index == 2 ? legacy.LegacyColors.text : legacy.LegacyColors.textSecondary,
                             ),
                           ),
                         ],
@@ -701,7 +702,7 @@ class _SellerNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? ui.AppColors.text : ui.AppColors.textSecondary;
+    final color = isActive ? legacy.LegacyColors.text : legacy.LegacyColors.textSecondary;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -712,7 +713,7 @@ class _SellerNavItem extends StatelessWidget {
             children: [
               Icon(isActive ? activeIcon : icon, color: color, size: 22),
               SizedBox(height: 3.h),
-              Text(label, style: ui.AppTextStyles.small.copyWith(color: color)),
+              Text(label, style: legacy.LegacyTextStyles.small.copyWith(color: color)),
             ],
           ),
         ),

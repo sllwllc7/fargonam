@@ -1,4 +1,5 @@
 import 'package:fargonam_ui/fargonam_ui.dart';
+import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,19 +26,19 @@ class SellerProfileScreen extends ConsumerWidget {
     final initial = (user?.fullName?.isNotEmpty == true ? user!.fullName![0] : 'S').toUpperCase();
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: LegacyColors.bg,
       body: SafeArea(
         child: ListView(
           padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
           children: [
-            Text('Profil', style: AppTextStyles.h1.copyWith(color: AppColors.primaryDark, fontSize: 28)),
+            Text('Profil', style: LegacyTextStyles.h1.copyWith(color: LegacyColors.primaryDark, fontSize: 28)),
             SizedBox(height: 16.h),
             Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: LegacyColors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.card),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: LegacyColors.border),
                 boxShadow: AppShadows.card,
               ),
               child: Row(
@@ -48,7 +49,7 @@ class SellerProfileScreen extends ConsumerWidget {
                     decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
                     child: Center(
                       child: Text(initial,
-                          style: AppTextStyles.h2.copyWith(color: AppColors.text, fontSize: 20)),
+                          style: LegacyTextStyles.h2.copyWith(color: LegacyColors.text, fontSize: 20)),
                     ),
                   ),
                   SizedBox(width: 14.w),
@@ -56,9 +57,9 @@ class SellerProfileScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user?.fullName ?? 'Sotuvchi', style: AppTextStyles.cardTitle.copyWith(fontSize: 16.5)),
+                        Text(user?.fullName ?? 'Sotuvchi', style: LegacyTextStyles.cardTitle.copyWith(fontSize: 16.5)),
                         SizedBox(height: 2.h),
-                        Text(user?.phone ?? '', style: AppTextStyles.caption.copyWith(fontSize: 13)),
+                        Text(user?.phone ?? '', style: LegacyTextStyles.caption.copyWith(fontSize: 13)),
                       ],
                     ),
                   ),
@@ -68,9 +69,9 @@ class SellerProfileScreen extends ConsumerWidget {
             SizedBox(height: 14.h),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: LegacyColors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.card),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: LegacyColors.border),
                 boxShadow: AppShadows.card,
               ),
               child: Column(
@@ -117,9 +118,9 @@ class SellerProfileScreen extends ConsumerWidget {
             SizedBox(height: 14.h),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: LegacyColors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.card),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: LegacyColors.border),
               ),
               child: InkWell(
                 borderRadius: BorderRadius.circular(AppRadius.card),
@@ -130,7 +131,7 @@ class SellerProfileScreen extends ConsumerWidget {
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 14.h),
                   child: Center(
-                    child: Text('Chiqish', style: AppTextStyles.cardTitleSm.copyWith(color: AppColors.danger)),
+                    child: Text('Chiqish', style: LegacyTextStyles.cardTitleSm.copyWith(color: LegacyColors.danger)),
                   ),
                 ),
               ),
@@ -141,7 +142,7 @@ class SellerProfileScreen extends ConsumerWidget {
                 future: PackageInfo.fromPlatform(),
                 builder: (context, snap) => Text(
                   'Fargonam Biznes v${snap.data?.version ?? '1.0'}',
-                  style: AppTextStyles.small.copyWith(color: AppColors.textSecondary),
+                  style: LegacyTextStyles.small.copyWith(color: LegacyColors.textSecondary),
                 ),
               ),
             ),
@@ -152,7 +153,7 @@ class SellerProfileScreen extends ConsumerWidget {
   }
 }
 
-const _divider = Divider(height: 1, color: AppColors.border);
+const _divider = Divider(height: 1, color: LegacyColors.border);
 
 class _Row extends StatelessWidget {
   const _Row({required this.icon, required this.label, required this.onTap});
@@ -175,11 +176,11 @@ class _Row extends StatelessWidget {
               width: 38.w,
               height: 38.w,
               decoration: BoxDecoration(color: const Color(0xFFEDE9FE), borderRadius: BorderRadius.circular(12.r)),
-              child: Icon(icon, color: AppColors.text, size: 19.sp),
+              child: Icon(icon, color: LegacyColors.text, size: 19.sp),
             ),
             SizedBox(width: 12.w),
-            Expanded(child: Text(label, style: AppTextStyles.cardTitleSm)),
-            Icon(Icons.chevron_right, size: 18.sp, color: AppColors.textSecondary),
+            Expanded(child: Text(label, style: LegacyTextStyles.cardTitleSm)),
+            Icon(Icons.chevron_right, size: 18.sp, color: LegacyColors.textSecondary),
           ],
         ),
       ),

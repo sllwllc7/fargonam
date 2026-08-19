@@ -72,22 +72,9 @@ class AppTypography {
   /// Tugma matni. 16px/w700/-.2px.
   static TextStyle get button => _figtree(size: 16, weight: FontWeight.w700, letterSpacing: -0.2, color: AppColors.ctaText);
 
-  /// LEGACY — eski nom, `small` bilan bir xil.
+  /// Eski nom, `small` bilan bir xil — `AppTextStyles` (`theme/legacy_tokens.dart`)
+  /// bu klassga typedef qilingani uchun shu yerda turadi (typedef yangi a'zo
+  /// qo'sha olmaydi). mobile_user'ning bir nechta hali tuzatilmagan ekrani
+  /// ishlatadi, 3-bosqichda `small`ga to'liq o'tkaziladi.
   static TextStyle get labelSm => small;
-}
-
-/// LEGACY (mobile_seller, 4-bosqichgacha) — eski nom bilan bog'langan
-/// ekranlar buzilmasligi uchun. mobile_user `AppTypography`dan foydalanadi.
-typedef AppTextStyles = AppTypography;
-
-/// LEGACY — prototipda dark-mode yo'q (7-bo'lim), `AppTypography` bilan bir xil.
-class AppTextStylesDark {
-  static TextStyle get h1 => AppTypography.h1;
-  static TextStyle get h2 => AppTypography.h2;
-  static TextStyle get title => AppTypography.title;
-  static TextStyle get body => AppTypography.body;
-  static TextStyle get bodyLg => AppTypography.bodyLg;
-  static TextStyle get caption => AppTypography.caption;
-  static TextStyle get labelSm => AppTypography.small;
-  static TextStyle get price => AppTypography.price;
 }

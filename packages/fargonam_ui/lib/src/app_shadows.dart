@@ -29,7 +29,8 @@ class AppShadows {
     BoxShadow(color: Color(0x66101F38), blurRadius: 16, offset: Offset(0, 8), spreadRadius: -4),
   ];
 
-  /// LEGACY (mobile_seller/mobile_user eski ekranlar, 3/4-bosqichgacha).
+  /// mobile_user eski ekranlarida ishlatiladi (cart/checkout/kit) — 3-bosqichda
+  /// tegishli ekran o'qilganda dc.html'dan tasdiqlanadi yoki `cta` bilan almashadi.
   static const primaryButton = [
     BoxShadow(color: Color(0x405B21B6), blurRadius: 20, offset: Offset(0, 8)),
   ];

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:fargonam_ui/fargonam_ui.dart';
+import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'products_providers.dart';
 
 /// Kategoriya tanlash bottom sheet'ini ochadi. Tanlangan (yoki shu yerdan
@@ -37,7 +37,7 @@ class _CategoryPickerSheet extends ConsumerWidget {
         ),
         child: Container(
           decoration: const BoxDecoration(
-            color: AppColors.surface,
+            color: LegacyColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
@@ -48,7 +48,7 @@ class _CategoryPickerSheet extends ConsumerWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: LegacyColors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -61,7 +61,7 @@ class _CategoryPickerSheet extends ConsumerWidget {
                       style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary),
+                          color: LegacyColors.textPrimary),
                     ),
                   ],
                 ),
@@ -70,7 +70,7 @@ class _CategoryPickerSheet extends ConsumerWidget {
                 ref: ref,
                 onCreated: (c) => Navigator.pop(context, c),
               ),
-              const Divider(height: 1, color: AppColors.border),
+              const Divider(height: 1, color: LegacyColors.border),
               Flexible(
                 child: categoriesAsync.when(
                   data: (cats) => cats.isEmpty
@@ -79,7 +79,7 @@ class _CategoryPickerSheet extends ConsumerWidget {
                           child: Center(
                             child: Text(
                               'Hali kategoriya yo\'q',
-                              style: TextStyle(color: AppColors.textMuted),
+                              style: TextStyle(color: LegacyColors.textMuted),
                             ),
                           ),
                         )
@@ -98,14 +98,14 @@ class _CategoryPickerSheet extends ConsumerWidget {
                               title: Text(
                                 c.name,
                                 style: TextStyle(
-                                    color: AppColors.textPrimary,
+                                    color: LegacyColors.textPrimary,
                                     fontWeight: selected
                                         ? FontWeight.w700
                                         : FontWeight.w500),
                               ),
                               trailing: selected
                                   ? const Icon(Icons.check_circle,
-                                      color: AppColors.sellerAccent)
+                                      color: LegacyColors.sellerAccent)
                                   : null,
                             );
                           },
@@ -114,14 +114,14 @@ class _CategoryPickerSheet extends ConsumerWidget {
                     padding: EdgeInsets.symmetric(vertical: 32),
                     child: Center(
                       child: CircularProgressIndicator(
-                          color: AppColors.sellerAccent, strokeWidth: 2.5),
+                          color: LegacyColors.sellerAccent, strokeWidth: 2.5),
                     ),
                   ),
                   error: (e, _) => const Padding(
                     padding: EdgeInsets.symmetric(vertical: 32),
                     child: Center(
                       child: Text('Yuklab bo\'lmadi',
-                          style: TextStyle(color: AppColors.error)),
+                          style: TextStyle(color: LegacyColors.error)),
                     ),
                   ),
                 ),
@@ -156,16 +156,16 @@ class _CreateCategoryTile extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: AppColors.sellerAccent.withValues(alpha: 0.12),
+                color: LegacyColors.sellerAccent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.add, color: AppColors.sellerAccent, size: 20),
+              child: const Icon(Icons.add, color: LegacyColors.sellerAccent, size: 20),
             ),
             const SizedBox(width: 12),
             const Text(
               'Yangi kategoriya qo\'shish',
               style: TextStyle(
-                  color: AppColors.sellerAccent, fontWeight: FontWeight.w700),
+                  color: LegacyColors.sellerAccent, fontWeight: FontWeight.w700),
             ),
           ],
         ),
@@ -186,7 +186,7 @@ Future<Category?> _promptCreateCategory(
         return StatefulBuilder(
           builder: (ctx, setState) {
             return AlertDialog(
-              backgroundColor: AppColors.surface,
+              backgroundColor: LegacyColors.surface,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
               title: const Text('Yangi kategoriya'),
@@ -208,7 +208,7 @@ Future<Category?> _promptCreateCategory(
                       child: Text(
                         error!,
                         style: const TextStyle(
-                            color: AppColors.error, fontSize: 13),
+                            color: LegacyColors.error, fontSize: 13),
                       ),
                     ),
                 ],

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
+import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,28 +38,28 @@ class _SellerOrdersScreenState extends ConsumerState<SellerOrdersScreen> {
   Widget build(BuildContext context) {
     final ordersAsync = ref.watch(sellerOrdersProvider);
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: LegacyColors.bg,
       body: SafeArea(
         child: Column(
           children: [
             Padding(
               padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
-              child: Text('Buyurtmalar', style: AppTextStyles.h2.copyWith(color: AppColors.primaryDark)),
+              child: Text('Buyurtmalar', style: LegacyTextStyles.h2.copyWith(color: LegacyColors.primaryDark)),
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 8.h),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceAlt,
+                  color: LegacyColors.surfaceAlt,
                   borderRadius: BorderRadius.circular(AppRadius.input),
                 ),
                 child: TextField(
                   onChanged: (v) => setState(() => _search = v),
-                  style: AppTextStyles.body.copyWith(color: AppColors.text),
+                  style: LegacyTextStyles.body.copyWith(color: LegacyColors.text),
                   decoration: InputDecoration(
                     hintText: 'Kod, ism yoki telefon bo\'yicha qidirish',
-                    hintStyle: AppTextStyles.body.copyWith(color: AppColors.textMuted, fontSize: 14),
-                    prefixIcon: Icon(Icons.search, color: AppColors.textMuted, size: 20.sp),
+                    hintStyle: LegacyTextStyles.body.copyWith(color: LegacyColors.textMuted, fontSize: 14),
+                    prefixIcon: Icon(Icons.search, color: LegacyColors.textMuted, size: 20.sp),
                     filled: true,
                     fillColor: Colors.transparent,
                     contentPadding: EdgeInsets.symmetric(vertical: 10.h),
@@ -79,12 +80,12 @@ class _SellerOrdersScreenState extends ConsumerState<SellerOrdersScreen> {
                   final filtered = orders.where((o) => _matchesSearch(o, _search)).toList();
                   if (filtered.isEmpty) {
                     return Center(
-                      child: Text('Hech narsa topilmadi', style: AppTextStyles.body.copyWith(color: AppColors.textMuted)),
+                      child: Text('Hech narsa topilmadi', style: LegacyTextStyles.body.copyWith(color: LegacyColors.textMuted)),
                     );
                   }
                   return RefreshIndicator(
-                    color: AppColors.primary,
-                    backgroundColor: AppColors.surface,
+                    color: LegacyColors.primary,
+                    backgroundColor: LegacyColors.surface,
                     onRefresh: () async {
                       HapticFeedback.lightImpact();
                       ref.invalidate(sellerOrdersProvider);
@@ -133,13 +134,13 @@ class _EmptyOrdersState extends StatelessWidget {
               width: 96.w,
               height: 96.w,
               decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-              child: Icon(Icons.receipt_long, size: 42.sp, color: AppColors.textMuted),
+              child: Icon(Icons.receipt_long, size: 42.sp, color: LegacyColors.textMuted),
             ),
             SizedBox(height: 20.h),
-            Text('Hali buyurtma kelmagan', style: AppTextStyles.cardTitle),
+            Text('Hali buyurtma kelmagan', style: LegacyTextStyles.cardTitle),
             SizedBox(height: 6.h),
             Text('Buyurtmalar shu yerda paydo bo\'ladi',
-                style: AppTextStyles.body.copyWith(color: AppColors.textMuted)),
+                style: LegacyTextStyles.body.copyWith(color: LegacyColors.textMuted)),
           ],
         ),
       ),
@@ -182,12 +183,12 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         'cancelled': 'Bekor qilingan',
       };
   static const _statusColors = {
-    'pending': AppColors.textMuted,
-    'preparing': AppColors.warning,
-    'ready': AppColors.accent,
-    'shipped': AppColors.accent,
-    'delivered': AppColors.success,
-    'cancelled': AppColors.danger,
+    'pending': LegacyColors.textMuted,
+    'preparing': LegacyColors.warning,
+    'ready': LegacyColors.accent,
+    'shipped': LegacyColors.accent,
+    'delivered': LegacyColors.success,
+    'cancelled': LegacyColors.danger,
   };
 
   String? get _nextStatus {
@@ -232,7 +233,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       ref.invalidate(sellerOrdersProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Holat: ${_statusLabels[newStatus]}'), backgroundColor: AppColors.success),
+          SnackBar(content: Text('Holat: ${_statusLabels[newStatus]}'), backgroundColor: LegacyColors.success),
         );
       }
     } on DioException catch (e) {
@@ -241,7 +242,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.response?.data['detail']?.toString() ?? 'Xato'),
-            backgroundColor: AppColors.danger,
+            backgroundColor: LegacyColors.danger,
           ),
         );
       }
@@ -260,7 +261,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: LegacyColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: Text(_isPickup ? 'Topshirildi deb belgilansinmi?' : 'Yetkazildi deb belgilansinmi?'),
         content: const Text(
@@ -269,7 +270,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Bekor qilish')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+            style: FilledButton.styleFrom(backgroundColor: LegacyColors.primary),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Ha, tasdiqlayman'),
           ),
@@ -288,7 +289,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     final reason = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: LegacyColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         title: const Text('Buyurtmani bekor qilish'),
         content: Column(
@@ -297,7 +298,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
           children: [
             Text(
               'Bu amalni ortga qaytarib bo\'lmaydi. Zaxira avtomatik qaytariladi, xaridorga xabar boradi.',
-              style: AppTextStyles.caption,
+              style: LegacyTextStyles.caption,
             ),
             SizedBox(height: 12.h),
             TextField(
@@ -314,7 +315,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Yopish')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            style: FilledButton.styleFrom(backgroundColor: LegacyColors.danger),
             onPressed: () {
               final text = controller.text.trim();
               if (text.isEmpty) return;
@@ -333,16 +334,16 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
   @override
   Widget build(BuildContext context) {
     final items = (widget.order['items'] as List?) ?? [];
-    final color = _statusColors[_status] ?? AppColors.textMuted;
+    final color = _statusColors[_status] ?? LegacyColors.textMuted;
     final totalStr = widget.order['total']?.toString() ?? '0';
     final total = double.tryParse(totalStr) ?? 0;
 
     return Container(
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: LegacyColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: LegacyColors.border),
         boxShadow: AppShadows.card,
       ),
       child: Column(
@@ -352,9 +353,9 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
             children: [
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 4.h),
-                decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(8.r)),
+                decoration: BoxDecoration(color: LegacyColors.surfaceAlt, borderRadius: BorderRadius.circular(8.r)),
                 child: Text('#${widget.order['id']}',
-                    style: AppTextStyles.small.copyWith(color: AppColors.text, fontSize: 13)),
+                    style: LegacyTextStyles.small.copyWith(color: LegacyColors.text, fontSize: 13)),
               ),
               const Spacer(),
               Container(
@@ -364,7 +365,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(_statusLabels[_status] ?? _status,
-                    style: AppTextStyles.small.copyWith(color: color, fontSize: 11.5)),
+                    style: LegacyTextStyles.small.copyWith(color: color, fontSize: 11.5)),
               ),
             ],
           ),
@@ -374,12 +375,12 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               padding: EdgeInsets.only(bottom: 8.h),
               child: Row(
                 children: [
-                  Icon(Icons.person_outline, size: 15.sp, color: AppColors.textMuted),
+                  Icon(Icons.person_outline, size: 15.sp, color: LegacyColors.textMuted),
                   SizedBox(width: 6.w),
                   Expanded(
                     child: Text(
                       (widget.order['customer_name'] as String?) ?? '',
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary, fontSize: 13),
+                      style: LegacyTextStyles.bodyMedium.copyWith(color: LegacyColors.textSecondary, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -392,10 +393,10 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
                         child: Row(
                           children: [
-                            Icon(Icons.call, size: 14.sp, color: AppColors.success),
+                            Icon(Icons.call, size: 14.sp, color: LegacyColors.success),
                             SizedBox(width: 4.w),
                             Text(widget.order['customer_phone'] as String,
-                                style: AppTextStyles.small.copyWith(color: AppColors.success, fontSize: 13)),
+                                style: LegacyTextStyles.small.copyWith(color: LegacyColors.success, fontSize: 13)),
                           ],
                         ),
                       ),
@@ -409,11 +410,11 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.location_on_outlined, size: 15.sp, color: AppColors.textMuted),
+                  Icon(Icons.location_on_outlined, size: 15.sp, color: LegacyColors.textMuted),
                   SizedBox(width: 6.w),
                   Expanded(
                     child: Text(widget.order['delivery_address'] as String,
-                        style: AppTextStyles.body.copyWith(color: AppColors.textSecondary, fontSize: 13)),
+                        style: LegacyTextStyles.body.copyWith(color: LegacyColors.textSecondary, fontSize: 13)),
                   ),
                 ],
               ),
@@ -425,14 +426,14 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                 width: double.infinity,
                 padding: EdgeInsets.symmetric(vertical: 10.h),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.12),
+                  color: LegacyColors.success.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
+                  border: Border.all(color: LegacyColors.success.withValues(alpha: 0.35)),
                 ),
                 child: Center(
                   child: Text(
                     widget.order['pickup_code'] as String,
-                    style: AppTextStyles.h2.copyWith(color: AppColors.success, letterSpacing: 4, fontSize: 22),
+                    style: LegacyTextStyles.h2.copyWith(color: LegacyColors.success, letterSpacing: 4, fontSize: 22),
                   ),
                 ),
               ),
@@ -445,34 +446,34 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   Container(
                     width: 4,
                     height: 4,
-                    decoration: const BoxDecoration(color: AppColors.textMuted, shape: BoxShape.circle),
+                    decoration: const BoxDecoration(color: LegacyColors.textMuted, shape: BoxShape.circle),
                   ),
                   SizedBox(width: 10.w),
                   Expanded(
                     child: Text(
                       '${item['product_name'] ?? 'Mahsulot #${item['product_id']}'} × ${item['quantity']}',
-                      style: AppTextStyles.body.copyWith(fontSize: 13),
+                      style: LegacyTextStyles.body.copyWith(fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Text(
                     formatSom(double.tryParse(item['price_at_purchase']?.toString() ?? '0') ?? 0),
-                    style: AppTextStyles.caption.copyWith(fontSize: 12),
+                    style: LegacyTextStyles.caption.copyWith(fontSize: 12),
                   ),
                 ],
               ),
             ),
-          Divider(height: 22.h, color: AppColors.border),
+          Divider(height: 22.h, color: LegacyColors.border),
           Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Jami', style: AppTextStyles.caption.copyWith(fontSize: 11)),
+                    Text('Jami', style: LegacyTextStyles.caption.copyWith(fontSize: 11)),
                     SizedBox(height: 2.h),
-                    Text(formatSom(total), style: AppTextStyles.price.copyWith(fontSize: 17)),
+                    Text(formatSom(total), style: LegacyTextStyles.price.copyWith(fontSize: 17)),
                   ],
                 ),
               ),
@@ -481,7 +482,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   padding: EdgeInsets.only(right: 8.w),
                   child: TextButton(
                     onPressed: _updating ? null : _cancelWithReason,
-                    style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                    style: TextButton.styleFrom(foregroundColor: LegacyColors.danger),
                     child: const Text('Bajarib bo\'lmaydi', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
                   ),
                 ),
@@ -489,7 +490,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                 FilledButton(
                   onPressed: _updating ? null : () => _confirmAndAdvance(_nextStatus!),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.sellerAccent,
+                    backgroundColor: LegacyColors.sellerAccent,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
                   ),

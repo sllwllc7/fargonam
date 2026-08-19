@@ -1,4 +1,5 @@
 import 'package:fargonam_ui/fargonam_ui.dart';
+import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -79,11 +80,11 @@ class _AttributesEditorState extends State<AttributesEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Parametrlar', style: AppTextStyles.cardTitleSm),
+        Text('Parametrlar', style: LegacyTextStyles.cardTitleSm),
         SizedBox(height: 4.h),
         Text(
           'Masalan "Varoq soni" — qiymatlari kiritilgach SKU jadvali avtomatik yasaladi',
-          style: AppTextStyles.caption,
+          style: LegacyTextStyles.caption,
         ),
         SizedBox(height: 10.h),
         for (int i = 0; i < widget.attributes.length; i++)
@@ -105,15 +106,15 @@ class _AttributesEditorState extends State<AttributesEditor> {
             padding: EdgeInsets.symmetric(vertical: 12.h),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.input),
-              border: Border.all(color: AppColors.sellerAccent.withValues(alpha: 0.4), style: BorderStyle.solid),
+              border: Border.all(color: LegacyColors.sellerAccent.withValues(alpha: 0.4), style: BorderStyle.solid),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.add, size: 18, color: AppColors.sellerAccent),
+                const Icon(Icons.add, size: 18, color: LegacyColors.sellerAccent),
                 SizedBox(width: 6.w),
                 Text('Parametr qo\'shish',
-                    style: AppTextStyles.cardTitleSm.copyWith(color: AppColors.sellerAccent, fontSize: 14)),
+                    style: LegacyTextStyles.cardTitleSm.copyWith(color: LegacyColors.sellerAccent, fontSize: 14)),
               ],
             ),
           ),
@@ -159,7 +160,7 @@ class _AttributeRowState extends State<_AttributeRow> {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: AppColors.surfaceAlt,
+        color: LegacyColors.surfaceAlt,
         borderRadius: BorderRadius.circular(AppRadius.input),
       ),
       child: Column(
@@ -171,7 +172,7 @@ class _AttributeRowState extends State<_AttributeRow> {
                 child: TextField(
                   controller: _nameCtrl,
                   decoration: const InputDecoration.collapsed(hintText: 'Parametr nomi (masalan: Varoq soni)'),
-                  style: AppTextStyles.cardTitleSm.copyWith(fontSize: 14),
+                  style: LegacyTextStyles.cardTitleSm.copyWith(fontSize: 14),
                   onChanged: (v) {
                     widget.attribute.name = v;
                     widget.onChanged();
@@ -180,7 +181,7 @@ class _AttributeRowState extends State<_AttributeRow> {
               ),
               GestureDetector(
                 onTap: widget.onRemove,
-                child: Icon(Icons.close, size: 18.sp, color: AppColors.textMuted),
+                child: Icon(Icons.close, size: 18.sp, color: LegacyColors.textMuted),
               ),
             ],
           ),
@@ -191,7 +192,7 @@ class _AttributeRowState extends State<_AttributeRow> {
             children: [
               for (final v in widget.attribute.values)
                 Chip(
-                  label: Text(v, style: AppTextStyles.small.copyWith(color: AppColors.text)),
+                  label: Text(v, style: LegacyTextStyles.small.copyWith(color: LegacyColors.text)),
                   backgroundColor: const Color(0xFFEDE9FE),
                   deleteIcon: const Icon(Icons.close, size: 14),
                   onDeleted: () {
@@ -206,7 +207,7 @@ class _AttributeRowState extends State<_AttributeRow> {
                 child: TextField(
                   controller: _valueCtrl,
                   decoration: const InputDecoration.collapsed(hintText: 'Qiymat + Enter'),
-                  style: AppTextStyles.body.copyWith(fontSize: 13),
+                  style: LegacyTextStyles.body.copyWith(fontSize: 13),
                   onSubmitted: _addValue,
                 ),
               ),
@@ -228,23 +229,23 @@ class SkuTable extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('SKU jadvali', style: AppTextStyles.cardTitleSm),
+        Text('SKU jadvali', style: LegacyTextStyles.cardTitleSm),
         SizedBox(height: 4.h),
-        Text('${rows.length} ta kombinatsiya — har biriga narx va zaxira kiriting', style: AppTextStyles.caption),
+        Text('${rows.length} ta kombinatsiya — har biriga narx va zaxira kiriting', style: LegacyTextStyles.caption),
         SizedBox(height: 10.h),
         for (final row in rows)
           Container(
             margin: EdgeInsets.only(bottom: 8.h),
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: LegacyColors.surface,
               borderRadius: BorderRadius.circular(AppRadius.input),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: LegacyColors.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(row.label, style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13.5)),
+                Text(row.label, style: LegacyTextStyles.cardTitleSm.copyWith(fontSize: 13.5)),
                 SizedBox(height: 8.h),
                 Row(
                   children: [

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
+import 'package:fargonam_ui/theme/legacy_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,7 +75,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     final picker = ImagePicker();
     final img = await showModalBottomSheet<XFile?>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: LegacyColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.sheet))),
       builder: (ctx) => SafeArea(
         child: Wrap(children: [
@@ -189,10 +190,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: LegacyColors.bg,
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        title: Text('Yangi mahsulot', style: AppTextStyles.title),
+        backgroundColor: LegacyColors.bg,
+        title: Text('Yangi mahsulot', style: LegacyTextStyles.title),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -205,10 +206,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                 child: Container(
                   height: 180.h,
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: LegacyColors.surface,
                     borderRadius: BorderRadius.circular(AppRadius.card),
                     border: Border.all(
-                      color: _pickedImage != null ? AppColors.sellerAccent : AppColors.border,
+                      color: _pickedImage != null ? LegacyColors.sellerAccent : LegacyColors.border,
                       width: _pickedImage != null ? 1.5 : 1,
                     ),
                   ),
@@ -245,12 +246,12 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                                 width: 56.w,
                                 height: 56.w,
                                 decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-                                child: Icon(Icons.add_a_photo_outlined, size: 26.sp, color: AppColors.text),
+                                child: Icon(Icons.add_a_photo_outlined, size: 26.sp, color: LegacyColors.text),
                               ),
                               SizedBox(height: 10.h),
-                              Text('Mahsulot rasmini tanlang', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13.5)),
+                              Text('Mahsulot rasmini tanlang', style: LegacyTextStyles.cardTitleSm.copyWith(fontSize: 13.5)),
                               SizedBox(height: 3.h),
-                              Text('Kamera yoki galereyadan', style: AppTextStyles.caption.copyWith(fontSize: 11.5)),
+                              Text('Kamera yoki galereyadan', style: LegacyTextStyles.caption.copyWith(fontSize: 11.5)),
                             ],
                           ),
                         ),
@@ -278,10 +279,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                     children: [
                       Expanded(
                         child: Text(_category?.name ?? 'Tanlanmagan',
-                            style: AppTextStyles.body.copyWith(
-                                color: _category != null ? AppColors.text : AppColors.textMuted)),
+                            style: LegacyTextStyles.body.copyWith(
+                                color: _category != null ? LegacyColors.text : LegacyColors.textMuted)),
                       ),
-                      Icon(Icons.expand_more, color: AppColors.textMuted, size: 20.sp),
+                      Icon(Icons.expand_more, color: LegacyColors.textMuted, size: 20.sp),
                     ],
                   ),
                 ),
@@ -301,14 +302,14 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                 Container(
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: AppColors.danger.withValues(alpha: 0.1),
+                    color: LegacyColors.danger.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppRadius.input),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: AppColors.danger, size: 18),
+                      const Icon(Icons.error_outline, color: LegacyColors.danger, size: 18),
                       SizedBox(width: 8.w),
-                      Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.danger, fontSize: 13))),
+                      Expanded(child: Text(_error!, style: const TextStyle(color: LegacyColors.danger, fontSize: 13))),
                     ],
                   ),
                 ),
@@ -319,7 +320,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                 child: FilledButton(
                   onPressed: _loading ? null : _submit,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.sellerAccent,
+                    backgroundColor: LegacyColors.sellerAccent,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
                   ),
                   child: _loading
