@@ -170,6 +170,8 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
 | 3 | 3/17: Sinf to'plami (kit detail) — to'liq qayta yozildi (dc.html aynan), `_addKit()` biznes-logikasi o'zgarishsiz | `mobile_user/lib/features/kits/kit_detail_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
 | 3 | `BackCircleButton` umumiy widget (5 dc.html ekranida bir xil orqaga tugmasi) | `packages/fargonam_ui/lib/src/widgets/back_circle_button.dart` | — | 0/0/0 | ✅ |
 | 3 | 4/17: Kategoriya (category detail) — to'liq qayta yozildi (dc.html aynan, kategoriya ikonka+imgLabel, Filtr) | `mobile_user/lib/features/marketplace/category_products_screen.dart` | 11/11 mavjud test yashil | 0/0/0 | ✅ |
+| 3 | `FavoriteHeartIcon` umumiy widget (Kategoriya+Mahsulot) | `packages/fargonam_ui/lib/src/widgets/favorite_heart_icon.dart` | — | 0/0/0 | ✅ |
+| 3 | 5/17: Mahsulot (product detail) — to'liq qayta yozildi (dc.html aynan, rasm karuseli soddalashtirilgan taqlid, stockInfo rangi tuzatildi) | `mobile_user/lib/features/products/product_detail_screen.dart` | 11/11 (2 tuzatildi: NBSP narx) | 0/0/0 | ✅ |
 
 ### Qarorlar
 - [2026-08-19] Savol: `handoff/`ga ko'chirilgan dc.html eski/xato versiya edi (E6E6FA/191970
@@ -359,6 +361,29 @@ tekshirdim, ular yuqoridagi 3 ta real layout bugini topib berdi.
   `AppTypography.priceSm` w800→w700 (dc.html'da barcha 14.5px matnlar w700, w800 emas).
   Yangi token: `AppColors.inputBorder` (`#D5DDE9`) — Filtr tugmasi + AI input/chip uchun
   (dc.html'da 3 marta uchraydi, AI ekrani to'liq qayta yozilganda ham shu ishlatiladi).
+
+- [2026-08-19] **5/17: Mahsulot (product detail)** ekrani dc.html'ning `PRODUCT DETAIL`
+  bo'limiga moslab qayta yozildi. Kategoriya ikonka/tint uchun `categoriesProvider`
+  (allaqachon Market ekranida mavjud, riverpod orqali keshlangan) qayta ishlatilib,
+  `product['category_id']`dan slug topiladi — backend `Product`da slug maydoni yo'q, lekin
+  buni backend o'zgartirmasdan client tomonda hal qilish mumkin bo'ldi (haqiqiy gap emas).
+  **Soddalashtirish** (ataylab, dekorativ): dc.html'dagi 3D CSS `perspective`/`rotateY`
+  rasm karuseli (`pdSlides`, translateZ+rotateY+brightness/blur) Flutter'da to'g'ridan-to'g'ri
+  emas — scale+qorayish bilan taqlid qilingan (markazdagi rasm to'liq, keyingisi biroz
+  kichrayib qorayib orqada ko'rinadi), bosilganda va nuqta bosilganda naviga to'g'ri
+  ishlaydi. Bu faqat vizual, biznes-mantiqqa taalluqli emas.
+  **Manba kodidan (`stockInfo()`, `pdFavFill/Stroke`, `addBtnBg`) tasdiqlangan, avval
+  taxminiy/noto'g'ri bo'lgan qiymatlar**:
+  - Zaxira rangi: "Tugagan"=`danger`(#DC2626, avval `textMuted` edi), "Kam
+    qolgan"=`primary`(#16294A, avval umuman ajratilmagan edi), "Mavjud"=`textPrimary`.
+  - Sevimli yurakcha rangi: qizil EMAS — `textMuted`/`textSecondary` (neytral kulrang).
+    `FavoriteHeartIcon` umumiy widget shu bilan tuzatildi (Kategoriya ekrani ham).
+  - "Savatga qo'shish" tugmasi: **qat'iy qora** (`#000000`/o'chirilganda `#1C1C22`),
+    CTA gradient EMAS — Kit/Checkout'dagi navy gradientdan farqli qaror, manba kodida
+    aniq tasdiqlangan (`addBtnBg = can ? '#000000' : '#1C1C22'`).
+  - `AppColors.borderStrong` (variant chip chegarasi) `#E0DCD4`→`#C6D0DF` — bu token
+    "3-bosqichda tasdiqlanadi" izohi bilan qo'yilgan edi, endi tasdiqlandi.
+  Yangi qo'shildi: `AppShadows.productImage`.
 
 ### Backend farqlari
 - [Market/kategoriyalar] Dev bazada `categories` jadvali bo'sh (`GET /categories` → `[]`),
