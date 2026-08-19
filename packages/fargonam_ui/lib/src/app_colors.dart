@@ -12,6 +12,10 @@ class AppColors {
   static const primaryMid = Color(0xFF2A4A7F);
   static const primaryLight = Color(0xFFE3ECFA);
 
+  /// `#14243F` — `primaryDark`dan farqli, alohida qora-havorang. dc.html'da
+  /// "Kuryerda" holat belgisi, "Marketga o'tish" tugmasi, push toggle va h.k.
+  static const primaryDeep = Color(0xFF14243F);
+
   static const tabBar = Color(0xFF0F1E33);
 
   static const success = Color(0xFF16A34A);
@@ -46,7 +50,7 @@ class AppColors {
 
   /// Kategoriya ikonka fon/old plan juftliklari — dc.html `const T = [...]`.
   static const categoryTints = <List<Color>>[
-    [Color(0xFFE3ECFA), Color(0xFF14243F)],
+    [primaryLight, primaryDeep],
     [Color(0xFFE3ECFA), Color(0xFF16294A)],
     [Color(0xFFDCFCE7), Color(0xFF16A34A)],
     [Color(0xFFE5EEF9), Color(0xFF2F5FB3)],

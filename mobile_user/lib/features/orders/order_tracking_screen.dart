@@ -1,12 +1,6 @@
+import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import '../../core/format.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
-import '../../core/theme/app_shadows.dart';
-import '../../core/theme/app_text_styles.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 const _stages = ['pending', 'preparing', 'ready', 'shipped', 'delivered'];
 const _stageTitles = {
@@ -24,6 +18,9 @@ const _stageSubs = {
   'delivered': 'Buyurtma topshirildi',
 };
 
+const _checkIconSvg =
+    '<svg viewBox="0 0 12 10"><path d="m1 5 3.5 3.5L11 1" stroke="#EEF1F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
+
 /// Kuzatish — HANDOFF.md 2-bo'lim, 9-band.
 class OrderTrackingScreen extends StatelessWidget {
   const OrderTrackingScreen({super.key, required this.order});
@@ -39,131 +36,138 @@ class OrderTrackingScreen extends StatelessWidget {
     final total = double.tryParse(order['total']?.toString() ?? '') ?? 0;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.only(bottom: 40.h),
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.maybePop(context);
-                    },
-                    child: Container(
-                      width: 36.w,
-                      height: 36.w,
-                      decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
-                      child: Icon(Icons.arrow_back_ios_new, size: 15.sp, color: AppColors.text),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('FN-${order['id']}', style: AppTextStyles.title),
-                      if (order['created_at'] != null) Text(_formatDate(order['created_at'] as String), style: AppTextStyles.caption.copyWith(fontSize: 12.5)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            if (isPickup && order['pickup_code'] != null)
-              Container(
-                margin: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
-                padding: EdgeInsets.symmetric(vertical: 14.h),
-                decoration: BoxDecoration(color: AppColors.successSoft, borderRadius: BorderRadius.circular(AppRadius.card), border: Border.all(color: AppColors.success.withValues(alpha: 0.35))),
-                child: Column(
+        child: ScreenFadeIn(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 40),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Row(
                   children: [
-                    Text('Do\'kondan olib ketish kodi', style: AppTextStyles.caption.copyWith(fontSize: 12)),
-                    SizedBox(height: 4.h),
-                    Text(order['pickup_code'] as String, style: AppTextStyles.h1.copyWith(color: AppColors.success, letterSpacing: 6, fontSize: 28)),
+                    BackCircleButton(onTap: () => Navigator.maybePop(context)),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('FN-${order['id']}', style: AppTypography.title),
+                        if (order['created_at'] != null) Text(_formatDate(order['created_at'] as String), style: AppTypography.caption),
+                      ],
+                    ),
                   ],
                 ),
               ),
-            Container(
-              margin: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
-              padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 20.h),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-                border: Border.all(color: AppColors.border),
-                boxShadow: AppShadows.card,
-              ),
-              child: cancelled
-                  ? Row(
-                      children: [
-                        Icon(Icons.cancel_outlined, color: AppColors.danger, size: 22.sp),
-                        SizedBox(width: 10.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Bekor qilingan', style: AppTextStyles.cardTitle.copyWith(color: AppColors.danger, fontSize: 15)),
-                              if ((order['cancel_reason'] as String?)?.isNotEmpty == true)
-                                Text(order['cancel_reason'] as String, style: AppTextStyles.caption.copyWith(fontSize: 12.5)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        for (var i = 0; i < _stages.length; i++)
-                          if (!(isPickup && _stages[i] == 'shipped'))
-                            _TimelineStep(
-                              title: _stageTitles[_stages[i]]!,
-                              sub: _stageSubs[_stages[i]]!,
-                              done: i <= idx,
-                              isLast: i == _stages.length - 1 || (isPickup && _stages[i + 1] == 'shipped' && i + 1 == _stages.length - 2),
-                            ),
-                      ],
-                    ),
-            ),
-            Container(
-              margin: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 0),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.cardLarge),
-                border: Border.all(color: AppColors.border),
-                boxShadow: AppShadows.card,
-              ),
-              child: Column(
-                children: [
-                  for (final l in items)
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 11.h),
-                      child: Row(
+              if (isPickup && order['pickup_code'] != null)
+                Container(
+                  margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.successTint,
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('Do\'kondan olib ketish kodi', style: AppTypography.caption.copyWith(fontSize: 12)),
+                      const SizedBox(height: 4),
+                      Text(order['pickup_code'] as String, style: AppTypography.h1.copyWith(color: AppColors.success, letterSpacing: 6, fontSize: 28)),
+                    ],
+                  ),
+                ),
+              Container(
+                margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: AppShadows.card,
+                ),
+                child: cancelled
+                    ? Row(
                         children: [
+                          const Icon(Icons.cancel_outlined, color: AppColors.danger, size: 22),
+                          const SizedBox(width: 10),
                           Expanded(
-                            child: Text.rich(
-                              TextSpan(children: [
-                                TextSpan(text: l['product_name'] as String? ?? '', style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13.5)),
-                                TextSpan(text: ' × ${l['quantity']}', style: AppTextStyles.caption.copyWith(fontSize: 13)),
-                              ]),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Bekor qilingan', style: AppTypography.cardTitle.copyWith(color: AppColors.danger, fontSize: 15)),
+                                if ((order['cancel_reason'] as String?)?.isNotEmpty == true)
+                                  Text(order['cancel_reason'] as String, style: AppTypography.caption),
+                              ],
                             ),
                           ),
-                          Text(formatSom((double.tryParse(l['price_at_purchase']?.toString() ?? '') ?? 0) * (l['quantity'] as int? ?? 0)), style: AppTextStyles.cardTitleSm.copyWith(fontSize: 13.5)),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          for (var i = 0; i < _stages.length; i++)
+                            if (!(isPickup && _stages[i] == 'shipped'))
+                              _TimelineStep(
+                                done: i <= idx,
+                                lineDone: i < idx,
+                                title: _stageTitles[_stages[i]]!,
+                                sub: _stageSubs[_stages[i]]!,
+                                isLast: i == _stages.length - 1 || (isPickup && _stages[i + 1] == 'shipped' && i + 1 == _stages.length - 2),
+                              ),
+                        ],
+                      ),
+              ),
+              Container(
+                margin: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: AppShadows.card,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    for (final l in items)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0x0D000000)))),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(text: l['product_name'] as String? ?? '', style: AppTypography.rowTitle.copyWith(fontSize: 13.5)),
+                                    TextSpan(
+                                      text: ' · ${l['variant_name'] ?? ''} × ${l['quantity']}',
+                                      style: AppTypography.caption.copyWith(height: null, fontSize: 13.5, color: AppColors.textMuted),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              formatSom((double.tryParse(l['price_at_purchase']?.toString() ?? '') ?? 0) * (l['quantity'] as int? ?? 0)),
+                              style: AppTypography.rowTitle.copyWith(fontSize: 13.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Jami', style: AppTypography.price.copyWith(fontSize: 15)),
+                          Text(formatSom(total), style: AppTypography.price.copyWith(fontSize: 15)),
                         ],
                       ),
                     ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Jami', style: AppTextStyles.cardTitle.copyWith(fontSize: 15)),
-                        Text(formatSom(total), style: AppTextStyles.cardTitle.copyWith(fontSize: 15)),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -178,10 +182,11 @@ class OrderTrackingScreen extends StatelessWidget {
 }
 
 class _TimelineStep extends StatelessWidget {
-  const _TimelineStep({required this.title, required this.sub, required this.done, required this.isLast});
+  const _TimelineStep({required this.done, required this.lineDone, required this.title, required this.sub, required this.isLast});
+  final bool done;
+  final bool lineDone;
   final String title;
   final String sub;
-  final bool done;
   final bool isLast;
 
   @override
@@ -193,28 +198,36 @@ class _TimelineStep extends StatelessWidget {
           Column(
             children: [
               Container(
-                width: 26.w,
-                height: 26.w,
+                width: 26,
+                height: 26,
                 decoration: BoxDecoration(
-                  color: done ? AppColors.text : AppColors.surface,
+                  color: done ? AppColors.textPrimary : AppColors.surface,
                   shape: BoxShape.circle,
-                  border: Border.all(color: done ? AppColors.text : AppColors.border, width: 2),
+                  border: Border.all(color: done ? AppColors.textPrimary : AppColors.primaryLight, width: 2),
                 ),
-                child: done ? const Icon(Icons.check, size: 13, color: Colors.white) : null,
+                alignment: Alignment.center,
+                child: done ? SvgPicture.string(_checkIconSvg, width: 11, height: 9) : null,
               ),
-              if (!isLast) Expanded(child: Container(width: 2, margin: EdgeInsets.symmetric(vertical: 3.h), color: done ? AppColors.text : AppColors.border)),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 3),
+                    color: lineDone ? AppColors.textPrimary : AppColors.primaryLight,
+                  ),
+                ),
             ],
           ),
-          SizedBox(width: 14.w),
+          const SizedBox(width: 14),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(bottom: 18.h),
+              padding: const EdgeInsets.only(bottom: 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTextStyles.cardTitleSm.copyWith(fontSize: 15, color: done ? AppColors.text : AppColors.textSecondary)),
-                  SizedBox(height: 2.h),
-                  Text(sub, style: AppTextStyles.caption.copyWith(fontSize: 12.5)),
+                  Text(title, style: AppTypography.cardTitleSm.copyWith(fontSize: 15, color: done ? AppColors.textPrimary : AppColors.textSecondary)),
+                  const SizedBox(height: 2),
+                  Text(sub, style: AppTypography.caption),
                 ],
               ),
             ),
