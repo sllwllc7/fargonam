@@ -40,19 +40,14 @@ class PushService {
   Future<void> _doInit() async {
     final messaging = FirebaseMessaging.instance;
 
-    final settings = await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      debugPrint('Push notification ruxsat berilmadi');
-      return;
-    }
-
-    final token = await messaging.getToken();
-    if (token != null) {
-      await _registerToken(token);
+    // Ilova ochilishida ruxsat SO'RALMAYDI — faqat oldin allaqachon berilgan
+    // bo'lsa tokenni jim ro'yxatdan o'tkazamiz. Birinchi so'rov — "Buyurtmalar"
+    // tabi birinchi ochilganda, `requestPermissionOnOrdersTab()` orqali
+    // (main.dart, mobile_user'dagi "birinchi buyurtma"ga o'xshash naqsh).
+    final current = await messaging.getNotificationSettings();
+    if (current.authorizationStatus == AuthorizationStatus.authorized ||
+        current.authorizationStatus == AuthorizationStatus.provisional) {
+      await _registerCurrentToken();
     }
     messaging.onTokenRefresh.listen(_registerToken);
 
@@ -62,6 +57,32 @@ class PushService {
     final initialMessage = await messaging.getInitialMessage();
     if (initialMessage != null) {
       _handleMessageTap(initialMessage);
+    }
+  }
+
+  Future<void> _registerCurrentToken() async {
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token != null) await _registerToken(token);
+  }
+
+  /// "Buyurtmalar" tabi birinchi marta ochilganda chaqiriladi.
+  Future<void> requestPermissionOnOrdersTab() async {
+    try {
+      final messaging = FirebaseMessaging.instance;
+      final current = await messaging.getNotificationSettings();
+      if (current.authorizationStatus == AuthorizationStatus.denied) return;
+      final settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      if (settings.authorizationStatus == AuthorizationStatus.denied) {
+        debugPrint('Push notification ruxsat berilmadi');
+        return;
+      }
+      await _registerCurrentToken();
+    } catch (e) {
+      debugPrint('Push ruxsat so\'rashda xato: $e');
     }
   }
 

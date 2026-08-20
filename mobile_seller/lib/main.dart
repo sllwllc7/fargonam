@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -437,6 +439,7 @@ class _BiznesShell extends ConsumerStatefulWidget {
 class _BiznesShellState extends ConsumerState<_BiznesShell> with WidgetsBindingObserver {
   int _index = 2; // Bosh sahifa default
   SellerOrderEventsWsService? _orderWs;
+  bool _askedPushOnOrdersTab = false;
 
   @override
   void initState() {
@@ -490,6 +493,10 @@ class _BiznesShellState extends ConsumerState<_BiznesShell> with WidgetsBindingO
   void _go(int i) {
     HapticFeedback.selectionClick();
     setState(() => _index = i);
+    if (i == widget.ordersTabIndex && !_askedPushOnOrdersTab) {
+      _askedPushOnOrdersTab = true;
+      unawaited(ref.read(pushServiceProvider).requestPermissionOnOrdersTab());
+    }
   }
 
   @override

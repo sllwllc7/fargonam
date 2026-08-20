@@ -83,6 +83,7 @@ services:
       - ./backend/app_version.json:/app/app_version.json:rw
       - ./backend/status.json:/app/status.json:ro
       - ./admin_web:/admin_web:ro
+      - ./backend/firebase_credentials.json:/app/firebase_credentials.json:ro
 
   telegram_bot:
     build:

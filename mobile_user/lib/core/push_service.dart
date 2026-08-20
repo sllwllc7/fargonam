@@ -32,22 +32,14 @@ class PushService {
   Future<void> _doInit() async {
     final messaging = FirebaseMessaging.instance;
 
-    // Ruxsat so'rash (iOS va Android 13+ uchun)
-    final settings = await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-
-    if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      debugPrint('Push notification ruxsat berilmadi');
-      return;
-    }
-
-    // FCM tokenni olish va backend'ga yuborish
-    final token = await messaging.getToken();
-    if (token != null) {
-      await _registerToken(token);
+    // Ilova ochilishida ruxsat SO'RALMAYDI (Android 13+/iOS) — faqat oldin
+    // allaqachon berilgan bo'lsa (qaytgan foydalanuvchi) tokenni jim
+    // ro'yxatdan o'tkazamiz. Birinchi so'rov — birinchi buyurtma berilganda,
+    // `requestPermissionForFirstOrder()` orqali (checkout_screen.dart).
+    final current = await messaging.getNotificationSettings();
+    if (current.authorizationStatus == AuthorizationStatus.authorized ||
+        current.authorizationStatus == AuthorizationStatus.provisional) {
+      await _registerCurrentToken();
     }
 
     // Token yangilanganda
@@ -63,6 +55,35 @@ class PushService {
     final initialMessage = await messaging.getInitialMessage();
     if (initialMessage != null) {
       _handleMessageTap(initialMessage);
+    }
+  }
+
+  Future<void> _registerCurrentToken() async {
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token != null) await _registerToken(token);
+  }
+
+  /// Birinchi buyurtma muvaffaqiyatli berilganda chaqiriladi — ruxsat shu
+  /// paytda so'raladi (ilova ochilishida emas). Ruxsat avval berilgan/rad
+  /// etilgan bo'lsa OS qayta dialog ko'rsatmaydi, shuning uchun har
+  /// buyurtmadan keyin chaqirish xavfsiz (faqat birinchi marta so'raladi).
+  Future<void> requestPermissionForFirstOrder() async {
+    try {
+      final messaging = FirebaseMessaging.instance;
+      final current = await messaging.getNotificationSettings();
+      if (current.authorizationStatus == AuthorizationStatus.denied) return;
+      final settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      if (settings.authorizationStatus == AuthorizationStatus.denied) {
+        debugPrint('Push notification ruxsat berilmadi');
+        return;
+      }
+      await _registerCurrentToken();
+    } catch (e) {
+      debugPrint('Push ruxsat so\'rashda xato: $e');
     }
   }
 

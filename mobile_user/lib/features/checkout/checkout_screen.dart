@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/api_client.dart';
+import '../../core/push_service.dart';
 import '../addresses/addresses_screen.dart' show addressesProvider;
 import '../cart/cart_screen.dart' show cartProvider;
 import 'order_success_screen.dart';
@@ -78,6 +80,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       ref.invalidate(cartProvider);
       _idempotencyKey = null;
       HapticFeedback.heavyImpact();
+      // Push ruxsati shu yerda so'raladi — ilova ochilishida emas (5.4-bo'lim).
+      unawaited(ref.read(pushServiceProvider).requestPermissionForFirstOrder());
       if (mounted) {
         pushReplacementAppRoute(context, (_) => OrderSuccessScreen(order: res.data as Map<String, dynamic>));
       }
