@@ -1806,3 +1806,50 @@ jonli yangilanishi (yuqorida tushuntirilgan, funksional emas, kosmetik
 cheklov). Haqiqiy qurilmada FCM push yetib borishini va mobil ekranlarni
 vizual tekshirish — buni faqat siz (yaqinlaringiz bilan birga) qila
 olasiz, chunki bu muhitda Android qurilma/emulyator yo'q.
+
+---
+
+## Sessiya (2026-08-20, davomi 6) — Login "Tarmoq xatosi" tekshiruvi
+
+Foydalanuvchi 0.2.0'ni telefoniga o'rnatib login bosganda "Tarmoq xatosi"
+ko'rgan. Server tomonini to'liq tekshirdim:
+
+| Tekshiruv | Natija |
+|---|---|
+| `GET /status` | `backend: ok, database: ok` |
+| DNS (`api.fargonam.uz`, 3 xil resolver: mahalliy, 8.8.8.8, 1.1.1.1) | Hammasi to'g'ri IP qaytardi |
+| SSL sertifikat zanjiri | To'liq (leaf+intermediate+root), `Verify return code: 0 (ok)` |
+| `POST /auth/telegram/session` (mendan) | 200, to'g'ri javob |
+| nginx access log | **Telefondan hech qanday so'rov kelmagan** (faqat mening test so'rovlarim ko'rindi) |
+| Firewall (`ufw`/`iptables`) | 443-port hammaga ochiq, shubhali bloklash yo'q |
+| **APK ichidagi haqiqiy `API_URL`** | `strings libapp.so` bilan tekshirildi (build buyrug'iga ishonmasdan) — `https://api.fargonam.uz` **bor**, `localhost:8000` (standart qiymat) **yo'q** — demak `--dart-define` to'g'ri qo'llangan |
+| `AndroidManifest.xml` | `INTERNET` ruxsati bor |
+| `network_security_config.xml` | Fayl yo'q — standart Android ishonch do'koni ishlaydi, hech narsa bloklanmaydi |
+
+Xulosa: **server va APK'ning o'zida muammo topilmadi** — so'rov
+serverga umuman yetib kelmayapti (nginx logida yo'q), demak muammo
+foydalanuvchi telefoni/tarmog'i tomonida (operator, DNS, VPN) bo'lishi
+ehtimoli katta, lekin **buni masofadan aniq isbotlab bo'lmaydi**.
+
+### Tuzatilgan haqiqiy kamchilik: xato matni hech narsa aytmasdi
+Foydalanuvchi to'g'ri ta'kidladi — "Tarmoq xatosi" tashxis qo'yishga
+yordam bermaydi. `mobile_user/lib/features/auth/auth_providers.dart`:
+yangi `describeConnectionError()` — server javob bermagan (ulanish
+darajasidagi) xatoda endi **qaysi URL'ga, qanday `DioExceptionType`
+bilan yiqilgani** ko'rsatiladi (masalan "ulanib bo'lmadi" / "ulanish
+vaqti tugadi" / "SSL sertifikat xato" + to'liq URL + tizim xabari).
+Server xato qaytarsa (4xx/5xx, `detail` bor) — eskicha ishlaydi,
+o'zgarmadi. `startTelegramLogin`, `addPhone`, `_loadMe` — uchalasida
+ham qo'llanildi. `flutter analyze`/`flutter test` — toza.
+
+**Reliz**: faqat `mobile_user` qayta qurildi (`0.2.1+5`, seller
+`0.2.0+4`da qoldi — unga tegilmadi), `app_version.json`/`status.json`
+faqat `user` bo'limi yangilandi (`seller` saqlanib qoldi — qo'lda
+Python bilan merge qilindi, umumiy `release.sh` ikkalasini ham qayta
+yozib yuborardi). Yangi APK'da ham `strings` bilan qayta tasdiqlandi.
+
+### Keyingi qadam
+Foydalanuvchi yangi APK bilan qayta urinib ko'radi — endi ekranda
+aniq xato matni chiqadi (masalan "ulanib bo'lmadi: https://api.
+fargonam.uz/auth/telegram/session"), shu orqali haqiqiy sabab
+(DNS/operator/VPN/boshqa) aniqlanadi.
