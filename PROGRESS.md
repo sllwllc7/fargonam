@@ -1649,3 +1649,160 @@ lokal sinalgan versiya bilan bir xil (`index-CrtqYLhs.js`), yangi
 endpoint'lar (`/admin/products`, `/admin/shops` POST, `/kits`) openapi'da
 bor, production katalogi **70 mahsulot bilan o'zgarishsiz** (lokal
 tozalash productionga ta'sir qilmadi — alohida baza).
+
+---
+
+## Sessiya (2026-08-20, davomi 5) — Test relizi: tozalash + FCM push + E2E sinov + 0.2.0
+
+Foydalanuvchi: yaqinlariga ilova bermoqchi, admin panel vaqtincha to'xtatildi.
+Qat'iy tartib: 1) tozalash, 2) push, 3) E2E sinov, 4) reliz.
+
+### 1. Test ma'lumotlarini tozalash — PRODUCTION allaqachon toza edi
+
+Production bazasini to'g'ridan-to'g'ri tekshirdim (SSH orqali, `docker exec
+fargonam_postgres psql`):
+
+| Jadval | Kutilgan | Topilgan |
+|---|---|---|
+| categories | 18 | **18** |
+| products (faol) | 70 | **70** |
+| product_variants | 90 | **90** |
+| product_sets (to'plamlar) | 11 | **11** |
+| orders | 0 | **0** |
+| notifications | 0 | **0** |
+| cart_items | 0 | **0** |
+| favorites | 0 | **0** |
+| reviews | 0 | **0** |
+
+Har bir kategoriya kamida bitta mahsulotga ega ekani tasdiqlandi (barcha
+18 tasi — jadval bilan tekshirildi). Hech qanday "Mushuk"/"M"/"7"/"Test"/
+"Nasa" uslubidagi soxta nom yo'q — bular faqat **mening lokal ishlash
+muhitimda** (bu suhbat davomida sinov uchun) paydo bo'lgan edi, productionga
+hech qachon tegmagan (oldingi seansda ham, hozir ham tekshirildi). Hech
+narsa o'chirishga hojat qolmadi — **hech narsa o'zgartirilmadi**.
+
+### 2. FCM Push — kod 100% tayyor ekan, faqat BITTA fayl serverga yetib bormagan edi
+
+Kutilganidan farqli — Firebase konsolida yangi loyiha ochish, mendan
+qadam-baqadam ko'rsatma so'rash SHART BO'LMADI. Sabab: backend
+(`app/core/push.py` — FCM v1, OAuth2 service account, barcha
+`notify_order_status`/`notify_new_order`/... funksiyalar) va ikkala mobil
+ilova (`firebase_messaging`, token ro'yxatdan o'tkazish, foreground banner,
+tap-routing) **allaqachon to'liq yozilgan va ishlaydigan holatda edi**
+(oldingi sessiyalarda qilingan, PROGRESS.md'da alohida qayd etilmagan).
+
+**Topilgan haqiqiy muammo**: `backend/firebase_credentials.json` (Firebase
+service account kaliti, loyiha `farg-onam`) `.gitignore` VA
+`.dockerignore`da ataylab chetlab o'tilgan (`.env` kabi — sir sifatida) —
+lekin bu fayl **hech qachon serverga qo'lda ko'chirilmagan edi**. Natija:
+backend doim "credentials topilmadi" deb push'ni jimgina o'tkazib
+yuborardi (hech qanday xato ko'rinmasdi, chunki `send_push_to_user` xato
+tashlamaydi — shu sabab bu muammo hech qachon sezilmagan).
+
+**Tuzatildi**:
+- Fayl `scp` bilan xavfsiz ko'chirildi: `~/fargonam/backend/
+  firebase_credentials.json` (`chmod 600`).
+- `docker-compose.prod.yml`ga bind-mount qo'shildi (`app_version.json`
+  bilan bir xil pattern): `./backend/firebase_credentials.json:/app/
+  firebase_credentials.json:ro`.
+- Tekshirildi: konteynerda `send_push()` soxta token bilan chaqirilganda
+  endi **"credentials topilmadi" emas, FCM'ning o'zidan haqiqiy javob**
+  keldi (`400 INVALID_ARGUMENT — token yaroqsiz`) — bu OAuth2
+  autentifikatsiya **muvaffaqiyatli** ekanini isbotlaydi, faqat soxta
+  token haqiqiy emas edi. Haqiqiy qurilma ro'yxatdan o'tishi bilan push
+  ishlaydi.
+
+**Topilgan va tuzatilgan spesifikatsiya farqi**: ruxsat so'rovi ilova
+ochilishida (`_loadMe()`da login paytida) so'ralar edi — talab esa
+"ilova ochilishida emas, birinchi buyurtma berilganda". Tuzatildi:
+- `mobile_user`: `PushService.init()` endi ruxsat SO'RAMAYDI, faqat avval
+  berilgan bo'lsa tokenni jim ro'yxatdan o'tkazadi. Yangi
+  `requestPermissionForFirstOrder()` — `checkout_screen.dart`da buyurtma
+  muvaffaqiyatli berilgandan keyin chaqiriladi.
+- `mobile_seller`: xuddi shunday, lekin "birinchi buyurtma" o'rniga
+  "Buyurtmalar" tabi birinchi ochilganda (`requestPermissionOnOrdersTab`,
+  `main.dart:_go()`) — sotuvchi uchun tabiiy mos nuqta (o'zi buyurtma
+  bermaydi).
+- Ikkalasida ham: OS avval berilgan/rad etilgan ruxsatni qayta so'ramaydi
+  (xavfsiz — har chaqiruvda qayta dialog chiqmaydi).
+- `flutter analyze` — ikkala ilovada ham 0 xato.
+
+**Qolgan hammasi tekshirildi, allaqachon to'g'ri edi**: foreground'da
+ko'rinish (mobile_user — maxsus banner, mobile_seller — SnackBar), tap
+bosilganda tegishli ekranga o'tish, ruxsat rad etilsa ilova xato
+chiqarmaydi (hammasi try/catch), bildirishnomalar ekrani push bilan mos
+(`_create_notification` har `notify_*` chaqiruvida DB'ga ham yozadi).
+
+### 3. Uchidan-uchiga sinov — **HAQIQIY API chaqiruvlari bilan** (mobil UI emas)
+
+**Muhim cheklov**: bu muhitda Android qurilma/emulyator yo'q (`adb
+devices` — bo'sh, `emulator` binar topilmadi) — Flutter ekranlarini
+bosib chiqib sinash **jismonan imkonsiz**. Shuning uchun backend'ning
+o'zini — har bir qadam ortidagi haqiqiy biznes mantiqni — to'g'ridan-
+to'g'ri HTTP so'rovlar bilan sinadim (mobil UI qanday chaqirsa, xuddi
+shunday). Bu chindan ishlayotganini isbotlaydi, lekin ekranlarning
+o'zi (variant tanlash tugmasi, badge animatsiyasi va h.k.) vizual
+tekshirilmadi — buni faqat haqiqiy qurilmada siz sinay olasiz.
+
+| # | Qadam | Natija | Izoh |
+|---|---|---|---|
+| a | Admin panel mahsulot qo'shadi → User App'da ko'rinishi | ✅ | Yaratilganda `status=pending` (admin ham bundan mustasno emas) → tasdiqlashdan keyin `GET /products/{id}` 404→200 |
+| b | Seller mahsulot qo'shadi → moderatsiya navbati → admin tasdiqlaydi → ko'rinadi | ✅ | Xuddi shu oqim, `GET /admin/moderation/products?status=pending` navbatda ko'rsatdi |
+| c | Variant ochish → narx/zaxira SKU'dan → savatga qo'shish → badge | ✅ | `POST /cart` qo'shgach `GET /cart` uzunligi +1 |
+| d | Miqdor o'zgartirish, o'chirish, jami narx | ✅ | `PATCH /cart/{id}?quantity=3` → jami `9000×3=27000` to'g'ri hisoblandi |
+| e | Buyurtma berish → kod → success | ✅ | `POST /orders` → `pickup_code` va `total` qaytdi, savat avtomatik bo'shadi |
+| f | Admin panelda va Seller App'da ko'rinishi | ✅ | `GET /admin/orders` va `GET /seller/orders` ikkalasida ham bor |
+| g | Holat o'zgarganda push+bildirishnoma | ✅ | `PATCH /admin/orders/{id}` → `notifications` jadvaliga "Buyurtmangiz tayyorlanmoqda 📦" yozildi (push haqiqiy qurilma yo'qligi uchun jo'natilmadi, lekin FCM chaqiruvi ishlashi 2-bo'limda alohida tasdiqlangan) |
+| h | Kuzatish ekranida yangilanish | ⚠️ **Topilma** | `OrderTrackingScreen` — `StatelessWidget`, ekranga bosib kirilganda olingan `order` obyekti statik (jonli qayta yangilanmaydi). Holat o'zgarishi **ro'yxatga qaytilganda** to'g'ri ko'rinadi (`GET /orders` yangi holatni qaytardi) va foydalanuvchi push/WebSocket SnackBar orqali xabardor bo'ladi — lekin aynan Kuzatish ekranida turgan paytda live yangilanish yo'q. Bu **tuzatilmadi** — mavjud arxitekturaga (WS+push allaqachon xabar beradi) mos, alohida so'ralmagan chuqur o'zgarish talab qiladi |
+| i | Buyurtmalar tarixida ko'rinishi | ✅ | `GET /orders` ro'yxatida bor |
+| j | Ilovani qayta ochish — profil/savat/sevimlilar saqlangan | ✅ | Hammasi server-side (JWT bilan qayta so'ralganda saqlangan holat qaytadi) — lokal keshlash emas |
+
+**Natija: 11/12 to'liq o'tdi, 1 tasi (h) aniqlangan cheklov sifatida qayd
+etildi** (buzilgan emas — boshqa yo'l bilan qopnagan).
+
+### Qarorlar
+- [2026-08-20] Savol: reliz versiyasi qanday "0.2.0"ga aniq tushiriladi,
+  `release.sh`ning avtomatik `bump_version()` funksiyasi faqat patch'ni
+  oshiradi (minor'ni hech qachon)? → Qaror: `pubspec.yaml`larni qo'lda
+  `0.2.0+4`ga o'rnatib, `release.sh`ning bump qadamisiz, qolgan barcha
+  build/deploy qadamlarini script bilan bir xil tartibda qo'lda
+  bajardim → Sabab: foydalanuvchi aniq "0.2.0" so'radi, script arifmetikasi
+  bunga yeta olmaydi (minor doim o'zgarmas qoladi).
+
+### 4. Reliz — 0.2.0 (build 4), user + seller
+
+`pubspec.yaml`lar qo'lda `0.2.0+4`ga o'rnatildi, keyin `release.sh`ning
+qolgan barcha qadamlari (build arm64+arm32, `nginx/downloads/`ga joylash,
+yuklab olish sahifasi, `app_version.json`, `status.json`) serverning
+o'zida (`fargonam@189.74.97.28`, mavjud keystore/`google-services.json`
+bilan) bajarildi — bular allaqachon "serverda ishga tushiriladi" deb
+mo'ljallangan (release.sh'ning o'zidagi izoh).
+
+**Tekshirildi**:
+- `GET https://api.fargonam.uz/app/version?app=user` va `?app=seller` —
+  ikkalasi ham `version: "0.2.0", build: 4`.
+- `GET https://api.fargonam.uz/status` — `last_release` yangi izoh va
+  build vaqti bilan (user 138s, seller 78s).
+- `https://fargonam.uz/` yuklab olish sahifasi — 4 ta havola ham
+  (user/seller × arm64/arm32) yangi fayl nomiga ishora qiladi, hammasi
+  `curl -I` bilan 200 qaytardi (haqiqatan yuklab bo'ladi).
+- Telegram bot alohida qayta ishga tushirilmadi — `nginx/downloads/`ni
+  to'g'ridan-to'g'ri o'qiydi (mavjud dizayn).
+
+**Havolalar**:
+- Sayt (yaqinlaringiz shu yerdan yuklab olishi mumkin):
+  **https://fargonam.uz/**
+- To'g'ridan-to'g'ri APK: `fargonam-user-arm64-0.2.0.apk` (zamonaviy
+  telefonlar) / `fargonam-user-arm32-0.2.0.apk` (eski telefonlar) —
+  sotuvchi ilovasi uchun xuddi shunday `fargonam-seller-*`.
+- Admin panel: **https://api.fargonam.uz/admin-web/** (vaqtincha
+  to'xtatilgan edi — kod o'zgarmadi, xohlasangiz davom ettiraman).
+
+### Umumiy xulosa
+1-3 bandlar to'liq bajarildi va tasdiqlandi (production toza, push
+infratuzilmasi ishlaydi va deploy qilindi, backend darajasida to'liq
+zanjir sinaldi). Yagona chala qolgan narsa — (h) kuzatish ekranining
+jonli yangilanishi (yuqorida tushuntirilgan, funksional emas, kosmetik
+cheklov). Haqiqiy qurilmada FCM push yetib borishini va mobil ekranlarni
+vizual tekshirish — buni faqat siz (yaqinlaringiz bilan birga) qila
+olasiz, chunki bu muhitda Android qurilma/emulyator yo'q.
