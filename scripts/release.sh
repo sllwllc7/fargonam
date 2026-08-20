@@ -34,13 +34,13 @@ bump_version() {
 release_app() {
   local app_dir="$1" app_id="$2" out_prefix="$3" version_name version_build start_ts end_ts duration apk_name
 
-  echo "=== $app_id: versiya oshirilmoqda ==="
+  echo "=== $app_id: versiya oshirilmoqda ===" >&2
   read -r version_name version_build <<<"$(bump_version "$app_dir/pubspec.yaml")"
-  echo "$app_id -> $version_name+$version_build"
+  echo "$app_id -> $version_name+$version_build" >&2
 
-  echo "=== $app_id: release build ==="
+  echo "=== $app_id: release build ===" >&2
   start_ts=$(date +%s)
-  (cd "$app_dir" && flutter build apk --release --dart-define=API_URL="$API_URL")
+  (cd "$app_dir" && flutter build apk --release --dart-define=API_URL="$API_URL") >&2
   end_ts=$(date +%s)
   duration=$((end_ts - start_ts))
 
