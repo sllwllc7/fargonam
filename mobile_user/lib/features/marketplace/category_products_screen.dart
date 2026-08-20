@@ -265,7 +265,10 @@ class _CategoryProductsScreenState
                                   crossAxisCount: 2,
                                   crossAxisSpacing: 12,
                                   mainAxisSpacing: 12,
-                                  childAspectRatio: 0.66,
+                                  // 0.66'da haqiqiy qurilmada (katta tizim
+                                  // shrifti) narx/tugma qatori 13px toshib
+                                  // ketardi — kartaga ko'proq bo'yi berildi.
+                                  childAspectRatio: 0.6,
                                 ),
                             itemBuilder: (context, i) => FadeUpItem(
                               delay: AppMotion.staggerStep * i,
