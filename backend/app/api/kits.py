@@ -85,10 +85,12 @@ async def list_kits(
     current_user: User | None = Depends(get_current_user_optional),
 ):
     """Faol va tasdiqlangan to'plamlar — User App "Sinflar" qatori uchun (auth kerak emas).
-    Do'kon egasi/admin o'z (hali pending/rejected) to'plamlarini ham ko'radi."""
-    q = select(ProductSet).where(ProductSet.is_active.is_(True))
-    if shop_id is None or not await _can_view_unapproved_shop(db, shop_id, current_user):
-        q = q.where(ProductSet.status == ProductStatus.approved)
+    Do'kon egasi/admin o'z (hali pending/rejected/nofaol) to'plamlarini ham ko'radi
+    (admin panel "To'plamlar" ekrani — nofaollashtirilganini qayta faollashtira olishi kerak)."""
+    can_see_all = shop_id is not None and await _can_view_unapproved_shop(db, shop_id, current_user)
+    q = select(ProductSet)
+    if not can_see_all:
+        q = q.where(ProductSet.is_active.is_(True), ProductSet.status == ProductStatus.approved)
     if grade_level:
         q = q.where(ProductSet.grade_level == grade_level)
     if shop_id is not None:

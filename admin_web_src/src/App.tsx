@@ -4,7 +4,13 @@ import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { LoginPage } from "./auth/LoginPage";
 import { Layout } from "./components/Layout";
 import { CategoriesPage } from "./pages/CategoriesPage";
+import { KitsPage } from "./pages/KitsPage";
 import { ModerationProductsPage } from "./pages/ModerationProductsPage";
+import { OrdersPage } from "./pages/OrdersPage";
+import { ProductsPage } from "./pages/ProductsPage";
+import { SellersPage } from "./pages/SellersPage";
+import { UsersPage } from "./pages/UsersPage";
+import { VersionPage } from "./pages/VersionPage";
 
 function Gate({ children }: { children: ReactElement }) {
   const { state } = useAuth();
@@ -31,6 +37,12 @@ export default function App() {
             <Route index element={<Navigate to="/moderation" replace />} />
             <Route path="moderation" element={<ModerationProductsPage />} />
             <Route path="categories" element={<CategoriesPage />} />
+            <Route path="products" element={<ProductsPage />} />
+            <Route path="kits" element={<KitsPage />} />
+            <Route path="orders" element={<OrdersPage />} />
+            <Route path="shops" element={<SellersPage />} />
+            <Route path="users" element={<UsersPage />} />
+            <Route path="version" element={<VersionPage />} />
           </Route>
         </Routes>
       </AuthProvider>

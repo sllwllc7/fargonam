@@ -158,6 +158,7 @@ class ShopStatusUpdate(BaseModel):
     status: ShopStatus | None = None
     admin_note: str | None = Field(default=None, max_length=500)
     is_trusted: bool | None = None
+    is_active: bool | None = None
 
 
 class ShopAdminOut(BaseModel):
@@ -250,6 +251,8 @@ async def update_shop_status(
         shop.admin_note = payload.admin_note
     if payload.is_trusted is not None:
         shop.is_trusted = payload.is_trusted
+    if payload.is_active is not None:
+        shop.is_active = payload.is_active
     await db.commit()
     await db.refresh(shop)
     return ShopAdminOut.model_validate(shop)

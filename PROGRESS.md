@@ -1554,3 +1554,92 @@ tahrirlandi (xatosiz), o'chirildi (19→18) — hammasi ishladi, skrinshot
 tekshirildi (navy sidebar, oq kartalar, token ranglar to'g'ri).
 
 Menyuda "Kategoriyalar" endi bosiladi (avval "Tez orada" edi).
+
+### Mahsulotlar ekrani — TAYYOR
+`ProductsPage.tsx` + `ProductEditModal.tsx` + `ProductCreateModal.tsx`:
+qidiruv (debounce 300ms), kategoriya filtri, holat filtri (draft/pending/
+approved/rejected), ro'yxat (rasm+nom+do'kon+narx oralig'i+zaxira). Tahrir
+modali `SkuEditor`/`ImageGallery`ni moderatsiya modalidan **qayta
+ishlatadi** (kod takrorlanmadi) — nom/brend/tavsif/kategoriya (`PATCH
+/products/{id}`, himoyalangan maydon bo'lsa avtomatik stagelanadi), rasm,
+SKU/parametr, ko'rsatish/yashirish, butunlay o'chirish (backend
+xavfsizlik tekshiruvlari saqlanadi: savat/buyurtmada bo'lsa 400 va aniq
+xabar). "+ Yangi mahsulot" — do'kon tanlash, nom, narx, zaxira, yaratilgach
+avtomatik tahrir oynasi ochiladi (SKU/rasm qo'shish uchun).
+**Backend**: `GET /admin/products` (holatidan qat'i, qidiruv+filtr) —
+bu safar qo'shildi, moderatsiya navbatidan farqli.
+
+**Playwright bilan sinaldi**: qidiruv ("Parker" → 1 ta), kategoriya filtri
+("Ruchka" → 5 ta), yangi mahsulot yaratish (avtomatik tahrir oynasi
+ochildi) — hammasi xatosiz. Sinov mahsuloti keyin tozalandi.
+
+### To'plamlar ekrani — TAYYOR
+`KitsPage.tsx` + `KitForm.tsx`: ro'yxat (nom, sinf, mahsulot soni, jami
+narx, holat), yaratish/tahrirlash (mahsulot qidirib SKU tanlash orqali
+tarkib tuzish, miqdor tahriri, jami narx hisoblanadi), ko'rsatish/
+yashirish, o'chirish, agar holat "approved" bo'lmasa — "Tasdiqlash"
+tugmasi (mavjud `/admin/moderation/kits/{id}/approve`ga ulanadi — admin
+o'zi yaratgan to'plam darhol foydalanuvchiga ko'rinishi uchun).
+**Backend tuzatildi** (`kits.py: list_kits`): avval `is_active=True`
+filtri SHARTSIZ qo'yilgan edi — admin nofaollashtirilgan to'plamni hech
+qachon ko'ra olmasdi (qayta faollashtirishning iloji yo'q edi). Endi
+admin (`shop_id` + `_can_view_unapproved_shop`) barcha holatlarni ko'radi.
+
+**Playwright bilan sinaldi**: yangi to'plam yaratildi (mahsulot qidirib
+qo'shildi), saqlandi, "Tasdiqlash" bosilib holat "approved"ga o'tdi —
+hammasi xatosiz. Sinov to'plami keyin o'chirildi.
+
+### Buyurtmalar ekrani — TAYYOR
+`OrdersPage.tsx` + `OrderDetailModal.tsx`: holat bo'yicha tab-filtr
+(barcha 7 ta `OrderStatus`), ro'yxat, detail (xaridor, telefon, manzil/
+pickup kodi, izoh, mahsulotlar, jami), holat o'zgartirish dropdown
+(backend state machine — noto'g'ri o'tishda 400 aniq xabar bilan),
+"Bekor qilish" tugmasi (`status=cancelled`). Yangi backend kerak bo'lmadi
+— `GET/PATCH /admin/orders` allaqachon tayyor edi.
+
+### Sotuvchilar ekrani — TAYYOR
+`SellersPage.tsx` + `SellerCreateModal.tsx`: ro'yxat (holat, "Ishonchli"
+belgisi, mahsulot soni), "Ishonchli qilish/olib tashlash", "Bloklash/
+Blokdan chiqarish", "+ Yangi sotuvchi" (F.I.Sh + **Telegram ID** + telefon
++ do'kon nomi — `User(telegram_id=..., role=seller)` + `Shop(status=
+approved)` yaratadi; sotuvchi keyin shu Telegram ID bilan kirsa
+to'g'ridan-to'g'ri shu hisobga ulanadi, kod o'zgarmadi).
+**Backend qo'shimchasi**: `ShopStatusUpdate`ga `is_active` yetishmayotgan
+edi (faqat KYC `status`, `is_trusted` bor edi) — "Bloklash" uchun kerak
+bo'lgani sabab qo'shildi, `update_shop_status` endi uni ham qo'llaydi.
+
+### Foydalanuvchilar + Versiya + Bildirishnoma — TAYYOR
+`UsersPage.tsx`: qidiruv (ism/telefon), rol filtri, bloklash/blokdan
+chiqarish (admin foydalanuvchini bloklay olmaydi — tugma o'chirilgan).
+**Bildirishnoma** — alohida menyu bandi qilib qo'shilmadi (reja 8 bandli
+sidebar ko'zda tutmagan edi), Foydalanuvchilar ekraniga panel sifatida
+kiritildi: yuqorida "Hammaga/xaridorlarga/sotuvchilarga" umumiy xabar,
+har foydalanuvchi qatorida "Xabar yuborish" — bittasiga (`target=
+user_ids`, backend allaqachon qo'llab-quvvatlardi, yangi endpoint kerak
+bo'lmadi). `VersionPage.tsx`: user/seller ilova uchun alohida forma
+(versiya/build/APK havolasi/izoh/majburiy-yangilanish), joriy qiymatlar
+`GET /app/version`dan oldindan to'ldiriladi, saqlash `PUT /admin/
+app-version`ga (oldingi seansda tayyor edi).
+
+**Playwright bilan sinaldi**: qidiruv, umumiy bildirishnoma yuborish
+(5 ta foydalanuvchiga, natija xabari to'g'ri ko'rsatildi), bitta
+foydalanuvchiga xabar paneli ochildi, bloklash/blokdan chiqarish ishladi,
+Versiya sahifasida 2 ta forma to'g'ri render bo'ldi (lokal muhitda
+`app_version.json` yo'q — bo'sh boshlanadi, bu kutilgan, production'da
+mavjud fayldan to'ladi).
+
+### Menyuda "Tez orada" — ENDI YO'Q
+Barcha 8 bo'lim endi ishlaydi. `Layout.tsx`dagi disabled/"Tez orada"
+filiali butunlay olib tashlandi (o'lik kod qolmasin).
+
+### Bazadagi test ma'lumotlari tozalandi (faqat lokal dev — production
+hech qachon bu ma'lumotlarga ega bo'lmagan, tekshirildi)
+7 ta soxta mahsulot (`Test`, `Ruchka`(nusxa, bo'sh brend/kategoriya),
+`Nasa`, `Mushuk`, `M`, `7`, `م`) — 6 tasi butunlay o'chirildi, 1 tasi
+(`Test`, id=1) haqiqiy buyurtma tarixida ishlatilgani uchun backend
+xavfsizlik qoidasi bo'yicha o'chirilmadi, shuning o'rniga **nofaol**
+qilindi (`is_active=false` — ro'yxatlardan yo'qoladi, ma'lumot
+saqlanadi). Sinov paytida yaratilgan "Sinov Do'koni" seller/shop yozuvi
+ham o'chirildi. Natija: 70 ta faol haqiqiy katalog mahsuloti, 1 ta shop.
+
+### Deploy — pastga qarang (alohida yozuv, natija bilan)
