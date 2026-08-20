@@ -1,5 +1,7 @@
 """Admin endpointlar — faqat role=admin uchun."""
+import json
 from decimal import Decimal
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -7,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import BaseModel, Field
 
+from app.api.app_version import _VERSION_FILE, AppVersionOut
 from app.api.deps import require_admin
 from app.api.kits import _kit_out, _load_items
 from app.api.products import _load_variants_map, _product_out
@@ -483,3 +486,28 @@ async def bulk_approve_kits(
         approve(kit, current_user.id)
     await db.commit()
     return {"approved": len(rows)}
+
+
+# ========== APP VERSION ==========
+class AppVersionUpdateRequest(BaseModel):
+    app: Literal["user", "seller"]
+    version: str = Field(min_length=1, max_length=20)
+    build: int = Field(ge=1)
+    apk_url: str = Field(min_length=1, max_length=500)
+    notes: str = ""
+    force: bool = False
+
+
+@router.put("/app-version", response_model=AppVersionOut)
+async def update_app_version(payload: AppVersionUpdateRequest):
+    """`release.sh` qiladigan ishni admin panel orqali qiladi — konteyner
+    qayta ishga tushirilmaydi, faylga to'g'ridan-to'g'ri yoziladi."""
+    try:
+        with open(_VERSION_FILE) as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = {}
+    data[payload.app] = payload.model_dump(exclude={"app"})
+    with open(_VERSION_FILE, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    return AppVersionOut(**data[payload.app])

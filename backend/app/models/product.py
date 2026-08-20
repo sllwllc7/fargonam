@@ -36,6 +36,8 @@ class Product(Base):
     # Parent darajasidagi "asosiy" rasm (kartochka uchun) — variantlar o'z rasmini
     # bersa shuni bekor qiladi, aks holda shu ko'rsatiladi
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Kvadrat preview (400x400 JPEG) — Pillow bilan yuklashda generatsiya qilinadi
+    thumb_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

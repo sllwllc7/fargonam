@@ -30,6 +30,25 @@ class CategoryCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     slug: str = Field(min_length=1, max_length=140)
     parent_id: int | None = None
+    icon: str | None = None
+    color: str | None = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
+
+
+class CategoryUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    slug: str | None = Field(default=None, min_length=1, max_length=140)
+    parent_id: int | None = None
+    icon: str | None = None
+    color: str | None = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
+
+
+class CategoryReorderItem(BaseModel):
+    id: int
+    sort_order: int
+
+
+class CategoryReorderRequest(BaseModel):
+    items: list[CategoryReorderItem] = Field(min_length=1, max_length=200)
 
 
 class CategoryOut(BaseModel):
@@ -37,6 +56,9 @@ class CategoryOut(BaseModel):
     name: str
     slug: str
     parent_id: int | None
+    icon: str | None = None
+    color: str | None = None
+    sort_order: int = 0
     product_count: int = 0
     model_config = {"from_attributes": True}
 
@@ -112,6 +134,7 @@ class ProductOut(BaseModel):
     brand: str | None = None
     description: str | None
     image_url: str | None
+    thumb_url: str | None = None
     is_active: bool
     created_at: datetime
     shop_name: str | None = None

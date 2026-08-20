@@ -1198,3 +1198,91 @@ badge/xabar).
   bog'lanadi, aldash riski past, sotuvchiga narx/tarkib tez moslashuv
   kerak (savat/buyurtma bilan bog'liq, kechiktirib bo'lmaydi — xuddi
   narx/stok kabi).
+
+---
+
+## Sessiya (2026-08-20, davomi) — Blok 2: Admin API kengaytmalari (qisman)
+
+Kompyuter qayta ishga tushirilgach shu seansda davom etildi. "Tartib"
+ro'yxatidagi 2-band ("Admin API kengaytmalari: kategoriya CRUD, moderatsiya,
+rasm, app-version") ustida ishlandi — moderatsiya qismi Blok 1'da allaqachon
+tayyor edi, shu safar **kategoriya CRUD va app-version** yozildi.
+
+### Topilma: eski "muhim topilma" noto'g'ri ekan
+REJA hujjatida (§2) "ikonkalar mobil ilovada `icon(catId)` funksiyasi orqali
+**id** bo'yicha qattiq kodlangan" deyilgan edi. Tekshirilganda aslida
+`mobile_user/lib/features/marketplace/category_icons.dart` ikonkani
+**slug** bo'yicha tanlaydi (`categoryIconPaths[slug]`), id bilan aloqasi
+yo'q. Bu yangi `icon`/`color` ustunlarini DB'da saqlashga xalaqit
+bermaydi — reja (b) varianti (mavjud ikonkalar ro'yxatidan tanlash, mobil
+kod tegilmaydi) baribir to'g'ri yo'l, faqat ikonka nomi allaqachon slug
+bilan bir xil ekanini bilib qo'yish kerak edi.
+
+### Bajarildi
+- **Kategoriya**: `categories`ga `icon` (18 ta ruxsat etilgan qiymat —
+  `app/core/category_icons.py`, `category_icons.dart` bilan aynan bir xil
+  ro'yxat), `color` (hex), `sort_order` ustunlari (migratsiya
+  `b3c4d5e6f708`, mavjud qatorlar `id*10` bilan to'ldirildi — ko'rinish
+  o'zgarmadi). `PATCH /categories/{id}` (admin/seller), `PATCH
+  /categories/reorder` (faqat admin, `{items:[{id,sort_order}]}`),
+  `GET /categories` endi `sort_order`bo'yicha tartiblanadi. **Diqqat**:
+  `icon`/`color` hozircha faqat saqlanadi — mobil ilovaga bog'lanish yo'q
+  (Shop.is_trusted'dagi kabi bir xil pattern, Blok 1'da qaror qilingan).
+- **App versiya**: `PUT /admin/app-version` (`{app,version,build,apk_url,
+  notes,force}`) — `release.sh` qiladigan ishni admin panel orqali qiladi,
+  konteyner qayta ishga tushirmasdan. `docker-compose.prod.yml`:
+  `app_version.json` endi `:rw` (avval `:ro`).
+- Lokal dev DB'da migratsiya qo'llanib tekshirildi (backfill to'g'ri),
+  `uvicorn` bilan barcha yangi endpoint qo'lda sinaldi: PATCH ikonka
+  validatsiyasi (noto'g'ri qiymat → 422), reorder, app-version yozish
+  (o'zbekcha apostrof matni to'g'ri saqlandi, boshqa app'ning yozuvi
+  buzilmadi).
+
+### Ataylab qilinmadi (keyingi qadamga qoldirildi)
+- **`status.json` `:rw` qilinmadi, `PUT /admin/status` yozilmadi** — Sabab:
+  uni hozircha faqat `release.sh` yozadi (build vaqti kabi avtomatik
+  ma'lumot), admin panelda uni qo'lda tahrirlash uchun aniq talab yo'q;
+  kerak bo'lsa keyin qo'shiladi (CLAUDE.md: "kelajak uchun abstraksiya"
+  yozilmaydi).
+- **Pillow / rasm siqish** — reja §2'da aytilgan, lekin bu asosan Web
+  Admin'ning rasm tahriri ekrani (qirqish/burish) bilan bog'liq (Tartib
+  4-band) — SPA hali yo'q, frontend cropper qanday format
+  yuborishini bilmasdan backend kontraktini taxmin qilish shart emas edi.
+  SPA qurilganda birga yoziladi.
+
+### Bajarilmagan (keyingi seansga)
+Tartib 3-band: Web Admin SPA skelet (React+Vite+TS+Tailwind, auth,
+layout, moderatsiya navbati ekrani) — hali boshlanmagan, `admin_web/`da
+faqat eski `index.html` bor. Undan keyin 4-5-6-bandlar.
+
+### Qaror: rasm siqish kechiktirilmadi (foydalanuvchi tuzatdi)
+Avvalgi qaror ("Pillow SPA bilan birga qurilsin") xato edi — sellerlar
+hozir ham rasm yuklayapti va xom holda saqlanmoqda, kechiktirilsa
+allaqachon yuklangan rasmlarni keyin qayta ishlash kerak bo'lardi.
+Shu zahoti yozildi:
+- `app/core/image_processing.py`: `process_product_image()` — Pillow bilan
+  EXIF orientatsiyasini qo'llaydi, max 1200px (uzun tomon) gacha
+  kichraytiradi, JPEG sifat 85 bilan siqadi, 400x400 kvadrat preview
+  (markazdan crop) generatsiya qiladi.
+- `products.py`dagi ikkala yuklash endpointi (`POST /{id}/image` — asosiy,
+  `POST /{id}/images` — galereya) shu funksiyani ishlatadi. Format qanday
+  bo'lishidan qat'i nazar (JPEG/PNG/WebP) natija doim JPEG. Magic-byte
+  tekshiruvi saqlanib qoldi (tez rad javob), Pillow o'zi ochib bo'lmasa
+  ham `ValueError` → 400.
+- Yangi `thumb_url` ustuni: `products` va `product_images` jadvallariga
+  (migratsiya `c4d5e6f7a819`). `Product.thumb_url` boshqa himoyalangan
+  maydonlar (`image_url`) bilan bir xil `pending_edit` mexanizmidan
+  o'tadi — tasdiqlangan mahsulotda eski rasm/preview ko'rinishda qoladi.
+  `ProductOut` schema'siga qo'shildi.
+- Pillow `requirements.txt`ga qo'shildi (`==11.1.0`), lokal `.venv`ga
+  o'rnatildi (`uv pip install`).
+- Sinov: 3000x2000 JPEG yuklandi → natija 1200x800 (nisbat saqlangan) +
+  400x400 kvadrat preview, ikkalasi ham diskka to'g'ri yozildi, tasdiqlangan
+  mahsulotda `pending_edit`ga to'g'ri stagelandi. Rasm bo'lmagan fayl (matn)
+  yuklanganda 400 qaytdi. Galereya endpointi ham `thumb_url` qaytaradi.
+  Sinov ma'lumotlari (fayllar, DB qatorlari) tozalab tashlandi.
+- **Qamrovdan tashqarida qoldi (ataylab)**: `news.py`/`profile.py`dagi
+  boshqa rasm yuklash endpointlari (yangiliklar, avatar) — foydalanuvchi
+  aniq "sotuvchi mahsulot rasmi" haqida yozgan edi, ular boshqa muammo.
+  Allaqachon yuklangan (siqilmagan) mahsulot rasmlarini orqaga qaytib
+  qayta ishlash — so'ralmadi, qilinmadi.

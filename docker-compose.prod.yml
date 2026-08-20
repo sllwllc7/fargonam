@@ -80,7 +80,7 @@ services:
         condition: service_healthy
     volumes:
       - uploads:/app/uploads
-      - ./backend/app_version.json:/app/app_version.json:ro
+      - ./backend/app_version.json:/app/app_version.json:rw
       - ./backend/status.json:/app/status.json:ro
       - ./admin_web:/admin_web:ro
 

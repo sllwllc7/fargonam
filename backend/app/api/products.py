@@ -1,7 +1,6 @@
 """Product endpointlari — katalog (parent+variant), variant CRUD, rasm yuklash."""
 import secrets
 from decimal import Decimal
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy import func, or_, select
@@ -9,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_current_user_optional
+from app.core.image_processing import process_product_image
 from app.core.moderation import stage_protected_update
 from app.core.storage import PRODUCTS_DIR, public_url
 from app.db.session import get_db
@@ -65,6 +65,7 @@ async def _product_out(
         brand=p.brand,
         description=p.description,
         image_url=p.image_url,
+        thumb_url=p.thumb_url,
         is_active=p.is_active,
         created_at=p.created_at,
         shop_name=shop_name,
@@ -530,29 +531,36 @@ async def upload_product_image(
         raise HTTPException(status_code=400, detail="Bo'sh fayl")
 
     # Magic bytes tekshiruvi — content_type aldanishi mumkin
-    real_ext = _validate_image_magic(contents)
-    if real_ext is None:
+    if _validate_image_magic(contents) is None:
         raise HTTPException(status_code=400, detail="Fayl haqiqiy rasm emas")
-    ext = real_ext
-    filename = f"{product_id}_{secrets.token_hex(8)}{ext}"
-    dest: Path = PRODUCTS_DIR / filename
-    dest.write_bytes(contents)
 
-    # Eski rasmni o'chirish (agar bor bo'lsa, lokal bo'lsa VA hozir stagelanmagan
+    try:
+        main_bytes, thumb_bytes = process_product_image(contents)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    token = secrets.token_hex(8)
+    filename = f"{product_id}_{token}.jpg"
+    thumb_filename = f"{product_id}_{token}_thumb.jpg"
+    (PRODUCTS_DIR / filename).write_bytes(main_bytes)
+    (PRODUCTS_DIR / thumb_filename).write_bytes(thumb_bytes)
+
+    # Eski rasmlarni o'chirish (agar bor bo'lsa, lokal bo'lsa VA hozir stagelanmagan
     # bo'lsa — tasdiqlangan mahsulotda eski rasm hali User App'da ko'rinib
     # turishi kerak, o'chirib bo'lmaydi)
-    if (
-        product.status != ProductStatus.approved
-        and product.image_url
-        and product.image_url.startswith("/static/")
-    ):
-        old = PRODUCTS_DIR.parent / product.image_url[len("/static/") :]
-        try:
-            old.unlink(missing_ok=True)
-        except OSError:
-            pass
+    if product.status != ProductStatus.approved:
+        for old_url in (product.image_url, product.thumb_url):
+            if old_url and old_url.startswith("/static/"):
+                old = PRODUCTS_DIR.parent / old_url[len("/static/") :]
+                try:
+                    old.unlink(missing_ok=True)
+                except OSError:
+                    pass
 
-    stage_protected_update(product, {"image_url": public_url(f"products/{filename}")})
+    stage_protected_update(product, {
+        "image_url": public_url(f"products/{filename}"),
+        "thumb_url": public_url(f"products/{thumb_filename}"),
+    })
     await db.commit()
     await db.refresh(product)
     variants = (await db.scalars(
@@ -567,7 +575,10 @@ async def list_product_images(product_id: int, db: AsyncSession = Depends(get_db
     rows = (await db.scalars(
         select(ProductImage).where(ProductImage.product_id == product_id).order_by(ProductImage.sort_order)
     )).all()
-    return [{"id": img.id, "image_url": img.image_url, "sort_order": img.sort_order} for img in rows]
+    return [
+        {"id": img.id, "image_url": img.image_url, "thumb_url": img.thumb_url, "sort_order": img.sort_order}
+        for img in rows
+    ]
 
 
 @router.post("/{product_id}/images", status_code=status.HTTP_201_CREATED)
@@ -589,15 +600,26 @@ async def add_product_image(
     if len(contents) > MAX_IMAGE_BYTES:
         raise HTTPException(status_code=400, detail="Rasm 5MB dan katta")
 
-    real_ext = _validate_image_magic(contents)
-    if real_ext is None:
+    if _validate_image_magic(contents) is None:
         raise HTTPException(status_code=400, detail="Fayl haqiqiy rasm emas")
-    ext = real_ext
-    filename = f"{product_id}_{secrets.token_hex(8)}{ext}"
-    (PRODUCTS_DIR / filename).write_bytes(contents)
 
-    img = ProductImage(product_id=product_id, image_url=public_url(f"products/{filename}"))
+    try:
+        main_bytes, thumb_bytes = process_product_image(contents)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    token = secrets.token_hex(8)
+    filename = f"{product_id}_{token}.jpg"
+    thumb_filename = f"{product_id}_{token}_thumb.jpg"
+    (PRODUCTS_DIR / filename).write_bytes(main_bytes)
+    (PRODUCTS_DIR / thumb_filename).write_bytes(thumb_bytes)
+
+    img = ProductImage(
+        product_id=product_id,
+        image_url=public_url(f"products/{filename}"),
+        thumb_url=public_url(f"products/{thumb_filename}"),
+    )
     db.add(img)
     await db.commit()
     await db.refresh(img)
-    return {"id": img.id, "image_url": img.image_url}
+    return {"id": img.id, "image_url": img.image_url, "thumb_url": img.thumb_url}

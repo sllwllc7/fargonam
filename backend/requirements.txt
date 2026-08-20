@@ -16,3 +16,4 @@ httpx==0.28.1
 boto3==1.36.26
 google-auth==2.38.0
 requests==2.32.3
+Pillow==11.1.0
