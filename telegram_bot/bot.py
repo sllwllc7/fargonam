@@ -21,6 +21,10 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+# httpx/telegram kutubxonalari har so'rovni to'liq URL bilan log qiladi — bot
+# tokeni URL ichida bo'lgani uchun bu darajani WARNING'ga tushiramiz.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("telegram").setLevel(logging.WARNING)
 logger = logging.getLogger("fargonam.apk_bot")
 
 BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
