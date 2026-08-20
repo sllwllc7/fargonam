@@ -51,13 +51,17 @@ async def create_session(request: Request, role: str = "buyer"):
     `role` — yangi (hali mavjud bo'lmagan) foydalanuvchi uchun boshlang'ich
     rol: mobile_user "buyer" (default), mobile_seller "seller" yuboradi.
     Mavjud foydalanuvchi uchun bu e'tiborga olinmaydi — u o'z roli bilan
-    kiradi."""
+    kiradi. "admin" faqat DEBUG=true bo'lganda qabul qilinadi (admin_web
+    lokal sinovi uchun dev bypass sentinel) — productionda hech kim shu
+    yo'l bilan o'zini admin qila olmasligi kerak."""
     if not settings.TELEGRAM_BOT_USERNAME:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Telegram login hali sozlanmagan",
         )
-    if role not in ("buyer", "seller"):
+    if role not in ("buyer", "seller", "admin"):
+        role = "buyer"
+    if role == "admin" and not settings.DEBUG:
         role = "buyer"
     session_id = uuid.uuid4().hex
     redis = get_redis()
@@ -115,7 +119,7 @@ async def poll_session(request: Request, session_id: str):
     )
 
 
-_DEV_TELEGRAM_IDS = {"buyer": -1001, "seller": -1002}
+_DEV_TELEGRAM_IDS = {"buyer": -1001, "seller": -1002, "admin": -1003}
 
 
 async def _get_or_create_dev_user(role: str) -> int:

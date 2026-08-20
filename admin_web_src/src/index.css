@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: #EEF1F6;
+  --color-surface: #FFFFFF;
+  --color-primary: #16294A;
+  --color-primary-dark: #0F1E38;
+  --color-primary-mid: #2A4A7F;
+  --color-primary-light: #E3ECFA;
+  --color-tab-bar: #0F1E33;
+  --color-success: #16A34A;
+  --color-success-tint: #DCFCE7;
+  --color-danger: #DC2626;
+  --color-danger-tint: #FEE2E2;
+  --color-text-primary: #000000;
+  --color-text-secondary: #1C1C22;
+  --color-text-muted: #3F3F49;
+  --color-border: #E0E6EF;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #24406F 0%, #12233F 100%);
+  color: #EEF1F6;
+  box-shadow: 0 8px 20px rgba(16, 31, 56, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.card-shadow {
+  box-shadow: 0 1px 2px rgba(23, 19, 39, 0.04), 0 12px 26px -16px rgba(23, 19, 39, 0.08);
+}

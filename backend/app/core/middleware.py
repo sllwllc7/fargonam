@@ -44,11 +44,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Referrer ma'lumotlarini cheklash
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
-        # iframe, object, embed'larni bloklash (faqat o'z domendan)
+        # iframe, object, embed'larni bloklash (faqat o'z domendan).
+        # style-src/font-src Google Fonts (Figtree, admin_web) uchun kengaytirilgan —
+        # mobil ilovaga ta'sir yo'q (Flutter CSP'ni umuman o'qimaydi).
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self'; "
-            "style-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data:; "
             "frame-ancestors 'none'"
         )

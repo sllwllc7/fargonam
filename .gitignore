@@ -40,6 +40,9 @@ local.properties
 *.swp
 *.swo
 
+# Web Admin Panel manbasi — build natijasi admin_web/ga tushadi (shu commitlanadi)
+admin_web_src/node_modules/
+
 # OS
 .DS_Store
 Thumbs.db

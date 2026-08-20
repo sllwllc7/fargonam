@@ -1286,3 +1286,117 @@ Shu zahoti yozildi:
   aniq "sotuvchi mahsulot rasmi" haqida yozgan edi, ular boshqa muammo.
   Allaqachon yuklangan (siqilmagan) mahsulot rasmlarini orqaga qaytib
   qayta ishlash — so'ralmadi, qilinmadi.
+
+---
+
+## Sessiya (2026-08-20, davomi 2) — Blok 3: Web Admin SPA skelet + moderatsiya ekrani
+
+Tartib 3-band boshlandi. Foydalanuvchi aniq buyurdi: "birinchi ishlaydigan
+ekran — moderatsiya navbati + rasm bilan ishlash", menyu/dashboard/statistika
+keyinroq. Shunga qat'iy amal qilindi — boshqa hech qanday ekran (mahsulot
+to'liq CRUD, buyurtmalar va h.k.) yozilmadi, sidebar'da ular "Tez orada"
+bilan ko'rinadi xolos.
+
+### Struktura
+- **`admin_web_src/`** — yangi manba (React 18 + Vite 6 + TypeScript 5 +
+  Tailwind v4). `vite.config.ts`: `build.outDir: '../admin_web'`,
+  `base: '/admin-web/'` — build natijasi to'g'ridan-to'g'ri backend allaqachon
+  mount qilgan `admin_web/` papkaga tushadi, **infra o'zgarmadi** (reja §3
+  tavsiyasi bilan bir xil). `admin_web_src/node_modules/` gitignore'ga
+  qo'shildi, lekin **`admin_web/` (build natijasi) commitlanadi** — eski
+  `admin_web/index.html` ham git'da statik fayl sifatida saqlangan edi, shu
+  konvensiya davom etadi (serverda alohida build qadam yo'q, `git pull`
+  yetarli — CLAUDE.md §7: CI/CD yo'q).
+- Qo'shimcha kutubxona faqat rejada aytilgan bittasi: `react-easy-crop`
+  (rasm qirqish/aylantirish). Boshqa hammasi standart (react-router-dom,
+  tailwind, vite).
+
+### Auth
+- Telegram login (mavjud `/auth/telegram/session` + polling oqimi, boshqa
+  klientlar bilan bir xil), keyin `GET /auth/me` bilan `role==admin`
+  tekshiriladi — bo'lmasa "Sizda admin huquqi yo'q" (reja §3'da aytilgan).
+  Refresh token: 401'da `apiFetch` avtomatik `/auth/refresh` chaqiradi va
+  bir marta qayta urinadi (rotation — har safar yangi refresh saqlanadi).
+- **Backend'ga kichik qo'shimcha** (`telegram_auth.py`): DEBUG dev-bypass
+  endi `role=admin` sentinel foydalanuvchisini (`telegram_id=-1003`,
+  mavjud -1001/-1002 buyer/seller pattern bilan bir xil) ham yarata oladi —
+  **faqat `settings.DEBUG=true` bo'lganda**, productionda `role=admin`
+  so'rovi majburan `buyer`ga tushadi (real foydalanuvchi Telegram orqali
+  o'z-o'zini admin qila olmasligi CLAUDE.md §4'dagi xavfsizlik qaroriga
+  aloqador — buzilmadi). Buni qilmasdan admin panelni lokal sinash imkonsiz
+  edi (mavjud dev-bypass faqat buyer/seller yaratardi).
+- CSP tuzatildi (`middleware.py`): `style-src`/`font-src`ga
+  `fonts.googleapis.com`/`fonts.gstatic.com` qo'shildi — aks holda Figtree
+  (Google Fonts) brauzerda yuklanmay, CSP uni bloklardi. Global header,
+  lekin mobil ilovaga ta'siri yo'q (Flutter CSP'ni o'qimaydi).
+
+### Dizayn
+Foydalanuvchi eslatmasi bo'yicha: fon `#EEF1F6`, kartalar oq, navy gradient
+tugma (`#24406F→#12233F`, CLAUDE.md §5.1 bilan bir xil qiymat), Figtree,
+qora matn — mobil bilan bir xil token tili, lekin **kompyuter layout**
+(chap sidebar navy `#16294A`, o'ng ish maydoni jadval/kartalar) — ilova
+ekranlari ko'chirilmadi.
+
+### Moderatsiya ekrani (`ModerationProductsPage` + `ProductDetailModal`)
+- Uch tab: Kutilmoqda / Tasdiqlangan / Rad etilgan (`GET
+  /admin/moderation/products?status=`).
+- Ro'yxat: mini-rasm (`thumb_url`), nom, do'kon, "qancha oldin", narx,
+  agar `pending_edit` bo'lsa "o'zgartirilgan" belgisi. Checkbox + "Tanlangan
+  larni tasdiqlash" (`bulk-approve`) faqat Kutilmoqda tabida.
+- Detail modal: nom/brend/kategoriya/tavsif tahrir maydonlari (`pending_edit`
+  bo'lsa o'sha qiymat bilan boshlanadi — "amaldagi" qiymat, `utils/
+  product.ts:effectiveFields`), rasm — mavjudini qirqish/aylantirish
+  (`ImageCropModal`, canvas orqali) yoki yangi fayl tanlash, keyin
+  `POST /products/{id}/image` (Pillow siqish avtomatik ishlaydi).
+  Tugmalar: Tasdiqlash / Saqlab tasdiqlash (edit-approve) / Rad etish
+  (sabab majburiy).
+- **Muhim topilma va qaror**: backend `admin_direct_edit()`
+  (`edit-approve`) `pending_edit`ni **butunlay tozalaydi**, faqat so'rovda
+  yuborilgan maydonlarni yozadi — agar admin rasmni alohida yuklab (bu
+  `pending_edit`ga stagelanishi mumkin), keyin "Saqlab tasdiqlash" bossa,
+  rasm o'zgarishi **yo'qolib qolardi** (edit-approve uni qamrab olmaydi,
+  `thumb_url` uchun schema'da maydon ham yo'q). Shu sabab UI qoidasi:
+  ushbu sessiyada rasm yangilangan bo'lsa "Saqlab tasdiqlash" tugmasi
+  yashiriladi, faqat oddiy "Tasdiqlash" (`approve()` butun `pending_edit`ni,
+  image+thumb bilan birga, to'g'ri qo'llaydi) qoladi. Backend'ning o'zini
+  (schema'ga `thumb_url` qo'shish yoki `admin_direct_edit`ni merge qiladigan
+  qilish) tuzatish — bu safar qilinmadi, alohida ko'rib chiqiladigan
+  "situq burchak" sifatida qayd etildi.
+- Kits (to'plamlar) moderatsiyasi qo'shilmadi — foydalanuvchi aniq
+  "mahsulot tasdiqlash"ni birinchi sinamoqchi edi, qamrov shunga
+  cheklandi.
+
+### Lokal sinov va topilma: bu muhitda Vite dev-server proxy portlari to'g'ri ishlamadi
+`npm run dev` (5173/5174/5175, turli host bayroqlari bilan) qaysi portda
+ishga tushirilmasin, shu terminal muhitidagi `curl`/`python urllib` so'rovlari
+har doim **backend'ning** javobini qaytardi (headerlar/etag aynan bir xil) —
+port haqiqatda `ss -tlnp`da node processga bog'langan bo'lsa ham. Sabab
+aniqlanmadi (muhitning tarmoq sandboxi bilan bog'liq bo'lishi mumkin,
+loyiha kodiga aloqasi yo'q). **Yechim**: mahalliy sinov uchun `npm run
+build` (natija `admin_web/`ga) + backend'ning o'zi orqali xizmat
+(`http://localhost:8000/admin-web/`) ishlatildi — bu productiondagi bilan
+aynan bir xil yo'l (nol proxy, nol CORS), shuning uchun ishonchli.
+Kodni o'zgartirgandan keyin sinash uchun: `cd admin_web_src && npm run
+build`, keyin backend'ni qayta ishga tushirish shart emas (statik fayl).
+
+**Sinaldi**: `tsc` — 0 xato. `npm run build` — muvaffaqiyatli.
+`GET /admin-web/` — 200, to'g'ri HTML+JS+CSS. CSP headerida Google Fonts
+ruxsat berilgani tasdiqlandi. Dev-admin login (`role=admin` bypass) —
+`/auth/me` `role: admin` qaytardi. `GET /admin/moderation/products?
+status=pending` — 3 ta mahsulot (ID 1, 2 oddiy pending; ID 3 — sun'iy
+`pending_edit={"name": "..."}") bilan sinov uchun DB'da qoldirilgan
+(**qasddan tasdiqlanmadi/rad etilmadi** — foydalanuvchi o'zi brauzerdan
+sinasin deb). React/Cropper mantig'i brauzerda ishga tushirilmadi (bu
+muhitda headless brauzer yo'q) — kod diqqat bilan qayta o'qib chiqildi,
+lekin foydalanuvchining o'z qo'lidagi sinovi hali kerak.
+
+### Havola
+`http://localhost:8000/admin-web/` — backend allaqachon shu portda
+ishlayapti (`nohup uvicorn ... --port 8000`, avvalgi eski jarayon
+o'chirilgan). "Telegram orqali kirish" tugmasi DEBUG=true tufayli darhol
+tasdiqlanadi (bot bilan gaplashish shart emas lokal muhitda).
+
+### Bajarilmagan (keyingi seansga)
+Kits moderatsiyasi, boshqa admin ekranlari (Tartib 4-5-band), production'ga
+deploy (bu SPA hali serverga chiqarilmagan — faqat lokal). `edit-approve`
++ `thumb_url` sharpi burchak (yuqorida).
