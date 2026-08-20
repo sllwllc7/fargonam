@@ -5,6 +5,25 @@ import '../../core/api_client.dart';
 import '../../core/config.dart';
 import '../../core/push_service.dart';
 
+/// Server javob bermagan (ulanish darajasidagi) xatoda "Tarmoq xatosi"
+/// o'rniga qaysi manzilga, qanday xato bilan yiqilganini ko'rsatadi —
+/// aks holda sabab (noto'g'ri URL, DNS, timeout, sertifikat) aniqlab
+/// bo'lmaydi. `e.response` bor bo'lsa (server javob berdi, faqat xato
+/// status) — bu funksiya chaqirilmaydi, `detail` ishlatiladi.
+String describeConnectionError(DioException e) {
+  final url = e.requestOptions.uri.toString();
+  final typeLabel = switch (e.type) {
+    DioExceptionType.connectionTimeout => 'ulanish vaqti tugadi',
+    DioExceptionType.sendTimeout => 'so\'rov yuborish vaqti tugadi',
+    DioExceptionType.receiveTimeout => 'javob kutish vaqti tugadi',
+    DioExceptionType.badCertificate => 'SSL sertifikat xato',
+    DioExceptionType.connectionError => 'ulanib bo\'lmadi',
+    DioExceptionType.cancel => 'bekor qilindi',
+    _ => 'noma\'lum xato',
+  };
+  return 'Tarmoq xatosi: $typeLabel\n$url\n${e.message ?? e.error ?? ''}';
+}
+
 class CurrentUser {
   final int id;
   final String? phone;
@@ -75,7 +94,7 @@ class AuthController extends Notifier<AuthState> {
         botUrl: data['bot_url'] as String,
       );
     } on DioException catch (e) {
-      state = state.copyWith(loading: false, error: e.response?.data['detail']?.toString() ?? 'Tarmoq xatosi');
+      state = state.copyWith(loading: false, error: e.response?.data['detail']?.toString() ?? describeConnectionError(e));
       return null;
     }
   }
@@ -105,7 +124,7 @@ class AuthController extends Notifier<AuthState> {
       await _loadMe();
       return true;
     } on DioException catch (e) {
-      state = state.copyWith(error: e.response?.data['detail']?.toString() ?? 'Tarmoq xatosi');
+      state = state.copyWith(error: e.response?.data['detail']?.toString() ?? describeConnectionError(e));
       return false;
     }
   }
@@ -120,7 +139,7 @@ class AuthController extends Notifier<AuthState> {
       // Login muvaffaqiyatli — push notification'ni boshlash
       ref.read(pushServiceProvider).init();
     } on DioException catch (e) {
-      state = state.copyWith(loading: false, error: e.message);
+      state = state.copyWith(loading: false, error: e.response?.data['detail']?.toString() ?? describeConnectionError(e));
     }
   }
 
