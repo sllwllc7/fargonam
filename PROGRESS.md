@@ -795,7 +795,8 @@ tahrirlagach konteynerni qayta ishga tushirish shart emas.
 ## Gradle build tezligi (server, ~/.gradle/gradle.properties — repoga TEGILMADI)
 
 `org.gradle.daemon=true`, `org.gradle.parallel=true`, `org.gradle.caching=true`
-qo'shildi. Aniq vaqt farqi keyingi release orqali o'lchanadi (`status.json`).
+qo'shildi. **O'lchandi**: `assembleRelease` 407s → 47.4s (user), 196s → 41.8s
+(seller) — ~8-9x tezlashdi (asosan issiq daemon + parallel execution).
 
 ## scripts/release.sh — bitta buyruq bilan release
 
@@ -804,6 +805,19 @@ ikkala ilovani release rejimida build qiladi, `nginx/downloads/`ga ko'chiradi (e
 APK fayllarini o'chiradi), yuklab olish sahifasi havolalarini yangilaydi,
 `app_version.json`/`status.json`ni yangilaydi, `pubspec.yaml`larni commit qiladi
 (`git push` qo'lda qoladi — operator nazorati uchun ataylab avtomatlashtirilmadi).
+
+**Topilgan va tuzatilgan xato**: birinchi urinishda `release_app()` funksiyasi
+ichidagi progress `echo`lari ham `$(release_app ...)` command substitution orqali
+ushlanib qolgan (bash barcha stdout'ni ushlaydi, faqat oxirgi qatorni emas) —
+natijada `U_VERSION`/`U_BUILD` o'rniga progress matni tushib, `app_version.json`
+yozishda "invalid literal for int()" bilan qulagan va `index.html` buzilgan
+(havolalar `href="/"` bo'lib qolgan). Progress xabarlari `>&2`ga ko'chirildi,
+faqat yakuniy natija qatori stdout'da qoldi. Server holati reset qilinib (git
+checkout + noto'g'ri APK'larni o'chirish) qayta ishga tushirilgach **muvaffaqiyatli
+o'tdi** (user/seller 0.1.1+2, sayt/`/app/version`/`/status` hammasi mos).
+Alohida topilgan kichik gap: serverda global git identity sozlanmagan edi
+(`git config --global user.email/name` — deploy foydalanuvchisi uchun bir marta
+qo'shildi, endi commit bosqichi ishlaydi).
 
 ## APK hajmi tekshiruvi (137 MB — sabab topildi, YECHIM FOYDALANUVCHIGA QOLDIRILDI)
 
