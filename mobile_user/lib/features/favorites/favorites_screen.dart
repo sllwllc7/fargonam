@@ -80,7 +80,11 @@ class FavoritesScreen extends ConsumerWidget {
                           crossAxisCount: 2,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          childAspectRatio: 0.72,
+                          // 0.72'da haqiqiy qurilmada (katta tizim shrifti)
+                          // narx qatori bir necha o'ndan bir pikselga
+                          // toshib, "BOTTOM OVERFLOWED" bannerini chiqarardi
+                          // — kartaga sal ko'proq bo'yi berildi.
+                          childAspectRatio: 0.68,
                         ),
                         itemBuilder: (context, i) => FadeUpItem(
                           delay: AppMotion.staggerStep * i,

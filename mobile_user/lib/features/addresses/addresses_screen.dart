@@ -440,7 +440,11 @@ class _AddAddressSheetState extends ConsumerState<_AddAddressSheet> {
             // Viloyat + tuman
             Row(
               children: [
+                // Katta tizim shrifti bilan flex:1 "Viloyat" yorlig'ini va
+                // "Farg'ona" qiymatini kesib qo'yardi ("Vilo…"/"Farg…") —
+                // flex:4/5'ga kengaytirildi.
                 Expanded(
+                  flex: 4,
                   child: TextField(
                     controller: _regionCtrl,
                     style: TextStyle(color: AppColors.textPrimary),
@@ -449,7 +453,7 @@ class _AddAddressSheetState extends ConsumerState<_AddAddressSheet> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  flex: 2,
+                  flex: 5,
                   child: DropdownButtonFormField<String>(
                     initialValue: _district,
                     isExpanded: true,
