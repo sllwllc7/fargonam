@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { LoginPage } from "./auth/LoginPage";
 import { Layout } from "./components/Layout";
+import { CategoriesPage } from "./pages/CategoriesPage";
 import { ModerationProductsPage } from "./pages/ModerationProductsPage";
 
 function Gate({ children }: { children: ReactElement }) {
@@ -29,6 +30,7 @@ export default function App() {
           >
             <Route index element={<Navigate to="/moderation" replace />} />
             <Route path="moderation" element={<ModerationProductsPage />} />
+            <Route path="categories" element={<CategoriesPage />} />
           </Route>
         </Routes>
       </AuthProvider>

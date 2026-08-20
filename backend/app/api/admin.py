@@ -155,8 +155,9 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
 # ========== SHOPS / KYC ==========
 
 class ShopStatusUpdate(BaseModel):
-    status: ShopStatus
+    status: ShopStatus | None = None
     admin_note: str | None = Field(default=None, max_length=500)
+    is_trusted: bool | None = None
 
 
 class ShopAdminOut(BaseModel):
@@ -167,6 +168,7 @@ class ShopAdminOut(BaseModel):
     status: ShopStatus
     admin_note: str | None
     is_active: bool
+    is_trusted: bool = False
     created_at: str
     owner_phone: str | None = None
     product_count: int = 0
@@ -183,6 +185,7 @@ class ShopAdminOut(BaseModel):
             status=obj.status,
             admin_note=obj.admin_note,
             is_active=obj.is_active,
+            is_trusted=obj.is_trusted,
             created_at=str(obj.created_at),
         )
 
@@ -237,16 +240,62 @@ async def update_shop_status(
     payload: ShopStatusUpdate,
     db: AsyncSession = Depends(get_db),
 ):
-    """Do'konni tasdiqlash yoki rad etish (KYC)."""
+    """Do'konni tasdiqlash/rad etish (KYC), "ishonchli" bayrog'i."""
     shop = await db.get(Shop, shop_id)
     if not shop:
         raise HTTPException(status_code=404, detail="Do'kon topilmadi")
-    shop.status = payload.status
+    if payload.status is not None:
+        shop.status = payload.status
     if payload.admin_note is not None:
         shop.admin_note = payload.admin_note
+    if payload.is_trusted is not None:
+        shop.is_trusted = payload.is_trusted
     await db.commit()
     await db.refresh(shop)
     return ShopAdminOut.model_validate(shop)
+
+
+class SellerCreateRequest(BaseModel):
+    full_name: str = Field(min_length=1, max_length=120)
+    telegram_id: int
+    phone: str | None = Field(default=None, max_length=20)
+    shop_name: str = Field(min_length=1, max_length=120)
+    shop_description: str | None = Field(default=None, max_length=1000)
+
+
+@router.post("/shops", response_model=ShopAdminOut, status_code=status.HTTP_201_CREATED)
+async def create_seller(payload: SellerCreateRequest, db: AsyncSession = Depends(get_db)):
+    """Yangi sotuvchi qo'shadi — User (role=seller, telegram_id bilan
+    oldindan bog'langan) + Shop (status=approved, admin o'zi qo'shgani
+    uchun). Sotuvchi keyinroq shu telegram_id bilan Telegram orqali kirsa,
+    to'g'ridan-to'g'ri shu hisobga ulanadi (telegram_auth.py:
+    `select(User).where(User.telegram_id == telegram_id)`)."""
+    existing = await db.scalar(select(User).where(User.telegram_id == payload.telegram_id))
+    if existing:
+        raise HTTPException(status_code=409, detail="Bu Telegram ID bilan foydalanuvchi allaqachon bor")
+
+    owner = User(
+        telegram_id=payload.telegram_id,
+        phone=payload.phone,
+        full_name=payload.full_name,
+        role=UserRole.seller,
+        is_active=True,
+    )
+    db.add(owner)
+    await db.flush()
+    shop = Shop(
+        owner_id=owner.id,
+        name=payload.shop_name,
+        description=payload.shop_description,
+        status=ShopStatus.approved,
+        is_active=True,
+    )
+    db.add(shop)
+    await db.commit()
+    await db.refresh(shop)
+    out = ShopAdminOut.model_validate(shop)
+    out.owner_phone = owner.phone
+    return out
 
 
 # ========== BROADCAST (xabar yuborish) ==========
@@ -493,6 +542,53 @@ async def bulk_approve_kits(
         approve(kit, current_user.id)
     await db.commit()
     return {"approved": len(rows)}
+
+
+# ========== MAHSULOTLAR (to'liq ro'yxat — "Mahsulotlar" ekrani) ==========
+@router.get("/products", response_model=Page[ProductOut])
+async def list_all_products(
+    db: AsyncSession = Depends(get_db),
+    q: str | None = Query(default=None, max_length=100),
+    category_id: int | None = Query(default=None),
+    status_filter: ProductStatus | None = Query(default=None, alias="status"),
+    shop_id: int | None = Query(default=None),
+    is_active: bool | None = Query(default=None),
+    limit: int = Query(default=50, le=200, ge=1),
+    offset: int = Query(default=0, ge=0),
+):
+    """Moderatsiya navbatidan farqli — holatidan qat'i nazar BARCHA
+    mahsulotlar, qidiruv/kategoriya/holat/do'kon bo'yicha filtr bilan."""
+    base = select(Product)
+    if q:
+        safe_q = q.replace("%", r"\%").replace("_", r"\_")
+        base = base.where(Product.name.ilike(f"%{safe_q}%"))
+    if category_id is not None:
+        base = base.where(Product.category_id == category_id)
+    if status_filter is not None:
+        base = base.where(Product.status == status_filter)
+    if shop_id is not None:
+        base = base.where(Product.shop_id == shop_id)
+    if is_active is not None:
+        base = base.where(Product.is_active == is_active)
+
+    total = await db.scalar(select(func.count()).select_from(base.subquery()))
+    rows = (await db.scalars(base.order_by(Product.id.desc()).limit(limit).offset(offset))).all()
+
+    variants_map = await _load_variants_map(db, [p.id for p in rows])
+    shop_ids = {p.shop_id for p in rows}
+    shop_map: dict[int, Shop] = {}
+    if shop_ids:
+        shops = (await db.scalars(select(Shop).where(Shop.id.in_(shop_ids)))).all()
+        shop_map = {s.id: s for s in shops}
+
+    items = [
+        await _product_out(
+            p, variants_map.get(p.id, []),
+            shop_map[p.shop_id].name if p.shop_id in shop_map else None,
+        )
+        for p in rows
+    ]
+    return Page[ProductOut](items=items, total=total or 0, limit=limit, offset=offset)
 
 
 # ========== APP VERSION ==========

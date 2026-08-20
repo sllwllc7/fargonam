@@ -1514,3 +1514,43 @@ hash'lari lokal sinalgan versiya bilan **aynan bir xil**
 /auth/telegram/session?role=admin` productionda **avtomatik tasdiqlanmaydi**
 (`status: pending` qoladi — DEBUG=false to'g'ri ishlayapti, faqat haqiqiy
 Telegram ID 5860426852 kira oladi). Barcha 6 konteyner "Up".
+
+---
+
+## Sessiya (2026-08-20, davomi 4) — Kategoriyalar ekrani + qolgan bo'limlar uchun backend
+
+Foydalanuvchi qaytib keldi, 8 bandli katta ro'yxat berdi (Kategoriyalar,
+Mahsulotlar, Moderatsiya-qolgan, To'plamlar, Buyurtmalar, Sotuvchilar,
+Foydalanuvchilar/Versiya/Bildirishnoma, test ma'lumot tozalash). Har
+ekrandan keyin Playwright bilan sinab, deploy qilib davom etilmoqda.
+
+### Backend qo'shimchalari (bir martalik rebuild, keyingi ekranlar
+frontend-only bo'ladi)
+- `GET /admin/products` — to'liq mahsulot ro'yxati (holatidan qat'i nazar),
+  `q`/`category_id`/`status`/`shop_id`/`is_active` filtrlari — Mahsulotlar
+  ekrani uchun (moderatsiya navbatidan farqli, faqat pending emas).
+- `ShopAdminOut`ga `is_trusted` qo'shildi, `ShopStatusUpdate`da `status`
+  endi ixtiyoriy (faqat `is_trusted` yangilash ham mumkin).
+- `POST /admin/shops` — yangi sotuvchi qo'shish: `User(telegram_id=...,
+  role=seller)` + `Shop(status=approved)`. `telegram_id` oldindan
+  bog'lanadi — sotuvchi keyin shu ID bilan Telegram orqali kirsa
+  to'g'ridan-to'g'ri shu hisobga ulanadi (`telegram_auth.py`dagi
+  `select(User).where(telegram_id==...)` orqali, kod o'zgarmadi).
+- Bitta foydalanuvchiga xabar — **yangi endpoint kerak bo'lmadi**,
+  `POST /admin/broadcast` allaqachon `target=user_ids` + `user_ids=[id]`
+  qo'llab-quvvatlaydi.
+
+### Kategoriyalar ekrani — TAYYOR
+`CategoriesPage.tsx` + `CategoryForm.tsx`: ro'yxat (ikonka+rang+nom+slug+
+mahsulot soni), ▲/▼ bilan tartib o'zgartirish (`PATCH /categories/reorder`),
+"+ Yangi kategoriya" va "Tahrirlash" bitta forma (nom/slug avtomatik
+generatsiya/qo'lda, ota kategoriya, native rang tanlagich, 18 ta ikonkadan
+grid orqali tanlash — `category_icons.dart`dagi SVG path'lar aynan
+ko'chirilgan). O'chirish — `window.confirm` + agar bog'liq mahsulot bo'lsa
+backend 409 xatosini ko'rsatadi.
+
+**Playwright bilan sinaldi**: yangi kategoriya yaratildi (18→19), rangi
+tahrirlandi (xatosiz), o'chirildi (19→18) — hammasi ishladi, skrinshot
+tekshirildi (navy sidebar, oq kartalar, token ranglar to'g'ri).
+
+Menyuda "Kategoriyalar" endi bosiladi (avval "Tez orada" edi).

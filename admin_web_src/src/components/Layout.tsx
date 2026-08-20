@@ -4,7 +4,7 @@ import { useAuth } from "../auth/AuthContext";
 const NAV_ITEMS = [
   { to: "/moderation", label: "Moderatsiya", enabled: true },
   { to: "/products", label: "Mahsulotlar", enabled: false },
-  { to: "/categories", label: "Kategoriyalar", enabled: false },
+  { to: "/categories", label: "Kategoriyalar", enabled: true },
   { to: "/kits", label: "To'plamlar", enabled: false },
   { to: "/orders", label: "Buyurtmalar", enabled: false },
   { to: "/shops", label: "Sotuvchilar", enabled: false },
