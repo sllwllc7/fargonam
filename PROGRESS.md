@@ -1642,4 +1642,10 @@ qilindi (`is_active=false` — ro'yxatlardan yo'qoladi, ma'lumot
 saqlanadi). Sinov paytida yaratilgan "Sinov Do'koni" seller/shop yozuvi
 ham o'chirildi. Natija: 70 ta faol haqiqiy katalog mahsuloti, 1 ta shop.
 
-### Deploy — pastga qarang (alohida yozuv, natija bilan)
+### Deploy — YAKUNLANDI
+`git pull` + `docker compose -f docker-compose.prod.yml up -d --build backend`.
+Tekshirildi: `/status` `database: ok`, `/admin-web/` build hash aynan
+lokal sinalgan versiya bilan bir xil (`index-CrtqYLhs.js`), yangi
+endpoint'lar (`/admin/products`, `/admin/shops` POST, `/kits`) openapi'da
+bor, production katalogi **70 mahsulot bilan o'zgarishsiz** (lokal
+tozalash productionga ta'sir qilmadi — alohida baza).
