@@ -36,16 +36,18 @@ _backend_url = os.environ.get("BACKEND_INTERNAL_URL", "http://backend:8000")
 AUTH_WEBHOOK_URL = f"{_backend_url}/auth/telegram/webhook/{_webhook_secret}" if _webhook_secret else None
 
 APP_LABELS = {"user": "Foydalanuvchi ilovasi", "seller": "Sotuvchi ilovasi"}
-FILENAME_RE = re.compile(r"^fargonam-(user|seller)-(?P<version>.+)\.apk$")
+# Bot faqat arm64-v8a variantini beradi (deyarli barcha zamonaviy qurilmalar) —
+# eski arm32 qurilmalar uchun foydalanuvchi saytdagi ikkinchi havoladan oladi.
+FILENAME_RE = re.compile(r"^fargonam-(user|seller)-arm64-(?P<version>.+)\.apk$")
 
 
 def _find_apk(kind: str) -> tuple[str, str, datetime] | None:
-    """`kind` ('user'/'seller') uchun eng so'nggi APK faylini topadi.
+    """`kind` ('user'/'seller') uchun eng so'nggi arm64 APK faylini topadi.
 
     Returns (fayl_yo'li, versiya, build_vaqti) yoki topilmasa None.
     """
     candidates = []
-    for path in glob.glob(os.path.join(APK_DIR, f"fargonam-{kind}-*.apk")):
+    for path in glob.glob(os.path.join(APK_DIR, f"fargonam-{kind}-arm64-*.apk")):
         match = FILENAME_RE.match(os.path.basename(path))
         if match:
             candidates.append((path, match.group("version"), datetime.fromtimestamp(os.path.getmtime(path))))
