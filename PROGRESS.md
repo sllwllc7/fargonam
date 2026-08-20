@@ -748,8 +748,94 @@ Server: `189.74.97.28`, domenlar `fargonam.uz` (APK yuklab olish sahifasi) va
   production'da hali umuman ishlamas edi. Tuzatildi (backend'ga shu env'lar qo'shildi,
   `TELEGRAM_BOT_USERNAME` `getMe` orqali aniqlandi: `fargonam_bot`, yangi
   `TELEGRAM_WEBHOOK_SECRET` generatsiya qilindi).
-- **HAL QILINMAGAN**: bot deploy qilindi, lekin Telegram `getUpdates` 409 Conflict
-  qaytarmoqda — konteynerni to'liq to'xtatib to'g'ridan-to'g'ri `curl getUpdates` bilan
-  tekshirilganda ham xuddi shu xato chiqdi va `getWebhookInfo` webhook yo'qligini
-  tasdiqladi. Demak shu bot tokeni bilan **serverdan tashqarida boshqa faol poller bor**
-  — bu server/kod muammosi emas, tashqi omil. Foydalanuvchiga xabar berildi.
+- **HAL QILINDI**: 409 sababi foydalanuvchining o'zi (avval boshqa joyda ishga tushirgan
+  ekan). BotFather orqali `/revoke` qilib yangi token oldi, `.env`ga o'zi yozdi (menga
+  qaytarib ko'rsatilmadi). Konteyner qayta ishga tushirilgach `getUpdates` 200 OK
+  qaytardi, 409 yo'qoldi.
+- **Tuzatildi**: `httpx`/`telegram` kutubxonalari INFO darajasida har so'rovni to'liq
+  URL bilan log qilardi (token URL ichida) — `docker logs` orqali token oshkor bo'lardi.
+  `bot.py`da bu loggerlar WARNING'ga tushirildi, eski (tokenli) log qatorlari bo'lgan
+  konteyner butunlay olib tashlanib qayta yaratildi.
+
+## SSH xavfsizlik yakunlandi (2026-08-20)
+
+Foydalanuvchi SSH kalitini qo'shgach tasdiqlandi: kalit bilan kirish ishlaydi, parol
+bilan kirish rad etiladi (`Permission denied (publickey)`). `PermitRootLogin no` va
+`PasswordAuthentication no` `/etc/ssh/sshd_config`ga qo'yildi, `sshd` qayta ishga
+tushirildi. Root va `fargonam` foydalanuvchilarining vaqtinchalik parollari
+`passwd -l` bilan qulflandi (`L` holat) — endi faqat SSH kalit orqali kirish mumkin.
+
+## MinIO healthcheck tuzatildi
+
+`healthcheck: mc ready local` doim "unhealthy" qaytarardi — bu image tag'da `mc`
+binary yo'q ekan (faqat server binary bor). MinIO'ning o'z
+`/minio/health/live` HTTP endpoint'iga `curl`ga almashtirildi, endi "healthy".
+
+## Ilova yangilanish tekshiruvi (GET /app/version) va GET /status
+
+`backend/app_version.json`/`backend/status.json` — ikkalasi ham gitignored,
+docker-compose orqali `:ro` bind-mount bilan konteynerga ulangan (`.example`
+fayllar repoda namuna sifatida). Fayllar har so'rovda qayta o'qiladi — operator
+tahrirlagach konteynerni qayta ishga tushirish shart emas.
+
+### Qarorlar
+
+- `GET /app/version` spetsifikatsiyada bitta obyekt qaytarishi yozilgan edi, lekin
+  ikkita mustaqil ilova (user/seller) bor — `?app=user|seller` query parametri
+  qo'shildi (422 boshqa qiymatda). Bu spetsifikatsiyani to'ldiruvchi zaruriy qaror,
+  aks holda ikkinchi ilova uchun ishlamas edi.
+- Versiya solishtirish: mavjud `compareVersions`/`PackageInfo` mexanizmi (app_config
+  orqali kelgan `min_app_version_*` majburiy-yangilash tizimidan alohida) qayta
+  ishlatildi — bu YANGI, ixtiyoriy "yangi versiya bor" bildirishnoma, force=true
+  bo'lmasa foydalanuvchi "Keyinroq" bosib davom eta oladi.
+- `GET /status` — release skripti yozadigan alohida JSON (`build_seconds`,
+  versiya, izoh) + jonli DB ulanish tekshiruvi. Foydalanuvchi so'ragan (Telegram
+  bot 409'da) fallback sifatida ishlatiladi.
+
+## Gradle build tezligi (server, ~/.gradle/gradle.properties — repoga TEGILMADI)
+
+`org.gradle.daemon=true`, `org.gradle.parallel=true`, `org.gradle.caching=true`
+qo'shildi. Aniq vaqt farqi keyingi release orqali o'lchanadi (`status.json`).
+
+## scripts/release.sh — bitta buyruq bilan release
+
+`./scripts/release.sh "Izoh"` — versionName/versionCode oshiradi (patch+1, build+1),
+ikkala ilovani release rejimida build qiladi, `nginx/downloads/`ga ko'chiradi (eski
+APK fayllarini o'chiradi), yuklab olish sahifasi havolalarini yangilaydi,
+`app_version.json`/`status.json`ni yangilaydi, `pubspec.yaml`larni commit qiladi
+(`git push` qo'lda qoladi — operator nazorati uchun ataylab avtomatlashtirilmadi).
+
+## APK hajmi tekshiruvi (137 MB — sabab topildi, YECHIM FOYDALANUVCHIGA QOLDIRILDI)
+
+`unzip -l` bilan tekshirildi (`fargonam-user-0.1.0.apk`, 150.7 MB siqilmagan):
+
+| Fayl | Hajm |
+|---|---|
+| `lib/x86_64/libmaps-mobile.so` | 28.9 MB |
+| `lib/arm64-v8a/libmaps-mobile.so` | 26.2 MB |
+| `lib/armeabi-v7a/libmaps-mobile.so` | 15.7 MB |
+| **Yandex Maps jami (3 arxitektura)** | **~70.9 MB (~47%)** |
+| `libflutter.so` + `libapp.so` (3 arxitektura) | ~55 MB |
+
+**Muhim topilma**: `yandex_mapkit`dan foydalanadigan yagona fayl —
+`mobile_user/lib/features/taxi/taxi_screen.dart` — hech qayerdan chaqirilmaydi.
+`app_shell.dart`dagi Taksi tab `TaxiComingSoonScreen`ni ko'rsatadi (CLAUDE.md
+1-bo'lim: taksi 2-bosqich funksiyasi, MVP-1'da "tez orada"). Ya'ni ilova hozir
+ishlatilmayotgan xususiyat uchun ~71 MB native kutubxona tashiydi.
+`yandexMapkit.variant=lite` allaqachon eng kichik variant — bu yo'nalishda
+qo'shimcha kamaytirish yo'q.
+
+**Variantlar** (qaror qilinmadi, foydalanuvchi tanlaydi):
+1. **`--split-per-abi`** — 3 alohida APK (har biri ~45-55 MB), faqat `arm64-v8a`ni
+   saytga qo'yish (so'nggi ~6-7 yillik qurilmalarning deyarli barchasi). Faqat build
+   bayrog'i, kod o'zgarmaydi. Kamchilik: eski 32-bit qurilmalar uchun alohida havola
+   kerak bo'ladi.
+2. **x86_64'ni universal build'dan chiqarib tashlash** (`--target-platform
+   android-arm,android-arm64`) — real foydalanuvchi qurilmalarida deyarli hech qachon
+   kerak bo'lmaydi (faqat emulyator/ba'zi Chromebook), ~49 MB tejaydi, bitta universal
+   APK saqlanib qoladi. Faqat build bayrog'i.
+3. **`yandex_mapkit`ni pubspec'dan vaqtincha olib tashlash** (2-bosqichda taksi
+   ishga tushganda qaytarish) — ~71 MB tejaydi, lekin bu kod/bog'liqlik o'zgarishi
+   (pubspec.yaml, Android native konfiguratsiya), shunchaki build bayrog'i emas.
+   Eng katta tejash, lekin eng invaziv.
+4. 1/2 va 3 birlashtirilishi mumkin (maksimal tejash).
