@@ -16,7 +16,7 @@ from sqlalchemy import select
 
 from app.db.session import AsyncSessionLocal
 from app.models.category import Category
-from app.models.product import Product
+from app.models.product import Product, ProductStatus
 from app.models.product_set import ProductSet, ProductSetItem
 from app.models.product_variant import ProductVariant
 
@@ -217,6 +217,7 @@ async def main():
                     brand=brand,
                     description=desc,
                     is_active=True,
+                    status=ProductStatus.approved,
                 )
                 db.add(product)
                 await db.flush()
@@ -289,6 +290,7 @@ async def main():
                 name=f"{grade}-sinf to'plami",
                 grade_level=gs,
                 is_active=True,
+                status=ProductStatus.approved,
             )
             db.add(kit)
             await db.flush()

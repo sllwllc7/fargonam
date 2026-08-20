@@ -8,18 +8,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
 
 from app.api.deps import require_admin
+from app.api.kits import _kit_out, _load_items
+from app.api.products import _load_variants_map, _product_out
+from app.core.moderation import admin_direct_edit, approve, reject
 from app.core.push import send_push_to_user
 from app.db.session import get_db
 from app.models.notification import Notification
 from app.api.cart import enrich_order, transition_order_status
 from app.models.order import Order, OrderStatus
-from app.models.product import Product
+from app.models.product import Product, ProductStatus
+from app.models.product_set import ProductSet
+from app.models.product_variant import ProductVariant
 from app.models.shop import Shop, ShopStatus
 from app.models.user import User, UserRole
 from app.schemas.admin import AdminStats, OrderStatusUpdate, UserAdminUpdate
 from app.schemas.auth import UserOut
 from app.schemas.common import Page
-from app.schemas.marketplace import OrderOut
+from app.schemas.marketplace import KitOut, OrderOut, ProductOut
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -288,3 +293,193 @@ async def broadcast_message(
         "push_sent": sent,
         "notifications_created": len(user_ids),
     }
+
+
+# ========== MODERATSIYA (mahsulot/to'plam tasdiqlash) ==========
+
+class RejectRequest(BaseModel):
+    reason: str = Field(min_length=1, max_length=1000)
+
+
+class BulkModerationRequest(BaseModel):
+    ids: list[int] = Field(min_length=1, max_length=200)
+
+
+class ProductDirectEditRequest(BaseModel):
+    """Admin "tuzatib tasdiqlash" — himoyalangan maydonni to'g'ridan-to'g'ri
+    tahrirlab, shu bilan birga tasdiqlaydi (sellerga qaytarmasdan)."""
+    name: str | None = None
+    brand: str | None = None
+    description: str | None = None
+    category_id: int | None = None
+    image_url: str | None = None
+
+
+@router.get("/moderation/products", response_model=Page[ProductOut])
+async def list_products_for_moderation(
+    db: AsyncSession = Depends(get_db),
+    status_filter: ProductStatus | None = Query(default=ProductStatus.pending, alias="status"),
+    limit: int = Query(default=50, le=200, ge=1),
+    offset: int = Query(default=0, ge=0),
+):
+    """Moderatsiya navbati — sukut bo'yicha faqat 'pending'."""
+    base = select(Product)
+    if status_filter is not None:
+        base = base.where(Product.status == status_filter)
+
+    total = await db.scalar(select(func.count()).select_from(base.subquery()))
+    rows = (await db.scalars(base.order_by(Product.submitted_at).limit(limit).offset(offset))).all()
+
+    variants_map = await _load_variants_map(db, [p.id for p in rows])
+    shop_ids = {p.shop_id for p in rows}
+    shop_map: dict[int, Shop] = {}
+    if shop_ids:
+        shops = (await db.scalars(select(Shop).where(Shop.id.in_(shop_ids)))).all()
+        shop_map = {s.id: s for s in shops}
+
+    items = [
+        await _product_out(
+            p, variants_map.get(p.id, []),
+            shop_map[p.shop_id].name if p.shop_id in shop_map else None,
+        )
+        for p in rows
+    ]
+    return Page[ProductOut](items=items, total=total or 0, limit=limit, offset=offset)
+
+
+async def _get_product_or_404(db: AsyncSession, product_id: int) -> Product:
+    p = await db.get(Product, product_id)
+    if not p:
+        raise HTTPException(status_code=404, detail="Mahsulot topilmadi")
+    return p
+
+
+async def _product_moderation_out(db: AsyncSession, p: Product) -> ProductOut:
+    variants = (await db.scalars(
+        select(ProductVariant).where(ProductVariant.product_id == p.id)
+    )).all()
+    shop = await db.get(Shop, p.shop_id)
+    return await _product_out(p, list(variants), shop.name if shop else None)
+
+
+@router.post("/moderation/products/{product_id}/approve", response_model=ProductOut)
+async def approve_product(
+    product_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    p = await _get_product_or_404(db, product_id)
+    approve(p, current_user.id)
+    await db.commit()
+    await db.refresh(p)
+    return await _product_moderation_out(db, p)
+
+
+@router.post("/moderation/products/{product_id}/reject", response_model=ProductOut)
+async def reject_product(
+    product_id: int,
+    payload: RejectRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    p = await _get_product_or_404(db, product_id)
+    reject(p, current_user.id, payload.reason)
+    await db.commit()
+    await db.refresh(p)
+    return await _product_moderation_out(db, p)
+
+
+@router.post("/moderation/products/{product_id}/edit-approve", response_model=ProductOut)
+async def edit_approve_product(
+    product_id: int,
+    payload: ProductDirectEditRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """Admin sellerga qaytarmasdan o'zi tahrirlab, shu zahoti tasdiqlaydi."""
+    p = await _get_product_or_404(db, product_id)
+    changed = payload.model_dump(exclude_unset=True)
+    if changed:
+        admin_direct_edit(p, changed)
+    approve(p, current_user.id)
+    await db.commit()
+    await db.refresh(p)
+    return await _product_moderation_out(db, p)
+
+
+@router.post("/moderation/products/bulk-approve")
+async def bulk_approve_products(
+    payload: BulkModerationRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    rows = (await db.scalars(select(Product).where(Product.id.in_(payload.ids)))).all()
+    for p in rows:
+        approve(p, current_user.id)
+    await db.commit()
+    return {"approved": len(rows)}
+
+
+@router.get("/moderation/kits", response_model=Page[KitOut])
+async def list_kits_for_moderation(
+    db: AsyncSession = Depends(get_db),
+    status_filter: ProductStatus | None = Query(default=ProductStatus.pending, alias="status"),
+    limit: int = Query(default=50, le=200, ge=1),
+    offset: int = Query(default=0, ge=0),
+):
+    base = select(ProductSet)
+    if status_filter is not None:
+        base = base.where(ProductSet.status == status_filter)
+
+    total = await db.scalar(select(func.count()).select_from(base.subquery()))
+    rows = (await db.scalars(base.order_by(ProductSet.submitted_at).limit(limit).offset(offset))).all()
+
+    items = [await _kit_out(s, await _load_items(db, s.id), db) for s in rows]
+    return Page[KitOut](items=items, total=total or 0, limit=limit, offset=offset)
+
+
+async def _get_kit_or_404(db: AsyncSession, kit_id: int) -> ProductSet:
+    kit = await db.get(ProductSet, kit_id)
+    if not kit:
+        raise HTTPException(status_code=404, detail="To'plam topilmadi")
+    return kit
+
+
+@router.post("/moderation/kits/{kit_id}/approve", response_model=KitOut)
+async def approve_kit(
+    kit_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    kit = await _get_kit_or_404(db, kit_id)
+    approve(kit, current_user.id)
+    await db.commit()
+    await db.refresh(kit)
+    return await _kit_out(kit, await _load_items(db, kit.id), db)
+
+
+@router.post("/moderation/kits/{kit_id}/reject", response_model=KitOut)
+async def reject_kit(
+    kit_id: int,
+    payload: RejectRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    kit = await _get_kit_or_404(db, kit_id)
+    reject(kit, current_user.id, payload.reason)
+    await db.commit()
+    await db.refresh(kit)
+    return await _kit_out(kit, await _load_items(db, kit.id), db)
+
+
+@router.post("/moderation/kits/bulk-approve")
+async def bulk_approve_kits(
+    payload: BulkModerationRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    rows = (await db.scalars(select(ProductSet).where(ProductSet.id.in_(payload.ids)))).all()
+    for kit in rows:
+        approve(kit, current_user.id)
+    await db.commit()
+    return {"approved": len(rows)}

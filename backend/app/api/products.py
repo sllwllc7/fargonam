@@ -9,11 +9,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_current_user_optional
+from app.core.moderation import stage_protected_update
 from app.core.storage import PRODUCTS_DIR, public_url
 from app.db.session import get_db
 from app.models.cart import CartItem
 from app.models.favorite import Favorite
-from app.models.product import Product
+from app.models.product import Product, ProductStatus
 from app.models.product_image import ProductImage
 from app.models.product_variant import ProductVariant
 from app.models.review import Review
@@ -67,6 +68,10 @@ async def _product_out(
         is_active=p.is_active,
         created_at=p.created_at,
         shop_name=shop_name,
+        status=p.status.value,
+        rejected_reason=p.rejected_reason,
+        pending_edit=p.pending_edit,
+        submitted_at=p.submitted_at,
         variants=[VariantOut.model_validate(v) for v in variants],
         min_price=Decimal(min(prices)) if prices else None,
         max_price=Decimal(max(prices)) if prices else None,
@@ -133,10 +138,13 @@ async def list_products(
         .join(agg, agg.c.product_id == Product.id)
         .where(Product.is_active.is_(True))
     )
-    # KYC tasdiqlanmagan do'kon mahsulotlari ommaviy katalogda ko'rinmaydi —
-    # bundan mustasno: so'rovchi aynan shu do'konni so'rayotgan egasi/admin
+    # KYC tasdiqlanmagan do'kon mahsulotlari va moderatsiyadan o'tmagan
+    # mahsulotlar ommaviy katalogda ko'rinmaydi — bundan mustasno: so'rovchi
+    # aynan shu do'konni so'rayotgan egasi/admin (moderatsiya holatidan
+    # qat'iy nazar o'z mahsulotini ko'ra olishi kerak)
     if shop_id is None or not await _can_view_unapproved_shop(db, shop_id, current_user):
         base = base.join(Shop, Shop.id == Product.shop_id).where(Shop.status == ShopStatus.approved)
+        base = base.where(Product.status == ProductStatus.approved)
     if q:
         # LIKE maxsus belgilarini escape qilish
         safe_q = q.replace("%", r"\%").replace("_", r"\_")
@@ -199,8 +207,10 @@ async def get_product(
     shop = await db.get(Shop, p.shop_id)
     if not shop:
         raise HTTPException(status_code=404, detail="Mahsulot topilmadi")
-    # KYC tasdiqlanmagan do'kon mahsuloti — do'kon egasi/admin bundan mustasno
-    if shop.status != ShopStatus.approved and not await _can_view_unapproved_shop(db, shop.id, current_user):
+    # KYC tasdiqlanmagan do'kon yoki moderatsiyadan o'tmagan mahsulot —
+    # do'kon egasi/admin bundan mustasno
+    unapproved = shop.status != ShopStatus.approved or p.status != ProductStatus.approved
+    if unapproved and not await _can_view_unapproved_shop(db, shop.id, current_user):
         raise HTTPException(status_code=404, detail="Mahsulot topilmadi")
     variants = (await db.scalars(
         select(ProductVariant)
@@ -239,6 +249,7 @@ async def create_product(
         name=payload.name,
         brand=payload.brand,
         description=payload.description,
+        status=ProductStatus.pending,
     )
     db.add(product)
     await db.flush()  # product.id kerak
@@ -272,8 +283,14 @@ async def update_product(
     data = payload.model_dump(exclude_unset=True)
     price = data.pop("price", None)
     stock = data.pop("stock", None)
-    for field, value in data.items():
-        setattr(product, field, value)
+    # is_active — ko'rinish tugmasi (yashirish/ko'rsatish), moderatsiya emas,
+    # darhol qo'llanadi
+    is_active = data.pop("is_active", None)
+    if is_active is not None:
+        product.is_active = is_active
+    # Qolgan maydonlar (name/brand/description/category_id) — himoyalangan,
+    # tasdiqlangan mahsulotda staging orqali o'tadi (moderation.py)
+    stage_protected_update(product, data)
 
     variants = (await db.scalars(
         select(ProductVariant)
@@ -521,15 +538,21 @@ async def upload_product_image(
     dest: Path = PRODUCTS_DIR / filename
     dest.write_bytes(contents)
 
-    # Eski rasmni o'chirish (agar bor bo'lsa va lokal bo'lsa)
-    if product.image_url and product.image_url.startswith("/static/"):
+    # Eski rasmni o'chirish (agar bor bo'lsa, lokal bo'lsa VA hozir stagelanmagan
+    # bo'lsa — tasdiqlangan mahsulotda eski rasm hali User App'da ko'rinib
+    # turishi kerak, o'chirib bo'lmaydi)
+    if (
+        product.status != ProductStatus.approved
+        and product.image_url
+        and product.image_url.startswith("/static/")
+    ):
         old = PRODUCTS_DIR.parent / product.image_url[len("/static/") :]
         try:
             old.unlink(missing_ok=True)
         except OSError:
             pass
 
-    product.image_url = public_url(f"products/{filename}")
+    stage_protected_update(product, {"image_url": public_url(f"products/{filename}")})
     await db.commit()
     await db.refresh(product)
     variants = (await db.scalars(

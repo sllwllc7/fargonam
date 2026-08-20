@@ -4,10 +4,13 @@ Sotuvchi (Seller App) o'zi tuzadi — `app/api/kits.py` orqali CRUD."""
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.db.base import Base
+from app.models.product import ProductStatus
 
 
 class ProductSet(Base):
@@ -26,6 +29,23 @@ class ProductSet(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+    # ── Moderatsiya (Product bilan bir xil model — moderation.md'ga qara) ──
+    status: Mapped[ProductStatus] = mapped_column(
+        SAEnum(ProductStatus, name="product_status"),
+        default=ProductStatus.pending,
+        nullable=False,
+        server_default="pending",
+    )
+    rejected_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    submitted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    moderated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    moderated_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    pending_edit: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
 
 class ProductSetItem(Base):

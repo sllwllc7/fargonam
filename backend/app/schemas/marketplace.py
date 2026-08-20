@@ -125,6 +125,13 @@ class ProductOut(BaseModel):
     # yangilanmaguncha)
     price: Decimal | None = None
     stock: int | None = None
+    # Moderatsiya — mobile_seller badge/xabar va admin moderatsiya navbati
+    # uchun (mobile_user'ga chiqmaydi, chunki User App faqat status=approved
+    # mahsulotlarni ko'radi)
+    status: str = "approved"
+    rejected_reason: str | None = None
+    pending_edit: dict | None = None
+    submitted_at: datetime | None = None
     model_config = {"from_attributes": True}
 
 
@@ -244,4 +251,8 @@ class KitOut(BaseModel):
     created_at: datetime
     items: list[KitItemOut] = Field(default_factory=list)
     total: int = 0
+    status: str = "approved"
+    rejected_reason: str | None = None
+    pending_edit: dict | None = None
+    submitted_at: datetime | None = None
     model_config = {"from_attributes": True}
