@@ -1853,3 +1853,57 @@ Foydalanuvchi yangi APK bilan qayta urinib ko'radi — endi ekranda
 aniq xato matni chiqadi (masalan "ulanib bo'lmadi: https://api.
 fargonam.uz/auth/telegram/session"), shu orqali haqiqiy sabab
 (DNS/operator/VPN/boshqa) aniqlanadi.
+
+---
+
+## Sessiya (2026-08-20, davomi 7) — Asosiy sabab topildi: min_app_version "1.0.0"
+
+Foydalanuvchi qayta urinib ko'rdi — hali ham login qila olmadi, va
+qo'shimcha topilma: seller/user ilova ikkalasi ham "eng yangi versiyasini
+o'rnating, davom etish uchun yangilang" deb turibdi, eng yangisini
+yuklab olishiga qaramasdan.
+
+### Ildiz sabab topildi
+`GET /app-config` → `min_app_version_user`/`min_app_version_seller`
+= **"1.0.0"** edi. Ilova esa 0.2.x. `main.dart`dagi `needsForceUpdate()`
+tekshiruvi shu qiymatni haqiqiy o'rnatilgan versiya bilan solishtiradi —
+0.2.x doim 1.0.0'dan kichik, shuning uchun **har safar ilova
+ochilganda**, tarmoq holatidan qat'i nazar, bloklovchi
+(`barrierDismissible: false`, `PopScope(canPop: false)`) "Yangilanish
+kerak" dialogi chiqadi — va **hech qachon qanoatlantirib bo'lmaydi**,
+chunki 1.0.0 hali chiqarilmagan. Buning ustiga "Yangilash" tugmasi
+bo'sh `onPressed: () {}` bilan yozilgan edi — bosilsa ham hech narsa
+bo'lmasdi. Bu ikkalasi birgalikda foydalanuvchini butunlay qamab
+qo'ygan (login ekraniga yetib borish-bormasligidan qat'i nazar).
+
+### Darhol tuzatildi (reliz kutmasdan, serverda)
+`PUT /app-config/min_app_version_user` va `.../min_app_version_seller`
+→ `"0.1.0"` (production admin token bilan, `role=admin` user orqali).
+**Bu o'zgarish darhol kuchga kirdi — foydalanuvchi hech narsa qayta
+o'rnatmasdan, ilovani yopib-ochib sinashi kifoya edi.**
+
+### Kod darajasida mustahkamlandi (0.2.2, ikkala ilova)
+- `RemoteConfig.defaults.minAppVersion`: `1.0.0` → `0.0.0` — server bilan
+  bog'lanib bo'lmasa (haqiqiy tarmoq xatosi holatida ham) ilova endi
+  HECH QACHON shu sabab bilan bloklanmaydi ("fail open" — avval "fail
+  closed" edi, bu aslida yanada jiddiy: tarmoq muammosi + noto'g'ri
+  standart qiymat birga kelsa, foydalanuvchi umuman hech narsa qila
+  olmasdi).
+- Backend `_DEFAULTS` ham `0.1.0`ga (DB qatori negadir o'chib qolsa ham
+  xavfsiz bo'lishi uchun).
+- "Yangilash" tugmasi endi ishlaydi — `https://fargonam.uz/` ochadi
+  (`url_launcher`, mavjud pattern — `app_update_sheet.dart`dan).
+- `mobile_seller`ga ham `describeConnectionError()` qo'shildi (avval
+  faqat `mobile_user`da bor edi) — endi ikkala ilovada ham login xatosi
+  aniq URL+sabab bilan ko'rsatiladi.
+- `flutter analyze`/`flutter test` — ikkala ilovada ham toza.
+
+**Reliz**: `0.2.2+6`, ikkala ilova ham qayta qurilib serverga
+chiqarilmoqda (backend allaqachon deploy qilindi va tekshirildi).
+
+### Ochiq qolgan savol
+Asl "tarmoq xatosi" (login POST'ning o'zi) haligacha aniq sabab bilan
+tasdiqlanmagan — force-update devori tufayli foydalanuvchi ehtimol hech
+qachon chinakam login urinishiga yetib bormagan bo'lishi mumkin edi.
+Endi devor yo'q — agar xato qolsa, yangi aniq xato matni (URL + xato
+turi) ko'rinadi, shundan keyingina haqiqiy tashxis qo'yiladi.
