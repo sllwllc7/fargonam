@@ -1500,3 +1500,17 @@ oldin.
 Foydalanuvchi tartibi bo'yicha: Kategoriyalar ekrani (backend tayyor),
 keyin Mahsulotlar ekrani (to'liq CRUD + qidiruv/filtr). Ikkalasi ham hali
 yozilmagan.
+
+### Deploy YAKUNLANDI (2026-08-20)
+Server: `fargonam@189.74.97.28`. Zaxira olindi
+(`~/backups/fargonam_pre_admin_deploy_2026-08-20_1255.sql.gz`), `git pull`,
+`docker compose -f docker-compose.prod.yml up -d --build backend` (Pillow
+bilan qayta qurildi), entrypoint avtomatik `alembic upgrade head` (ikkala
+yangi migratsiya — kategoriya ustunlari, `thumb_url` — qo'llandi,
+tekshirildi). Tasdiqlandi: `GET https://api.fargonam.uz/categories`
+`icon`/`color`/`sort_order` bilan qaytadi; `GET /admin-web/` build
+hash'lari lokal sinalgan versiya bilan **aynan bir xil**
+(`index-VVqg1Hzy.js`); CSP javobida `blob:` bor; `POST
+/auth/telegram/session?role=admin` productionda **avtomatik tasdiqlanmaydi**
+(`status: pending` qoladi — DEBUG=false to'g'ri ishlayapti, faqat haqiqiy
+Telegram ID 5860426852 kira oladi). Barcha 6 konteyner "Up".
