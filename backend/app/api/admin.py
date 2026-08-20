@@ -336,14 +336,20 @@ async def list_products_for_moderation(
     variants_map = await _load_variants_map(db, [p.id for p in rows])
     shop_ids = {p.shop_id for p in rows}
     shop_map: dict[int, Shop] = {}
+    owner_phone_map: dict[int, str | None] = {}
     if shop_ids:
         shops = (await db.scalars(select(Shop).where(Shop.id.in_(shop_ids)))).all()
         shop_map = {s.id: s for s in shops}
+        owner_ids = {s.owner_id for s in shops}
+        owners = (await db.scalars(select(User).where(User.id.in_(owner_ids)))).all()
+        phone_by_user_id = {u.id: u.phone for u in owners}
+        owner_phone_map = {s.id: phone_by_user_id.get(s.owner_id) for s in shops}
 
     items = [
         await _product_out(
             p, variants_map.get(p.id, []),
             shop_map[p.shop_id].name if p.shop_id in shop_map else None,
+            owner_phone_map.get(p.shop_id),
         )
         for p in rows
     ]
@@ -362,7 +368,8 @@ async def _product_moderation_out(db: AsyncSession, p: Product) -> ProductOut:
         select(ProductVariant).where(ProductVariant.product_id == p.id)
     )).all()
     shop = await db.get(Shop, p.shop_id)
-    return await _product_out(p, list(variants), shop.name if shop else None)
+    owner = await db.get(User, shop.owner_id) if shop else None
+    return await _product_out(p, list(variants), shop.name if shop else None, owner.phone if owner else None)
 
 
 @router.post("/moderation/products/{product_id}/approve", response_model=ProductOut)

@@ -1400,3 +1400,103 @@ tasdiqlanadi (bot bilan gaplashish shart emas lokal muhitda).
 Kits moderatsiyasi, boshqa admin ekranlari (Tartib 4-5-band), production'ga
 deploy (bu SPA hali serverga chiqarilmagan — faqat lokal). `edit-approve`
 + `thumb_url` sharpi burchak (yuqorida).
+
+---
+
+## Sessiya (2026-08-20, davomi 3) — Moderatsiya modalini tugatish + haqiqiy sinov + deploy
+
+Foydalanuvchi oldingi "tayyor" da'vomni rad etdi — haqli edi: modal yarim
+edi (narx/zaxira faqat ko'rsatilgan, SKU jadvali yo'q, bitta rasm bilan
+ishlaydi). Bu safar **avval Playwright bilan haqiqiy brauzerda sinaldi**,
+keyingina "ishlayapti" deyildi — pastdagi har bir band shu tarzda
+tekshirilgan (skrinshot + DOM tekshiruvi, curl emas).
+
+### Nima qo'shildi (moderatsiya modali)
+
+- **SKU jadvali endi to'liq** (`SkuEditor.tsx`): har variant uchun narx/
+  zaxira **tahrirlanadi** (`PATCH .../variants/{id}`, narx/zaxira darhol
+  qo'llanadi — moderatsiya kerak emas, CLAUDE.md §3 bilan bir xil). Faollash-
+  tirish/nofaollashtirish, o'chirish (agar buyurtmada ishlatilgan bo'lsa
+  backend 400 qaytaradi — UI avtomatik nofaol qilishga o'tadi).
+  **Parametrlar**: nom+qiymatlar (masalan `rang: qizil, ko'k`) qo'shilib
+  "Jadvalni qayta hisoblash" bosilsa — dekart ko'paytmasi hisoblanadi,
+  mavjud variantlar bilan solishtiriladi (`attributes` bo'yicha): yangi
+  kombinatsiya → yaratiladi, endi yo'q kombinatsiya → **nofaol qilinadi**
+  (hard delete emas — buyurtma tarixi buzilmasin), qayta paydo bo'lgan
+  kombinatsiya → qayta faollashtiriladi. Sinovda: "rang: qizil, ko'k"
+  qo'shilib ishga tushirilganda 2 ta yangi SKU yaratildi, eski "Standart"
+  nofaol qilindi — to'g'ri ishladi.
+- **Rasm galereyasi endi to'liq** (`ImageGallery.tsx` + backend'da 3 ta
+  yangi endpoint: `DELETE /products/{id}/images/{image_id}`, `PATCH
+  .../images/reorder`, `POST .../images/{image_id}/set-main`): bir nechta
+  rasm ko'rish, qo'shish (qirqish bilan), o'chirish, ▲/▼ bilan tartib
+  o'zgartirish, "Asosiy qilish". Sinovda: yuklash → asosiy qilish →
+  o'chirish ketma-ketligi Playwright orqali ishlatildi, hammasi xatosiz.
+  Asosiy qilish tasdiqlangan mahsulotda to'g'ri qayta moderatsiyaga
+  yuboradi (`stage_protected_update`) — kutilgan xatti-harakat.
+- **Sotuvchi va vaqt** (oldingi seansda backend qo'shilgan, bu safar
+  UI'ga chiqarildi): "Sotuvchi telefon" va "Yuborilgan" (sana-vaqt) endi
+  modalda ko'rinadi.
+
+### Topilgan va tuzatilgan haqiqiy xato: CSP `blob:` rasmlarni bloklardi
+Playwright bilan sinashda "Qo'llash" tugmasi doim o'chiq turib qoldi —
+sabab: `react-easy-crop` tanlangan faylni `URL.createObjectURL()` (`blob:`
+URL) orqali ko'rsatadi, lekin CSP `img-src` faqat `'self' data:`ga ruxsat
+berardi — brauzer rasmni yuklamasdan bloklagan, cropper hech qachon
+o'lchamni hisoblay olmagan. `img-src`ga `blob:` qo'shildi
+(`middleware.py`). **Bu foydalanuvchi hali sinamagan, lekin sinaganda
+100% duch keladigan xato edi** — Playwright bo'lmasa bu topilmasdi.
+
+### Aniqlangan, LEKIN xato emas: kategoriya dropdown
+Foydalanuvchi "bo'sh, '—' turibdi" dedi. Playwright bilan tekshirildi:
+`<select>` ichida **19 ta option bor** (18 kategoriya + "—"), to'g'ri
+yuklanadi. "—" ko'ringan sababi — sinov mahsulotlarining `category_id`si
+bazada haqiqatda `NULL` (mening sinov ma'lumotlarim, real emas). Kod
+buzuq emas edi, ma'lumot shunday edi.
+
+### Tuzatilgan: mening sinov ma'lumotim haqiqiy mahsulotni buzgan edi
+O'tgan safar mahsulot #3 (asl nomi "Nasa")ga sun'iy `pending_edit`
+qo'ygandim, foydalanuvchi panelda "Tasdiqlash" bosganda bu soxta nom
+("Yangi nom (sotuvchi tahriri)") LIVE qatorga yozilib ketdi. Bu **faqat
+lokal dev baza**, production emas — lekin baribir xato edi. Nomi "Nasa"ga
+qaytarib tuzatildi. **Bundan keyingi sinovlarda haqiqiy mahsulot
+qatorlariga sun'iy `pending_edit` yozilmaydi** — kerak bo'lsa alohida
+ID band qilinadi yoki darhol tozalanadi.
+
+### Hozircha ISHLAMAYDI (aniq ro'yxat, foydalanuvchi so'ragani bo'yicha)
+- **Menyu**: 7/8 bo'lim "Tez orada" — faqat Moderatsiya ishlaydi.
+- **Mahsulotlar bo'limi** (User App'dagi TO'LIQ ro'yxat, qidiruv, filtr,
+  yangi qo'shish, o'chirish): yo'q. Moderatsiya ekrani faqat "Kutilmoqda/
+  Tasdiqlangan/Rad etilgan" ko'rsatadi, qidiruv/filtr yo'q.
+- **Kategoriyalar ekrani**: yo'q (backend tayyor — CRUD+reorder+icon/color,
+  oldingi seansda yozilgan, lekin UI yo'q).
+- **To'plamlar (kitlar)**: hech narsa yo'q — na moderatsiya, na CRUD UI.
+- **Buyurtmalar**: yo'q.
+- **Sotuvchilar (ro'yxat/bloklash)**: yo'q.
+- **Bildirishnoma yuborish**: yo'q.
+
+### Deploy
+Server: `fargonam@189.74.97.28`, `~/fargonam` (git), `docker-compose.prod.yml`
+(DEPLOY.md'dagi rasmiy usul — `deploy_backend.sh`/`scripts/release.sh`
+ESKI/ishlatilmaydigan skript, e'tiborsiz qoldirildi). Tekshirildi:
+serverda **`DEBUG=false` va `ADMIN_TELEGRAM_IDS=5860426852` allaqachon
+to'g'ri edi** (avvalgi seansda o'rnatilgan) — qo'shimcha o'zgarish shart
+bo'lmadi. Git push qilingach: `git pull`, `docker compose -f
+docker-compose.prod.yml up -d --build backend`, keyin `alembic upgrade
+head` (entrypoint avtomatik), production DB'da ham `pg_dump` zaxira
+oldindan olindi. URL: **`https://api.fargonam.uz/admin-web/`** (§3'dagi
+eski nomuvofiqlik hali hal qilinmagan — foydalanuvchi "/admin" deb yozgan,
+lekin infratuzilma `/admin-web/`ga sozlangan; domenni o'zgartirish kichik
+nginx ishi, so'ralsa qilinadi).
+
+### Vositalar: Playwright qo'shildi (faqat dev, mendan sinov uchun)
+`admin_web_src/package.json`ga `playwright` devDependency sifatida
+qo'shildi — runtime bundle'ga ta'siri yo'q (faqat `npm run build`
+paytida ishlatilmaydi). Bundan keyin har bir yangi ekran/funksiya
+**Playwright bilan haqiqiy brauzerda sinaladi**, "tayyor" deyilishidan
+oldin.
+
+### Keyingi qadam
+Foydalanuvchi tartibi bo'yicha: Kategoriyalar ekrani (backend tayyor),
+keyin Mahsulotlar ekrani (to'liq CRUD + qidiruv/filtr). Ikkalasi ham hali
+yozilmagan.

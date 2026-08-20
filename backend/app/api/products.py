@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_current_user_optional
 from app.core.image_processing import process_product_image
 from app.core.moderation import stage_protected_update
-from app.core.storage import PRODUCTS_DIR, public_url
+from app.core.storage import PRODUCTS_DIR, delete_file, public_url
 from app.db.session import get_db
 from app.models.cart import CartItem
 from app.models.favorite import Favorite
@@ -23,6 +23,7 @@ from app.models.user import User, UserRole
 from app.schemas.common import Page
 from app.schemas.marketplace import (
     ProductCreate,
+    ProductImageReorderRequest,
     ProductOut,
     ProductUpdate,
     VariantCreate,
@@ -46,7 +47,10 @@ def _generate_sku(product_id: int) -> str:
 
 
 async def _product_out(
-    p: Product, variants: list[ProductVariant], shop_name: str | None = None
+    p: Product,
+    variants: list[ProductVariant],
+    shop_name: str | None = None,
+    seller_phone: str | None = None,
 ) -> ProductOut:
     active_variants = [v for v in variants if v.is_active]
     # Eski moslik price/stock maydonlari xaridor haqiqatda savatga qo'sha
@@ -69,6 +73,7 @@ async def _product_out(
         is_active=p.is_active,
         created_at=p.created_at,
         shop_name=shop_name,
+        seller_phone=seller_phone,
         status=p.status.value,
         rejected_reason=p.rejected_reason,
         pending_edit=p.pending_edit,
@@ -623,3 +628,83 @@ async def add_product_image(
     await db.commit()
     await db.refresh(img)
     return {"id": img.id, "image_url": img.image_url, "thumb_url": img.thumb_url}
+
+
+def _delete_local_file(url: str | None) -> None:
+    if url and url.startswith("/static/"):
+        delete_file(url[len("/static/"):])
+
+
+@router.delete("/{product_id}/images/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_product_image(
+    product_id: int,
+    image_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Galereyadagi bitta rasmni o'chiradi (asosiy rasm bunga kirmaydi —
+    u alohida yangi rasm yuklab almashtiriladi)."""
+    product = await db.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Mahsulot topilmadi")
+    await _ensure_shop_owner(db, product.shop_id, current_user)
+    img = await db.get(ProductImage, image_id)
+    if not img or img.product_id != product_id:
+        raise HTTPException(status_code=404, detail="Rasm topilmadi")
+    _delete_local_file(img.image_url)
+    _delete_local_file(img.thumb_url)
+    await db.delete(img)
+    await db.commit()
+
+
+@router.patch("/{product_id}/images/reorder")
+async def reorder_product_images(
+    product_id: int,
+    payload: ProductImageReorderRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    product = await db.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Mahsulot topilmadi")
+    await _ensure_shop_owner(db, product.shop_id, current_user)
+
+    ids = [item.id for item in payload.items]
+    rows = {
+        img.id: img
+        for img in await db.scalars(
+            select(ProductImage).where(ProductImage.id.in_(ids), ProductImage.product_id == product_id)
+        )
+    }
+    missing = set(ids) - set(rows)
+    if missing:
+        raise HTTPException(status_code=404, detail=f"Rasm topilmadi: {sorted(missing)}")
+    for item in payload.items:
+        rows[item.id].sort_order = item.sort_order
+    await db.commit()
+    return await list_product_images(product_id, db)
+
+
+@router.post("/{product_id}/images/{image_id}/set-main", response_model=ProductOut)
+async def set_main_product_image(
+    product_id: int,
+    image_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Galereyadagi bitta rasmni mahsulotning asosiy (kartochka) rasmi qiladi."""
+    product = await db.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Mahsulot topilmadi")
+    await _ensure_shop_owner(db, product.shop_id, current_user)
+    img = await db.get(ProductImage, image_id)
+    if not img or img.product_id != product_id:
+        raise HTTPException(status_code=404, detail="Rasm topilmadi")
+
+    stage_protected_update(product, {"image_url": img.image_url, "thumb_url": img.thumb_url})
+    await db.commit()
+    await db.refresh(product)
+    variants = (await db.scalars(
+        select(ProductVariant).where(ProductVariant.product_id == product_id)
+    )).all()
+    return await _product_out(product, list(variants))

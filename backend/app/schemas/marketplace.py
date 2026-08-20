@@ -75,6 +75,15 @@ class VariantCreate(BaseModel):
     sort_order: int = 0
 
 
+class ProductImageReorderItem(BaseModel):
+    id: int
+    sort_order: int
+
+
+class ProductImageReorderRequest(BaseModel):
+    items: list[ProductImageReorderItem] = Field(min_length=1, max_length=50)
+
+
 class VariantUpdate(BaseModel):
     variant_name: str | None = Field(default=None, min_length=1, max_length=100)
     price: int | None = Field(default=None, gt=0)
@@ -138,6 +147,8 @@ class ProductOut(BaseModel):
     is_active: bool
     created_at: datetime
     shop_name: str | None = None
+    # Admin moderatsiya navbati uchun — "kim yubordi" (mobile_user'ga chiqmaydi)
+    seller_phone: str | None = None
     # Variant tanlash uchun (mobile_user)
     variants: list[VariantOut] = Field(default_factory=list)
     min_price: Decimal | None = None

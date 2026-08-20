@@ -46,6 +46,7 @@ export type ProductOut = {
   is_active: boolean;
   created_at: string;
   shop_name: string | null;
+  seller_phone: string | null;
   variants: VariantOut[];
   min_price: string | null;
   max_price: string | null;

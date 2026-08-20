@@ -6,9 +6,11 @@ import {
   uploadProductImage,
 } from "../api/moderation";
 import type { ApiError } from "../api/client";
-import type { CategoryOut, ProductOut } from "../api/types";
+import type { CategoryOut, ProductOut, VariantOut } from "../api/types";
 import { effectiveFields } from "../utils/product";
 import { ImageCropModal } from "./ImageCropModal";
+import { ImageGallery } from "./ImageGallery";
+import { SkuEditor } from "./SkuEditor";
 
 export function ProductDetailModal({
   product: initialProduct,
@@ -105,6 +107,14 @@ export function ProductDetailModal({
     } finally {
       setBusy(null);
     }
+  }
+
+  function handleVariantsChange(variants: VariantOut[]) {
+    setProduct((prev) => {
+      const next = { ...prev, variants };
+      onUpdated(next);
+      return next;
+    });
   }
 
   function pickNewFile() {
@@ -212,10 +222,20 @@ export function ProductDetailModal({
 
           <div className="rounded-xl bg-background px-4 py-3 text-xs text-text-muted grid grid-cols-2 gap-x-4 gap-y-1">
             <span>Do'kon: {product.shop_name ?? "—"}</span>
-            <span>Narx: {product.price ? `${product.price} so'm` : "—"}</span>
+            <span>Sotuvchi telefon: {product.seller_phone ?? "—"}</span>
             <span>Holat: {product.status}</span>
-            <span>Zaxira: {product.total_stock}</span>
+            <span>Yuborilgan: {product.submitted_at ? new Date(product.submitted_at).toLocaleString("uz-UZ") : "—"}</span>
           </div>
+
+          <SkuEditor productId={product.id} variants={product.variants} onVariantsChange={handleVariantsChange} />
+
+          <ImageGallery
+            productId={product.id}
+            onMainImageChanged={(p) => {
+              applyUpdated(p);
+              setImageChanged(true);
+            }}
+          />
 
           {product.rejected_reason && (
             <div className="rounded-xl bg-danger-tint px-4 py-3 text-sm text-danger">
