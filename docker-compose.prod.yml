@@ -45,7 +45,7 @@ services:
     ports:
       - "9001:9001"  # MinIO Console (admin uchun)
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 10s
       retries: 3
