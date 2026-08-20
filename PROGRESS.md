@@ -853,3 +853,63 @@ qo'shimcha kamaytirish yo'q.
    (pubspec.yaml, Android native konfiguratsiya), shunchaki build bayrog'i emas.
    Eng katta tejash, lekin eng invaziv.
 4. 1/2 va 3 birlashtirilishi mumkin (maksimal tejash).
+
+### Qaror: 3+1 birlashtirildi (2026-08-20, foydalanuvchi tanladi)
+
+**Natija**: user 137MB → **28MB (arm64) / 25MB (arm32)**, seller 61MB → **24MB (arm64) /
+22MB (arm32)**. Ikkalasi ham 50MB Telegram limitidan past — bot endi APK faylini
+to'g'ridan-to'g'ri yuboradi (havola emas), qo'shimcha kod o'zgarishi kerak bo'lmadi
+(mavjud `MAX_TELEGRAM_FILE` tekshiruvi allaqachon shunday ishlagan).
+
+**O'chirilgan (kommentariyga o'ralgan, o'zgartirilmagan, faqat "// " prefiksi
+qo'shilgan yoki qatorlar kommentariyga olingan):**
+- `mobile_user/pubspec.yaml`: `yandex_mapkit: ^4.1.0` qatori
+- `mobile_user/android/app/build.gradle.kts`: `implementation("com.yandex.android:maps.mobile:...")`
+- `mobile_user/android/app/src/main/kotlin/.../MainApplication.kt`: `MapKitFactory` import va init
+- `mobile_user/lib/features/taxi/taxi_screen.dart`: **butun fayl** (2091 qator, har biri
+  `// ` bilan boshlanadi) — `app_shell.dart`dan chaqirilmasdi (Taksi tab
+  `TaxiComingSoonScreen` ko'rsatadi), lekin `activeRideProvider`ni eksport qilardi
+
+**Yangi qo'shildi**: `mobile_user/lib/features/taxi/active_ride_stub.dart` — faqat
+`app_shell.dart`ning `ref.invalidate(activeRideProvider)` chaqiruvi (WebSocket
+`ride_status` event'ida) kompilyatsiya bo'lishi uchun minimal `FutureProvider` stub
+(doim `null` qaytaradi — taksi o'chirilgan holda haqiqiy faol sayohat bo'lishi
+mumkin emas).
+
+#### TAKSI QAYTARISH (2-bosqich boshlanganda) — aniq qadamlar
+
+1. `mobile_user/pubspec.yaml`: 43-qatordagi kommentariyni olib tashlang —
+   `yandex_mapkit: ^4.1.0` qayta yoziladi.
+2. `mobile_user/android/app/build.gradle.kts`: `dependencies {}` blokidagi
+   `implementation("com.yandex.android:maps.mobile:4.22.0-lite")` qatorini
+   kommentariydan chiqaring.
+3. `MainApplication.kt`: 2 ta import va `onCreate()` ichidagi `try {}` blokini
+   kommentariydan chiqaring (fayl boshidagi izohni o'chiring).
+4. `taxi_screen.dart`: har qatordan `// ` prefiksini olib tashlang —
+   `sed -i 's/^\/\/ //' taxi_screen.dart` (birinchi 5 ta izoh qatorini qo'lda
+   o'chirish kerak bo'ladi), yoki `git log`dan shu commit'dan OLDINGI versiyani
+   qayta tiklang (`git show <bu-commitdan-oldingi-hash>:mobile_user/lib/features/taxi/taxi_screen.dart`).
+5. `mobile_user/lib/features/taxi/active_ride_stub.dart`ni o'chiring.
+6. `app_shell.dart`dagi import'ni qaytaring:
+   `import '../taxi/active_ride_stub.dart' show activeRideProvider;` →
+   `import '../taxi/taxi_screen.dart' show activeRideProvider;`
+7. `app_shell.dart`dagi `_pages` ro'yxatida `TaxiComingSoonScreen()` o'rniga
+   `TaxiScreen()` qo'ying (yoki mos UI qarorini qabul qiling).
+8. `flutter pub get` + `flutter analyze` + `flutter test` — 0/0/0 va yashil bo'lishi kerak.
+9. `scripts/release.sh` avtomatik arm64/arm32 build qiladi — hajm яна ~70MB
+   ko'tariladi, bu normal (xarita kutubxonasi qaytdi).
+
+### Arxitektura sxemasi (2026-08-20)
+
+`--split-per-abi` ISHLATILMADI — buning o'rniga har arxitektura uchun alohida
+`flutter build apk --release --target-platform android-arm64` /
+`--target-platform android-arm` chaqiruvi (natija bir xil: 2 alohida APK,
+x86_64 umuman ishlab chiqarilmaydi). Sabab: `--split-per-abi` standart holatda
+x86_64'ni ham qo'shib yuborar edi, buni chiqarib tashlash uchun baribir
+`--target-platform` cheklash kerak bo'lardi.
+
+Sayt: har ilova uchun 2 tugma — "Zamonaviy telefonlar (arm64)" (asosiy,
+tavsiya etiladi) va "Eski telefonlar (arm32)" (ikkinchi darajali). `/app/version`
+(ilova ichidagi yangilanish paneli) — faqat arm64 havolasini beradi (standart
+holat). Bot — faqat arm64 (oddiy bo'lib qolishi uchun, ikkinchi variant
+takliflanmaydi, kerak bo'lsa sayt ko'rsatiladi).
