@@ -13,7 +13,7 @@ import '../marketplace/catalog_screen.dart';
 import '../notifications/notifications_providers.dart';
 import '../orders/orders_screen.dart';
 import '../taxi/taxi_coming_soon_screen.dart';
-import '../taxi/taxi_screen.dart' show activeRideProvider;
+import '../taxi/active_ride_stub.dart' show activeRideProvider;
 import '../profile/profile_screen.dart';
 
 /// Global key — bosh sahifadan tab o'zgartirish uchun.

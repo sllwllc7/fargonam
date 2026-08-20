@@ -43,7 +43,8 @@ android {
 
     defaultConfig {
         applicationId = "uz.fargonam.app"
-        // Yandex MapKit Android 8.0+ talab qiladi
+        // minSdk 26 — Yandex MapKit talabi edi (hozir o'chirilgan, pastga
+        // qarang), o'zgartirilmadi (boshqa bog'liqlik bo'lishi mumkin).
         minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -82,5 +83,7 @@ flutter {
 }
 
 dependencies {
-    implementation("com.yandex.android:maps.mobile:4.22.0-lite")
+    // 2026-08-20: vaqtincha o'chirilgan (APK ~71MB kamaytirish uchun, taksi
+    // hali 2-bosqich funksiyasi). Qaytarish: PROGRESS.md "Taksi qaytarish".
+    // implementation("com.yandex.android:maps.mobile:4.22.0-lite")
 }

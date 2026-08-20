@@ -40,7 +40,9 @@ dependencies:
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
   geolocator: ^14.0.2
-  yandex_mapkit: ^4.1.0
+  # yandex_mapkit: ^4.1.0  # 2026-08-20: vaqtincha o'chirilgan (APK ~71MB kamaytirish
+  # uchun, taksi hali 2-bosqich funksiyasi) — qaytarish: DEPLOY.md yoki PROGRESS.md
+  # "Taksi qaytarish" bo'limiga qara.
   shared_preferences: ^2.5.5
   share_plus: ^10.1.4
   image_picker: ^1.2.1
