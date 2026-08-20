@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/api_client.dart';
-import '../cart/cart_screen.dart' show cartProvider;
+import '../cart/cart_screen.dart' show CartScreen, cartProvider;
 import 'kit_providers.dart';
 
 /// dc.html'da har bir to'plam elementi o'z kategoriyasiga mos ikonka
@@ -34,13 +34,18 @@ class _KitDetailScreenState extends ConsumerState<KitDetailScreen> {
     try {
       final dio = ref.read(dioProvider);
       for (final item in widget.kit.items) {
-        await dio.post('/cart', data: {'variant_id': item.variantId, 'quantity': item.quantity});
+        await dio.post(
+          '/cart',
+          data: {'variant_id': item.variantId, 'quantity': item.quantity},
+        );
       }
       ref.invalidate(cartProvider);
       HapticFeedback.lightImpact();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('To\'plam savatga qo\'shildi'), backgroundColor: AppColors.success),
+        showAppToast(
+          context,
+          'To\'plam savatga qo\'shildi',
+          onCartTap: () => pushAppRoute(context, (_) => const CartScreen()),
         );
         Navigator.pop(context);
       }
@@ -62,7 +67,15 @@ class _KitDetailScreenState extends ConsumerState<KitDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final k = widget.kit;
-    final tint = AppColors.categoryTints[(int.tryParse(k.gradeLevel ?? '1') ?? 1) % AppColors.categoryTints.length];
+    final tint =
+        AppColors.categoryTints[(int.tryParse(k.gradeLevel ?? '1') ?? 1) %
+            AppColors.categoryTints.length];
+    final cartAsync = ref.watch(cartProvider);
+    final cartCount = cartAsync.maybeWhen(
+      data: (items) =>
+          items.fold<int>(0, (s, it) => s + ((it['quantity'] as int?) ?? 1)),
+      orElse: () => 0,
+    );
 
     return PopScope(
       canPop: false,
@@ -89,8 +102,16 @@ class _KitDetailScreenState extends ConsumerState<KitDetailScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(k.name, style: AppTypography.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                Text('${k.items.length} xil mahsulot · to\'liq komplekt', style: AppTypography.caption),
+                                Text(
+                                  k.name,
+                                  style: AppTypography.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  '${k.items.length} xil mahsulot · to\'liq komplekt',
+                                  style: AppTypography.caption,
+                                ),
                               ],
                             ),
                           ),
@@ -100,21 +121,39 @@ class _KitDetailScreenState extends ConsumerState<KitDetailScreen> {
                     Container(
                       margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: tint[0], borderRadius: BorderRadius.circular(AppRadius.card)),
+                      decoration: BoxDecoration(
+                        color: tint[0],
+                        borderRadius: BorderRadius.circular(AppRadius.card),
+                      ),
                       child: Row(
                         children: [
                           Container(
                             width: 52,
                             height: 52,
-                            decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(15)),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(15),
+                            ),
                             alignment: Alignment.center,
-                            child: Text(k.gradeLevel ?? '?', style: AppTypography.cardTitle.copyWith(fontSize: 22, color: tint[1], letterSpacing: 0)),
+                            child: Text(
+                              k.gradeLevel ?? '?',
+                              style: AppTypography.cardTitle.copyWith(
+                                fontSize: 22,
+                                color: tint[1],
+                                letterSpacing: 0,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
                             child: Text(
                               'Do\'kon tomonidan tayyorlangan — hammasi bitta to\'plamda, alohida qidirish shart emas',
-                              style: AppTypography.rowTitle.copyWith(fontWeight: FontWeight.w600, fontSize: 13, height: 1.45, color: tint[1]),
+                              style: AppTypography.rowTitle.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                height: 1.45,
+                                color: tint[1],
+                              ),
                             ),
                           ),
                         ],
@@ -137,12 +176,29 @@ class _KitDetailScreenState extends ConsumerState<KitDetailScreen> {
                               child: _KitItemRow(item: k.items[i], tint: tint),
                             ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 13,
+                            ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Jami', style: AppTypography.cardTitle.copyWith(fontSize: 15.5, fontWeight: FontWeight.w800, letterSpacing: 0)),
-                                Text(formatSom(k.total), style: AppTypography.cardTitle.copyWith(fontSize: 15.5, fontWeight: FontWeight.w800, letterSpacing: 0)),
+                                Text(
+                                  'Jami',
+                                  style: AppTypography.cardTitle.copyWith(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0,
+                                  ),
+                                ),
+                                Text(
+                                  formatSom(k.total),
+                                  style: AppTypography.cardTitle.copyWith(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -162,11 +218,26 @@ class _KitDetailScreenState extends ConsumerState<KitDetailScreen> {
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         stops: const [0, 0.7, 1],
-                        colors: [AppColors.background, AppColors.background, AppColors.background.withValues(alpha: 0)],
+                        colors: [
+                          AppColors.background,
+                          AppColors.background,
+                          AppColors.background.withValues(alpha: 0),
+                        ],
                       ),
                     ),
-                    child: _AddKitButton(adding: _adding, total: k.total, onTap: _adding ? null : _addKit),
+                    child: _AddKitButton(
+                      adding: _adding,
+                      total: k.total,
+                      onTap: _adding ? null : _addKit,
+                    ),
                   ),
+                ),
+                CartFab(
+                  cartCount: cartCount,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    pushAppRoute(context, (_) => const CartScreen());
+                  },
                 ),
               ],
             ),
@@ -178,7 +249,11 @@ class _KitDetailScreenState extends ConsumerState<KitDetailScreen> {
 }
 
 class _AddKitButton extends StatelessWidget {
-  const _AddKitButton({required this.adding, required this.total, required this.onTap});
+  const _AddKitButton({
+    required this.adding,
+    required this.total,
+    required this.onTap,
+  });
   final bool adding;
   final int total;
   final VoidCallback? onTap;
@@ -196,8 +271,19 @@ class _AddKitButton extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: adding
-            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-            : Text('To\'plamni savatga qo\'shish · ${formatSom(total)}', style: AppTypography.button, textAlign: TextAlign.center),
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                'To\'plamni savatga qo\'shish · ${formatSom(total)}',
+                style: AppTypography.button,
+                textAlign: TextAlign.center,
+              ),
       ),
     );
   }
@@ -212,13 +298,18 @@ class _KitItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0x0D000000)))),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0x0D000000))),
+      ),
       child: Row(
         children: [
           Container(
             width: 52,
             height: 52,
-            decoration: BoxDecoration(color: tint[0], borderRadius: BorderRadius.circular(14)),
+            decoration: BoxDecoration(
+              color: tint[0],
+              borderRadius: BorderRadius.circular(14),
+            ),
             alignment: Alignment.center,
             child: SvgPicture.string(
               _packageIconSvg,
@@ -232,17 +323,34 @@ class _KitItemRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.productName ?? 'Mahsulot', style: AppTypography.rowTitle.copyWith(fontWeight: FontWeight.w600, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  item.productName ?? 'Mahsulot',
+                  style: AppTypography.rowTitle.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 if ((item.variantName ?? '').isNotEmpty)
-                  Text(item.variantName!, style: AppTypography.caption.copyWith(fontSize: 12)),
+                  Text(
+                    item.variantName!,
+                    style: AppTypography.caption.copyWith(fontSize: 12),
+                  ),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('× ${item.quantity}', style: AppTypography.rowTitle.copyWith(fontSize: 13.5)),
-              Text(formatSom(item.lineTotal ?? 0), style: AppTypography.caption.copyWith(fontSize: 11.5)),
+              Text(
+                '× ${item.quantity}',
+                style: AppTypography.rowTitle.copyWith(fontSize: 13.5),
+              ),
+              Text(
+                formatSom(item.lineTotal ?? 0),
+                style: AppTypography.caption.copyWith(fontSize: 11.5),
+              ),
             ],
           ),
         ],

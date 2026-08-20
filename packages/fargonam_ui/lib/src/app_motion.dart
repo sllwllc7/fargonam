@@ -31,7 +31,10 @@ class AppMotion {
 
   /// Toast: pastdan 12px + fade, 2.4s ko'rinadi.
   static const toastIn = Duration(milliseconds: 300);
-  static const toastVisible = Duration(milliseconds: 2400);
+  // dc.html asl qiymati 2400ms edi — foydalanuvchi bu ekranda aniq
+  // qisqartirishni so'radi (1.2-1.5s), shuning uchun bu bittasi dc.html'dan
+  // ataylab og'ib ketadi.
+  static const toastVisible = Duration(milliseconds: 1300);
 
   /// `standard`ning `Curves`-asosidagi muqobili — `Cubic` qabul qilmaydigan
   /// API'lar (masalan `TweenAnimationBuilder`ning ba'zi qurilishlari) uchun.

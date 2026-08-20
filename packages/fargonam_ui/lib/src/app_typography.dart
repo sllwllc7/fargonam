@@ -35,10 +35,16 @@ class AppTypography {
   static TextStyle get title => _figtree(size: 21, weight: FontWeight.w700, letterSpacing: -0.4);
 
   /// Bo'lim yorlig'i — UPPERCASE, textSecondary. Matn `.toUpperCase()` bilan beriladi.
+  // dc.html'da bu qator uchun line-height ko'rsatilmagan (brauzer
+  // standarti ~1.2 ishlatiladi) — Figtree'ning o'z standart height'i
+  // sezilarli kattaroq bo'lgani uchun height ko'rsatilmasa matn o'z
+  // qatori ichida pastga siljib ko'rinadi ("Sinflar uchun tayyor
+  // mahsulotlar" sarlavhasi pastlab ketgan bug — height:1.2 bilan tuzatildi).
   static TextStyle get sectionLabel => _figtree(
         size: 11.5,
         weight: FontWeight.w800,
         letterSpacing: 1.2,
+        height: 1.2,
         color: AppColors.textSecondary,
       );
 

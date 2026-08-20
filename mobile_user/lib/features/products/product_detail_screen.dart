@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/api_client.dart';
-import '../cart/cart_screen.dart' show cartProvider;
+import '../cart/cart_screen.dart' show CartScreen, cartProvider;
 import '../favorites/favorites_screen.dart' show favoritesProvider;
 import '../marketplace/catalog_screen.dart' show categoriesProvider;
 import '../marketplace/category_icons.dart';
@@ -118,11 +118,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       ref.invalidate(cartProvider);
       HapticFeedback.lightImpact();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Savatga qo\'shildi'),
-            backgroundColor: AppColors.success,
-          ),
+        showAppToast(
+          context,
+          'Savatga qo\'shildi',
+          onCartTap: () => pushAppRoute(context, (_) => const CartScreen()),
         );
       }
     } on DioException catch (e) {
@@ -529,7 +528,8 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
     final n = widget.labels.length;
     // dc.html `z: 100 - round(d*10)` — z kichikroq (d kattaroq) avval
     // chizilishi kerak (Stack'da keyingi bola tepada chiqadi).
-    final order = List<int>.generate(n, (i) => i)..sort((a, b) => _circularDelta(b, n).compareTo(_circularDelta(a, n)));
+    final order = List<int>.generate(n, (i) => i)
+      ..sort((a, b) => _circularDelta(b, n).compareTo(_circularDelta(a, n)));
 
     return Column(
       children: [
@@ -539,7 +539,9 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
             height: 300,
             child: Stack(
               alignment: Alignment.center,
-              children: [for (final i in order) _buildSlide(i, _circularDelta(i, n))],
+              children: [
+                for (final i in order) _buildSlide(i, _circularDelta(i, n)),
+              ],
             ),
           ),
         ),
@@ -556,7 +558,9 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
                   width: i == _index ? 16 : 5,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: i == _index ? AppColors.textPrimary : _dotInactiveColor,
+                    color: i == _index
+                        ? AppColors.textPrimary
+                        : _dotInactiveColor,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -612,7 +616,11 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
           const SizedBox(height: 12),
           Text(
             widget.labels[i],
-            style: TextStyle(fontFamily: 'monospace', fontSize: 10, color: widget.fg.withValues(alpha: 0.65)),
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 10,
+              color: widget.fg.withValues(alpha: 0.65),
+            ),
           ),
         ],
       ),
@@ -629,7 +637,13 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
         curve: AppMotion.standard,
         builder: (context, animatedBlur, child) {
           if (animatedBlur <= 0) return child!;
-          return ImageFiltered(imageFilter: ImageFilter.blur(sigmaX: animatedBlur, sigmaY: animatedBlur), child: child);
+          return ImageFiltered(
+            imageFilter: ImageFilter.blur(
+              sigmaX: animatedBlur,
+              sigmaY: animatedBlur,
+            ),
+            child: child,
+          );
         },
         child: slide,
       ),
