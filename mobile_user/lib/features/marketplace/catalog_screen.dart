@@ -161,7 +161,13 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                   const SizedBox(height: 12),
                   kitsAsync.when(
                     loading: () => SizedBox(
-                      height: 100,
+                      // dc.html'da bu qatorga qattiq balandlik berilmagan
+                      // (kontent o'zi belgilaydi) — 100 haqiqiy qurilmada
+                      // katta tizim shrifti bilan 40px'gacha toshib ketardi
+                      // ("Sinflar uchun tayyor mahsulotlar" kartasi
+                      // pastlab ketgan bug). Kontentga yetadigan bo'sh
+                      // joy bilan 144'ga oshirildi.
+                      height: 144,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -169,7 +175,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                         separatorBuilder: (_, _) => const SizedBox(width: 10),
                         itemBuilder: (_, _) => const ShimmerBox(
                           width: 158,
-                          height: 100,
+                          height: 144,
                           borderRadius: AppRadius.card,
                         ),
                       ),
@@ -186,7 +192,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                         );
                       }
                       return SizedBox(
-                        height: 100,
+                        height: 144,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(

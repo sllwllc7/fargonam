@@ -67,14 +67,20 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
-                child: Row(
-                  children: [
-                    _FilterChip(label: 'Barchasi', selected: _tab == 'all', onTap: () => setState(() => _tab = 'all')),
-                    const SizedBox(width: 6),
-                    _FilterChip(label: 'Jarayonda', selected: _tab == 'progress', onTap: () => setState(() => _tab = 'progress')),
-                    const SizedBox(width: 6),
-                    _FilterChip(label: 'Yetkazilgan', selected: _tab == 'done', onTap: () => setState(() => _tab = 'done')),
-                  ],
+                // Katta tizim shrift o'lchamida (ba'zi qurilmalarda standart)
+                // uchta pill bir qatorga sig'maydi — RenderFlex toshib ketishini
+                // oldini olish uchun gorizontal scroll ichiga olindi.
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _FilterChip(label: 'Barchasi', selected: _tab == 'all', onTap: () => setState(() => _tab = 'all')),
+                      const SizedBox(width: 6),
+                      _FilterChip(label: 'Jarayonda', selected: _tab == 'progress', onTap: () => setState(() => _tab = 'progress')),
+                      const SizedBox(width: 6),
+                      _FilterChip(label: 'Yetkazilgan', selected: _tab == 'done', onTap: () => setState(() => _tab = 'done')),
+                    ],
+                  ),
                 ),
               ),
               Expanded(
