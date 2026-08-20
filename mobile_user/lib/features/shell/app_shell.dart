@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_update_service.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_update_sheet.dart';
 import '../../core/ws_service.dart';
 import '../ai_assistant/ai_assistant_screen.dart';
 import '../home/home_feed_screen.dart';
@@ -44,6 +46,14 @@ class AppShellState extends ConsumerState<AppShell> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _connectUserWs());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+  }
+
+  Future<void> _checkForUpdate() async {
+    final info = await checkForUpdate('user');
+    if (info != null && mounted) {
+      showAppUpdateSheet(context, info);
+    }
   }
 
   /// Global WebSocket'ga ulanish — order_status, ride_status, notifications

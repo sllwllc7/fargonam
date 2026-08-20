@@ -17,6 +17,9 @@ env/
 .env.local
 *.env
 
+# Ilova versiyasi (serverda qo'lda tahrirlanadi, .example'ga qara)
+backend/app_version.json
+
 # Flutter
 .dart_tool/
 .flutter-plugins

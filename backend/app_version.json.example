@@ -1,0 +1,16 @@
+{
+  "user": {
+    "version": "0.1.0",
+    "build": 1,
+    "apk_url": "https://fargonam.uz/fargonam-user-0.1.0.apk",
+    "notes": "Birinchi versiya",
+    "force": false
+  },
+  "seller": {
+    "version": "0.1.0",
+    "build": 1,
+    "apk_url": "https://fargonam.uz/fargonam-seller-0.1.0.apk",
+    "notes": "Birinchi versiya",
+    "force": false
+  }
+}

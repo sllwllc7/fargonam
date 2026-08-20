@@ -10,7 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api_client.dart' show navigatorKey, onTokenExpired, secureStorageProvider;
 import 'core/app_config_service.dart';
+import 'core/app_update_service.dart';
 import 'core/push_service.dart';
+import 'core/widgets/app_update_sheet.dart';
 import 'core/ws_service.dart';
 import 'features/auth/auth_providers.dart';
 import 'features/auth/telegram_login_screen.dart';
@@ -92,6 +94,14 @@ class _RootState extends ConsumerState<_Root> {
       await ref.read(authControllerProvider.notifier).tryAutoLogin();
       if (mounted) setState(() => _checked = true);
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+  }
+
+  Future<void> _checkForUpdate() async {
+    final info = await checkForUpdate('seller');
+    if (info != null && mounted) {
+      showAppUpdateSheet(context, info);
+    }
   }
 
   void _showForceUpdateDialog() {
