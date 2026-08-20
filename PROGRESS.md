@@ -1114,3 +1114,81 @@ klaviatura sinovi) — bu moderatsiya UI (yuqoridagi §4) bilan bir vaqtda,
 o'sha ekranlarga tegilganda birga qilinishi tavsiya etiladi (ikki marta
 ochib-yopish o'rniga), alohida oldin qilish shart emas — foydalanuvchi
 tasdiqlasa shu tartibda davom etiladi.
+
+---
+
+## Sessiya (2026-08-20) — Laptop qayta yonlangandan keyin davom
+
+Kontekst yo'qolgan (xotira tozalangan), lekin server/git'da hech narsa
+yo'qolmagan edi. Oldingi seans allaqachon Blok 1'ni yarmigacha yozib
+qo'ygan ekan (uncommitted, lokal DB'da migratsiya qo'llangan) — shu yerdan
+davom etildi, qaytadan yozilmadi.
+
+### Topilgan va tuzatilgan xato: admin-web 404 edi
+`backend/app/main.py`dagi `ADMIN_WEB_DIR = parents[2] / "admin_web"` konteyner
+ichida mavjud bo'lmagan yo'lga ishora qilardi (`admin_web/` build context'ga
+kirmaydi) — `StaticFiles` mount() `if ADMIN_WEB_DIR.exists()` shartidan
+o'tolmay, `/admin-web/` doim 404 qaytarardi (ehtimol boshidan beri). Tuzatildi:
+`docker-compose.prod.yml`ga `./admin_web:/admin_web:ro` bind mount qo'shildi.
+Tekshirildi — endi `https://api.fargonam.uz/admin-web/` 200.
+Shuningdek auto-login'da admin bo'lmagan/olib tashlangan token bilan kirilsa
+endi "Sizda admin huquqi yo'q" ko'rsatiladi (avval jim tozalanardi).
+
+### ADMIN_TELEGRAM_IDS — faqat 1 kishi
+Ro'yxatda 3 ID bor edi (Vohidjon, Adibaxon, Solijon — izohda shunday yozilgan
+edi). Foydalanuvchi "faqat 5860426852 (Solijon) kira olsin, boshqa hech kim"
+dedi → ro'yxat shu bittaga qisqartirildi (lokal `backend/.env` va server
+`.env`, ikkalasi ham). Productionda hech kimda hali `role=admin` yo'q edi
+(DB'da tekshirildi) — retroaktiv pastga tushirish kerak bo'lmadi, mavjud
+`telegram_auth.py` mexanizmi kelajakda ID ro'yxatdan chiqsa avtomatik
+pastga tushiradi (194-qator, allaqachon bor edi).
+
+### Blok 1 — Migratsiya + status modeli + backend endpointlar: TUGALLANDI
+Reja (yuqorida, §1-3) bo'yicha to'liq yozildi:
+- `products.py`, `kits.py` — User App faqat `status=approved` ko'radi;
+  do'kon egasi/admin o'zinikini har doim ko'radi. Narx/stok/`is_active`
+  (kitda: `items` ham) darhol o'zgaradi. Nom/rasm/tavsif/kategoriya —
+  tasdiqlangan mahsulotda `pending_edit`ga stagelanadi, LIVE qator eski
+  holicha qoladi. **Qaror**: kit `items` (tarkib) va `is_active`ni
+  himoyalanmagan qildim (mavjud tasdiqlangan variantlarga bog'lanadi, xato
+  qilib firibgarlik qilish qiyin, sotuvchiga tez moslashuv kerak) — faqat
+  nom/sinf/tavsif/rasm himoyalangan. Reja hujjatida bu aniq yozilmagan edi,
+  mustaqil qaror qilindi (CLAUDE.md §14).
+- `admin.py`: `/admin/moderation/products` va `/admin/moderation/kits`
+  (navbat, sukut `status=pending`), har biriga `/approve`, `/reject`
+  (`{reason}`), `/bulk-approve` (`{ids}`), mahsulotga qo'shimcha
+  `/edit-approve` (admin sellerga qaytarmasdan o'zi tuzatib tasdiqlaydi).
+- `scripts/seed_catalog.py` — yangi seed mahsulot/to'plam endi
+  `status=approved` bilan yaratiladi (aks holda MVP monodo'kon katalogi
+  moderatsiya navbatida "yo'qolib" qolardi).
+- `Shop.is_trusted` ustuni qo'shildi, hozircha faqat saqlanadi (bypass
+  mantiqi yo'q — reja shunday deydi, kelajakda ishlatiladi).
+
+**Tekshirildi** (lokal dev DB'da, keyin production'da):
+- Lokal: migratsiya oldin qo'llangan ekan (77 mahsulot, 11 to'plam — hammasi
+  `approved`ga to'ldirilgan). `uvicorn` lokal ishga tushirilib, `openapi()`
+  sxemasi qurildi (barcha 9 ta moderatsiya route ro'yxatda), keyin bitta
+  mahsulot qo'lda `pending`ga o'tkazilib — ommaviy ro'yxatdan va
+  `GET /products/{id}`dan yo'qolgani, keyin qaytadan `approved`ga
+  qaytarilgach yana ko'ringani tasdiqlandi.
+- Production: deploydan oldin `pg_dump` bilan zaxira olindi
+  (`/home/fargonam/backups/pre_moderation.dump`). `docker compose build
+  backend` + `up -d` — entrypoint avtomatik `alembic upgrade head` ishga
+  tushirdi, xatosiz o'tdi. Deploydan keyin: `/categories` 200,
+  `/products?limit=3` — 70 ta mahsulot, hammasi `status=approved`
+  (hech narsa yo'qolmadi), `/admin-web/` 200, `fargonam.uz` 200, 6/6
+  konteyner Up.
+
+**Bajarilmagan (keyingi seansga)**: Blok 2 (dc.html/model solishtiruvi —
+alohida, mustaqil tekshiruv), Blok 3 (Web Admin SPA — moderatsiya navbati
+UI + rasm tahriri, eng katta qism, Pillow hali `requirements.txt`ga
+qo'shilmagan), Blok 4-5 (admin qolgan ekranlari), Blok 6 (Seller App
+badge/xabar).
+
+### Qarorlar
+- [2026-08-20] Savol: kit moderatsiyasida `items`/`is_active`ni ham
+  himoyalash kerakmi? → Qaror: yo'q, faqat nom/sinf/tavsif/rasm
+  himoyalangan → Sabab: itemlar mavjud tasdiqlangan variantlarga
+  bog'lanadi, aldash riski past, sotuvchiga narx/tarkib tez moslashuv
+  kerak (savat/buyurtma bilan bog'liq, kechiktirib bo'lmaydi — xuddi
+  narx/stok kabi).
