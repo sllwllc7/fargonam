@@ -1,0 +1,8 @@
+{
+  "last_release": {
+    "notes": "Birinchi versiya",
+    "at": "2026-08-20T10:00:00Z",
+    "user": {"version": "0.1.0", "build": 1, "build_seconds": 407},
+    "seller": {"version": "0.1.0", "build": 1, "build_seconds": 196}
+  }
+}

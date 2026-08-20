@@ -81,6 +81,7 @@ services:
     volumes:
       - uploads:/app/uploads
       - ./backend/app_version.json:/app/app_version.json:ro
+      - ./backend/status.json:/app/status.json:ro
 
   telegram_bot:
     build:

@@ -19,6 +19,7 @@ from app.api import addresses as addresses_api
 from app.api import announcements as announcements_api
 from app.api import app_config as app_config_api
 from app.api import app_version as app_version_api
+from app.api import status as status_api
 from app.api import admin as admin_api
 from app.api import auth as auth_api
 from app.api import chat as chat_api
@@ -76,6 +77,7 @@ app.mount("/static", StaticFiles(directory=UPLOAD_ROOT), name="static")
 
 app.include_router(app_config_api.router)
 app.include_router(app_version_api.router)
+app.include_router(status_api.router)
 app.include_router(auth_api.router)
 app.include_router(telegram_auth_api.router)
 app.include_router(shops_api.router)

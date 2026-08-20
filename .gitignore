@@ -19,6 +19,8 @@ env/
 
 # Ilova versiyasi (serverda qo'lda tahrirlanadi, .example'ga qara)
 backend/app_version.json
+# Deploy holati (scripts/release.sh yozadi, .example'ga qara)
+backend/status.json
 
 # Flutter
 .dart_tool/
