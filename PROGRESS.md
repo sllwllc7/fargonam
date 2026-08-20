@@ -968,6 +968,12 @@ bildirishnomalar, boshqaruv) — texnik asos:
   brauzerda (canvas, kutubxona kerak — 3-bo'limga qara), yuklashda backend
   `Pillow` bilan siqadi + kvadrat preview yaratadi (`requirements.txt`ga
   `Pillow` qo'shiladi, hozir yo'q — rasm hozir xom holda saqlanadi, tekshirildi).
+  Navbat UI'da bir nechta mahsulot belgilab **birdan tasdiqlash** (checkbox +
+  "Tanlanganlarni tasdiqlash") — backend `/admin/moderation/{products,kits}/
+  bulk-approve` (`{ids: [...]}`) allaqachon tayyor (Blok 1'da yozildi), UI
+  shu endpointga ulanadi. Admin "tuzatib tasdiqlash" (sellerga qaytarmasdan
+  o'zi tahrirlab) — `/admin/moderation/products/{id}/edit-approve` ham
+  tayyor.
 - **Mahsulotlar CRUD, SKU jadvali**: `products.py`dagi mavjud
   create/update/variants endpoint'lari admin uchun ham ishlatiladi (rol
   tekshiruvi kengaytiriladi: seller o'ziniki, admin — hammasi).
