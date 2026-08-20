@@ -913,3 +913,204 @@ tavsiya etiladi) va "Eski telefonlar (arm32)" (ikkinchi darajali). `/app/version
 (ilova ichidagi yangilanish paneli) — faqat arm64 havolasini beradi (standart
 holat). Bot — faqat arm64 (oddiy bo'lib qolishi uchun, ikkinchi variant
 takliflanmaydi, kerak bo'lsa sayt ko'rsatiladi).
+
+---
+
+## REJA: Web Admin Panel + Moderatsiya (2026-08-20, TASDIQLASH KUTILMOQDA)
+
+Kod hali yozilmagan — bu reja, foydalanuvchi tasdiqlagach boshlanadi.
+
+### 1. Moderatsiya modeli
+
+**Yangi migratsiya** — `products` va `product_sets` jadvallariga:
+```
+status          enum(draft, pending, approved, rejected)  default 'pending'
+rejected_reason text | null
+submitted_at    timestamptz  default now()
+moderated_at    timestamptz | null
+moderated_by    int | null  FK -> users.id
+```
+Migratsiyada mavjud barcha qatorlar (va `seed_catalog.py`/`bootstrap_shop.py`
+natijasi) `status='approved'`, `moderated_at=created_at` qilib to'ldiriladi —
+hech narsa yo'qolib qolmaydi, hech kim to'satdan Market'dan tushib qolmaydi.
+
+**Oqim** (foydalanuvchi yozgani aynan):
+- Seller saqlaydi → `pending`
+- Admin tasdiqlaydi → `approved` → User App'da ko'rinadi
+- Admin rad etadi → `rejected` + `rejected_reason` → seller ko'radi, tahrirlab
+  qayta yuborsa → yana `pending`
+
+**Eng muhim texnik qaror — "tasdiqlangan mahsulot tahrirlansa eski versiya
+ko'rinib tursin":**
+Narx/zaxira (`ProductVariant.price`/`stock`) — DOIM darhol o'zgaradi, hech qanday
+moderatsiya yo'q (buyurtma/inventar bilan bog'liq, kechiktirib bo'lmaydi).
+Nom/rasm/tavsif/parametr (variant tuzilmasi) — bu maydonlar to'g'ridan-to'g'ri
+qatorga yozilmaydi. `products`/`product_sets`ga yangi `pending_edit: JSONB | null`
+ustuni qo'shiladi: seller himoyalangan maydonni o'zgartirganda, o'zgarish shu
+ustunga JSON sifatida yoziladi, LIVE qator o'zgarmaydi, `status='pending'`
+qo'yiladi. User App hamon eski (approved) qiymatlarni ko'rsataveradi. Admin
+tasdiqlasa — `pending_edit` LIVE qatorga qo'llaniladi va tozalanadi. Rad etsa —
+`pending_edit` saqlanib qoladi (seller "Tahrirlash"da o'z yuborgan variantini
+qayta ko'radi), `status='rejected'` + sabab.
+
+User App endpointlari (`categories.py`, `products.py`, `kits.py`) — mavjud
+`Product.is_active.is_(True)` filtriga `Product.status == ProductStatus.approved`
+qo'shiladi (bir joyda, bitta helper funksiya orqali — hozir bu filtr 3 joyda
+qo'lda takrorlangan, shu safar umumlashtiriladi).
+
+### 2. Web Admin — to'liq funksionallik
+
+Foydalanuvchi yozgan ro'yxat (moderatsiya navbati, rasm tahriri, mahsulotlar,
+kategoriyalar, to'plamlar, buyurtmalar, sotuvchilar, foydalanuvchilar,
+bildirishnomalar, boshqaruv) — texnik asos:
+
+- **Moderatsiya navbati, rasm tahriri**: yangi. Rasm qirqish/burish/aylantirish —
+  brauzerda (canvas, kutubxona kerak — 3-bo'limga qara), yuklashda backend
+  `Pillow` bilan siqadi + kvadrat preview yaratadi (`requirements.txt`ga
+  `Pillow` qo'shiladi, hozir yo'q — rasm hozir xom holda saqlanadi, tekshirildi).
+- **Mahsulotlar CRUD, SKU jadvali**: `products.py`dagi mavjud
+  create/update/variants endpoint'lari admin uchun ham ishlatiladi (rol
+  tekshiruvi kengaytiriladi: seller o'ziniki, admin — hammasi).
+- **Kategoriyalar**: hozir CRUD YO'Q (faqat `GET /categories`). Yangi:
+  `POST/PATCH/DELETE /admin/categories`, `PATCH .../reorder`. **Muhim topilma**:
+  `Category` modelida `icon`/`color`/`sort_order` ustunlari yo'q — ikonkalar
+  hozir mobil ilovada `icon(catId)` funksiyasi orqali id bo'yicha qattiq
+  kodlangan (dc.html'dan ko'chirilgan SVG). "Ikonka va rang tanlash" talabini
+  bajarish uchun ikki yo'l bor: (a) yangi ustunlar qo'shib mobil ilovani
+  API'dan o'qishga o'tkazish (CLAUDE.md §6 "yangi ikonka o'ylab topish"
+  taqig'iga qarshi kelmaydi — tanlov mavjud ikonkalar orasidan bo'ladi, lekin
+  bu mobil UI kod o'zgarishi talab qiladi), yoki (b) admin panelda faqat
+  MAVJUD ikonkalar ro'yxatidan tanlash (yangisini yuklamasdan), DB'da faqat
+  qaysi ikonka tanlanganini saqlash, mobil ilova o'zgarmaydi. **(b) tavsiya
+  etiladi** — kichikroq, mobil kod kodga tegmaydi. Bo'sh bo'lmagan kategoriya
+  o'chirilganda 409 + mahsulotlar soni xabari.
+- **To'plamlar (kitlar)**: `kits.py`da CRUD allaqachon bor, admin uchun
+  kengaytiriladi + moderatsiya (1-bo'limdagi model bilan bir xil).
+- **Buyurtmalar**: `admin.py`da `GET /admin/orders` + status PATCH allaqachon
+  bor — UI qurish kifoya, backend deyarli tayyor. "Bekor qilish" — mavjud
+  `OrderStatus.cancelled`ga PATCH.
+- **Sotuvchilar**: `admin.py`da `GET/PATCH /admin/shops` bor (KYC holati).
+  Yangi: "Ishonchli" bayrog'i (`Shop`ga `is_trusted: bool` ustuni, hozircha
+  faqat saqlanadi — moderatsiya bypass mantiqi keyinroq, foydalanuvchi aytgan).
+  Yangi seller qo'shish — mavjud `User`/`Shop` yaratish logikasidan
+  foydalanadi (bootstrap_shop.py'dagi patternga o'xshash, lekin admin API orqali).
+- **Foydalanuvchilar**: `admin.py`da `GET/PATCH /admin/users` bor — UI kifoya.
+- **Bildirishnomalar**: `admin.py`da `POST /admin/broadcast` bor (hammaga).
+  Yangi: bitta foydalanuvchiga yuborish varianti (kichik qo'shimcha).
+- **Versiya e'lon qilish**: hozir `backend/app_version.json` `:ro` (read-only)
+  bind-mount — admin panel orqali yozish uchun `:rw`ga o'zgartiriladi + yangi
+  `PUT /admin/app-version` endpoint (faylni yozadi, xuddi `release.sh` qiladigan
+  ishni). `status.json` ham xuddi shunday `:rw`.
+- **Yangiliklar**: `news.py`da create/delete allaqachon bor — UI kifoya.
+- **Yetkazib berish narxi va sozlamalar**: `app_config.py`da allaqachon TO'LIQ
+  bor (`PUT /app-config/{key}`) — yangi backend kerak emas, faqat UI.
+
+### 3. Web Admin — texnik
+
+- **Stack**: React + Vite + TypeScript + Tailwind. Qo'shimcha kutubxona —
+  faqat rasm qirqish uchun bitta kichik kutubxona kerak bo'ladi (masalan
+  `react-easy-crop`) — qo'lda yozish oqilona emas, boshqa hamma narsa qo'shimcha
+  paketsiz. Router — `react-router`. Ma'lumot olish — oddiy `fetch` (React Query
+  kabi qo'shimcha state kutubxona qo'shilmaydi, foydalanuvchining "ortiqcha
+  kutubxona qo'shma" qoidasiga ko'ra).
+- **Joylashuv — TOPILGAN NOMUVOFIQLIK**: foydalanuvchi "hozircha fargonam.uz/admin"
+  deb yozgan, lekin backend'da ALLAQACHON `api.fargonam.uz/admin-web/` mount
+  qilingan (`main.py`: `app.mount("/admin-web", ...)`, nginx'da ham tayyor) va
+  hozirgi `admin_web/index.html` (eski, boshqa — qorong'i mavzu, Indigo bilan
+  hech aloqasi yo'q) shu joyga xizmat qiladi. **Tavsiya**: yangi SPA'ni ayni shu
+  `admin_web/` papkaga build qilib qo'yish (`api.fargonam.uz/admin-web/`) —
+  nol infra o'zgarishi, domen keyin (`admin.fargonam.uz`) DNS qo'shilgach
+  osongina almashtiriladi (bitta nginx server_name qatori). Agar aynan
+  `fargonam.uz/admin` kerak bo'lsa — nginx'ga yangi `location /admin` qo'shish
+  kerak bo'ladi (kichik qo'shimcha ish). Reja shu (a) variant bilan davom etadi,
+  agar (b) kerak bo'lsa — bitta nginx qatori, keyin osongina o'zgartiriladi.
+- **Dizayn**: mavjud tokenlar (fon `#EEF1F6`, kartalar oq, navy gradient
+  tugmalar, Figtree, radius 16) — lekin bular Flutter/Dart konstantalari
+  (`packages/fargonam_ui`), web uchun QAYTA yoziladi CSS custom properties
+  sifatida (bir xil qiymatlar, ikkinchi manba — Dart paketini web'ga import
+  qilib bo'lmaydi). Layout — chap menyu + o'ng ish maydoni, jadvallar (ilova
+  ekranlarining o'zi ko'chirilmaydi, faqat rang/shrift tili).
+- **Auth — TOPILGAN NOMUVOFIQLIK**: foydalanuvchi "telefon + parol yoki
+  Telegram login" deb yozgan, lekin CLAUDE.md §4 aniq: "Uchala klient ham
+  (mobile_user, mobile_seller, admin_web) Telegram login ishlatadi... telefon+OTP
+  butunlay olib tashlangan". Telefon+PAROL — OTP emas, lekin baribir loyihaning
+  qat'iy qabul qilingan "faqat Telegram" xavfsizlik qaroriga zid yangi kirish
+  usuli bo'lardi. **Tavsiya: faqat Telegram login**, mavjud `/auth/telegram/*`
+  oqimidan foydalaniladi, faqat `role=admin` bo'lgan userlar admin panelga
+  kira oladi (`require_admin` allaqachon bor). Uzoq sessiya — mavjud refresh
+  token rotation (backendda bor) client tomonda to'g'ri implementatsiya
+  qilinsa kifoya, yangi backend mexanizmi kerak emas.
+- Mobil brauzerda ochiladigan, lekin desktop-birinchi responsive layout.
+- Ro'yxat sahifalash — mavjud `Page[...]` pagination pattern (`admin.py`da
+  allaqachon ishlatiladi) qayta ishlatiladi. Rasm lazy load — oddiy
+  `loading="lazy"` yetadi, qo'shimcha kutubxona kerak emas.
+
+### 4. Seller App o'zgarishlari
+
+- Har mahsulot qatoriga status badge (`mobile_seller/lib/features/products/`):
+  kulrang "Tekshiruvda" / yashil "Tasdiqlandi" / qizil "Rad etildi" — mavjud
+  `AppColors.textMuted`/`success`/`danger` va tint ranglar, yangi rang yo'q.
+- Rad etilganda: sabab matni + "Tahrirlash" tugmasi (mavjud edit ekraniga olib
+  boradi, forma to'ldirilgan holda).
+- Saqlagandan keyin snackbar/toast: "Yuborildi, tekshiruvdan o'tgach Market'da
+  ko'rinadi" (mavjud toast widget, `packages/fargonam_ui`).
+- Yangi ekran yo'q — mavjud `products_screen.dart`/`add_product_screen.dart`/
+  `edit_product_screen.dart` kengaytiriladi.
+
+### 5. Taqqoslash va reja (tartib, vaqt, xavf)
+
+**O'zgaradigan mavjud fayllar** (backend): `models/product.py`, `models/product_set.py`,
+`models/category.py`, `models/shop.py` (`is_trusted`), yangi Alembic migratsiya,
+`api/products.py` (moderatsiya gate + `pending_edit` mantiq), `api/kits.py`
+(xuddi shunday), `api/categories.py` (CRUD qo'shiladi, filtr yangilanadi),
+`api/admin.py` (yangi endpoint'lar: moderatsiya navbati, kategoriyalar,
+app-version, bitta userga xabar), `docker-compose.prod.yml` (app_version.json/
+status.json `:rw`ga, yangi admin_web static volume shart emas — mavjud mount
+ishlaydi), `requirements.txt` (+Pillow). Mobil: `mobile_seller` 4 ta ekran
+faylida kichik qo'shimcha (yangi fayl yo'q).
+
+**Migratsiya xavfsizmi**: ha — yangi ustunlar `nullable`/`default` bilan
+qo'shiladi, mavjud qatorlar bitta `UPDATE ... SET status='approved'` bilan
+to'ldiriladi, hech qanday `NOT NULL` majburiy maydon eski qatorni buzmaydi.
+Productionda `alembic upgrade head` — downtime kerak emas (ustun qo'shish
+PostgreSQL'da tez).
+
+**Testlar buziladimi**: backend'da moderatsiya filtri qo'shilgani uchun mavjud
+`list_products`/`list_categories` testlari (agar bor bo'lsa) `status=approved`
+seed ma'lumoti bilan yozilishi kerak — seed skriptlari `status='approved'`
+qilib yangilanadi (Qismi 1). Mobil testlarga (`flutter test`) ta'sir yo'q —
+faqat UI badge qo'shiladi, mavjud repository chaqiruvlari saqlanadi.
+
+**Taxminiy vaqt** (bitta ishchi sessiya = ~bir necha soat, CLAUDE.md §10
+"seans qoidasi" mobil UI uchun; bu backend/web ish, bo'linish erkinroq):
+| Blok | Taxminiy hajm |
+|---|---|
+| Migratsiya + moderatsiya modeli (backend) | O'rtacha (1 sessiya) |
+| Admin API kengaytmalari (kategoriya CRUD, moderatsiya, rasm, app-version) | Katta (2-3 sessiya) |
+| Web Admin SPA — skelet + auth + layout | O'rtacha (1 sessiya) |
+| Web Admin — moderatsiya navbati + rasm tahriri ekrani | Katta (2 sessiya, rasm kutubxonasi integratsiyasi eng murakkab qism) |
+| Web Admin — qolgan ekranlar (mahsulot/kategoriya/kit/buyurtma/seller/user/bildirishnoma/sozlama CRUD) | Katta (3-4 sessiya, ko'p lekin takrorlanuvchi pattern) |
+| Seller App badge/xabar | Kichik (yarim sessiya) |
+
+**Tartib** (foydalanuvchi eng tez foyda ko'rishi uchun):
+1. Migratsiya + backend moderatsiya modeli (hech narsa buzilmaydi, User App
+   darhol ishlashda davom etadi — status default approved)
+2. Admin API — moderatsiya navbati + kategoriya CRUD (eng ko'p ishlatiladigan)
+3. Web Admin SPA skelet + auth + moderatsiya navbati ekrani (birinchi
+   ishlaydigan oyna — foydalanuvchi shu yerdan darhol foyda ko'radi)
+4. Rasm tahriri (eng murakkab, lekin foydalanuvchi "eng muhim" degan)
+5. Qolgan admin ekranlari (mahsulot to'liq CRUD, kategoriya, kit,
+   buyurtma, seller, user, bildirishnoma, sozlama) — birma-bir, har biridan
+   keyin sinov
+6. Seller App badge/xabar (kichik, istalgan vaqtda qo'shilishi mumkin)
+
+### 6. Qolgan ishlar holati
+
+APK hajmi, yangilanish mexanizmi, `release.sh`, Telegram bot — **hammasi
+bajarildi va tasdiqlandi** (yuqoridagi bo'limlarga qarang). **Bajarilmagan**:
+"4-bosqich: Seller App ekranlari tugallanishi" (CLAUDE.md §10, 13-bo'lim
+"inson qo'li" tekshiruvi — har ekran uchun haptika/letterSpacing/uzun matn/
+klaviatura sinovi) — bu moderatsiya UI (yuqoridagi §4) bilan bir vaqtda,
+o'sha ekranlarga tegilganda birga qilinishi tavsiya etiladi (ikki marta
+ochib-yopish o'rniga), alohida oldin qilish shart emas — foydalanuvchi
+tasdiqlasa shu tartibda davom etiladi.
