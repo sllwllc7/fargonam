@@ -412,7 +412,11 @@ function logout() {
 // auto-login
 if (TOKEN) {
   api('GET', '/auth/me').then(me => {
-    if (me.role !== 'admin') { TOKEN=''; localStorage.removeItem('fg_tok'); return; }
+    if (me.role !== 'admin') {
+      TOKEN=''; localStorage.removeItem('fg_tok');
+      showLE('Sizda admin huquqi yo\'q');
+      return;
+    }
     document.getElementById('admName').textContent = me.full_name || me.phone || 'Admin';
     document.getElementById('login').style.display = 'none';
     document.getElementById('app').style.display = 'block';

@@ -82,6 +82,7 @@ services:
       - uploads:/app/uploads
       - ./backend/app_version.json:/app/app_version.json:ro
       - ./backend/status.json:/app/status.json:ro
+      - ./admin_web:/admin_web:ro
 
   telegram_bot:
     build:
