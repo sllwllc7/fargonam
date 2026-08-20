@@ -2013,3 +2013,187 @@ ketishi+buyurtmalar filtri, sevimlilar+manzil). Versiya hali
 oshirilmagan (0.2.2+6da qoladi, lokal debug-keystore build bilan
 sinaldi) — foydalanuvchi "Hammasi tugagach release.sh bilan yangi
 versiya" deb so'ragan, shu bosqich hali oldinda.
+
+---
+
+## Sessiya (2026-08-20, davomi 9) — YO'NALISH O'ZGARDI: mobile_seller to'xtatildi, /dokon web paneli
+
+Foydalanuvchi katta pivot qildi: **mobile_seller endi mobil ilova
+sifatida rivojlantirilmaydi.** Oila/do'kondagilar uchun juda murakkab
+edi (rasm yuklash, mahsulot qo'shish — ular buni Telegram orqali
+yuborishadi, foydalanuvchi o'zi admin panelda kiritadi). O'rniga:
+faqat "buyurtmalarni ko'rish va tayyorlash" uchun juda sodda, mobil
+brauzerga mo'ljallangan web sahifa — `api.fargonam.uz/dokon`.
+
+### mobile_seller — holati
+**Kod o'chirilmadi**, branch'da shunday qoladi (kerak bo'lsa
+qaytariladi). Faqat:
+- `scripts/release.sh` endi `mobile_user`ni chiqaradi, `mobile_seller`
+  release funksiyasi saqlanadi lekin chaqirilmaydi.
+- `nginx/downloads/index.html`dan "Sotuvchi ilovasi" bo'limi olib
+  tashlandi (faqat Xaridor ilovasi qoldi).
+- Telegram APK-tarqatish boti (`telegram_bot/bot.py`) endi faqat
+  "Foydalanuvchi ilovasi" tugmasini ko'rsatadi.
+- `backend/app_version.json`dagi "seller" yozuvi **tegilmadi**
+  (o'chirilmadi ham) — eski o'rnatilgan nusxalar `/app/version?app=seller`
+  so'rasa xato bermasin deb, lekin endi yangilanmaydi (versiya muzlab
+  qoladi, bu xavfsiz — force update devori yo'q, `mobile_seller`ning
+  o'zi ham fail-open, 8-davomdagi tuzatish bo'yicha).
+
+### /dokon — backend (`backend/app/api/dokon.py`, prefix `/dokon-api`)
+- **Kirish**: umumiy login/parol, Telegram/OTP EMAS. `.env`:
+  `SELLER_LOGIN=sotuvchiuz`, `SELLER_PASSWORD_HASH` (bcrypt, ochiq parol
+  emas — `backend/scripts/hash_seller_password.py` bilan generatsiya
+  qilinadi). Sessiya — JWT cookie, 30 kun, `HttpOnly`+`Secure`+`SameSite=Lax`.
+- **Ism**: kirishdan keyin bir marta so'raladi, xuddi shu cookie'ga
+  yoziladi (qayta login talab qilinmaydi, faqat ism cookie'da yo'q
+  bo'lsa so'raladi). Har bir buyurtma-amali (`claim`/status/cancel) shu
+  ismni "kim qildi" sifatida yozadi.
+- **Buyurtmalar**: `GET /orders?status_filter=`, `GET /orders/counts`,
+  `POST /orders/{id}/status`, `POST /orders/{id}/cancel` — mavjud
+  `transition_order_status`/`enrich_order` (`cart.py`) qayta ishlatildi,
+  **hech narsa nusxalanmadi**. Xaridorga "Tayyor" push'i avtomatik
+  ketadi — bu allaqachon mavjud kod (`notify_order_status`), yangi
+  yozilmadi.
+- **Ko'p telefonli ish (band qilish)**: DB'ga yangi ustun QO'SHILMADI —
+  bu holat vaqtinchalik (buyurtma tugasa keragi qolmaydi), shuning
+  uchun Redis'da `dokon:claim:{order_id}` kaliti (`SET NX`, 2 kun TTL
+  zaxira sifatida). "Qabul qildim" (pending→preparing) bosilganda
+  atomik band qilinadi — birinchi bosgan g'olib, ikkinchisiga **aniq**
+  409 xato ("Bu buyurtmani Aziz allaqachon oldi"), holat allaqachon
+  o'zgargan bo'lsa ham (eski ro'yxatdan bosilgan bo'lsa) xuddi shu xato
+  chiqadi. Buyurtma delivered/cancelled bo'lganda band avtomatik
+  bo'shatiladi. **Playwright bilan haqiqiy race-condition sinaldi**
+  (parallel so'rovlar) — ishladi.
+- Yangilanish — WebSocket EMAS, oddiy **12 soniyalik polling**
+  (foydalanuvchi shunday so'radi: "10-15 soniyada bir marta").
+
+### /dokon — frontend (`backend/app/static_dokon/index.html` + `app.js`)
+Bitta HTML + bitta JS fayl, build tizimi yo'q (npm/webpack shart emas —
+"juda sodda" talabiga mos). **Muhim**: JS alohida faylda, chunki backend
+xavfsizlik middleware'i `Content-Security-Policy: script-src 'self'`
+qo'yadi — inline `<script>` bloklanadi (birinchi urinishda aynan shu
+sabab bilan sahifa butunlay ishlamay qoldi, Playwright orqali topildi
+va tuzatildi).
+- Filtr tablar: Yangi | Tayyorlanmoqda | Tayyor | Yetkazildi | Barchasi
+  (sonlar bilan). Foydalanuvchi ro'yxatida "Kuryerda" alohida tab
+  sifatida so'ralmagan — shunday qoldirildi, "Kuryerda" buyurtmalar
+  faqat "Barchasi"da ko'rinadi (PROGRESS.md qarori, pastda).
+- Buyurtma kartasi: FN-XXXXX, "necha daqiqa oldin", mijoz ismi+telefon
+  (`tel:` havola — bosilganda qo'ng'iroq), manzil yoki pickup kod,
+  mahsulotlar, katta "Jami", holat tugmasi (matn holatga qarab
+  o'zgaradi: "Qabul qildim"/"Tayyor"/"Kuryerga berdim" yoki pickup'da
+  "Mijozga topshirdim"/"Yetkazildi"), bekor qilish (×, sabab so'raydi).
+- Dizayn: ilova bilan bir xil tokenlar (fon #EEF1F6, navy gradient
+  tugma, Figtree, qora matn) — yangi rang o'ylab topilmadi.
+- Yangi buyurtma kelganda ovoz (Web Audio API, tashqi fayl shart emas —
+  "og'ir narsa yuklamasin" talabiga mos) + toast.
+- "Ulanish yo'q, qayta urinilmoqda" — tarmoq xatosida ko'rinadi.
+
+### Sinov (Playwright, `backend/.venv` ga o'rnatildi — `uv pip install playwright`)
+Lokal backend'ga qarshi (`http://localhost:8000`, real lokal DB):
+- Noto'g'ri parol bilan kirib bo'lmadi ✓
+- To'g'ri login → ism so'raldi → asosiy ekran ✓
+- 2 ta alohida brauzer-kontekst ("Aziz-Test", "Malika-Test") — Aziz
+  buyurtmani oladi, Malika bosganda **409 + aniq xabar** darhol
+  chiqdi ✓
+- "Tayyorlanmoqda"da "Tayyorlayapti: Aziz-Test" nishonchasi ✓
+- To'liq holat zanjiri: pending→preparing→ready→shipped (delivery
+  turi uchun to'g'ri tugma tanlandi: "Kuryerga berdim") ✓
+- Mobil (390×844) va desktop (1280×900) o'lchamda tekshirildi ✓
+
+**Production'da ham** (`https://api.fargonam.uz/dokon`) alohida sinov
+o'tkazildi: bitta sinov buyurtmasi (`user_id=1` — real mijoz emas,
+tizim/test hisobi) qo'lda DB'ga qo'shildi, Playwright orqali "Qabul
+qildim"→"Tayyor" bosildi, so'ng **bekor qilib tozalandi** (haqiqiy ish
+oqimiga aralashmasligi uchun). Shu jarayonda **2 ta real ishlab
+turgan sotuvchi buyurtmasi** (FN-1, FN-2 — avvalgi mobil UI test
+sessiyasidan qolgan haqiqiy buyurtmalar) panelda to'g'ri ko'rinishi
+tasdiqlandi — bu aynan "User App'dan buyurtma berib, web'da paydo
+bo'lishini ko'r" talabini qanoatlantiradi (yangi qurilma ulanmagani
+uchun ilovaning o'zidan emas, lekin xuddi shu real buyurtmalar orqali).
+"Tayyor" bosilganda push chaqiruvi kodda ishlayotgani tasdiqlandi
+(`notify_order_status`, 8-davomda alohida sinalgan edi); test hisobida
+FCM token ro'yxatdan o'tmagani uchun bu safar haqiqiy push kuzatilmadi
+— bu kutilgan holat, xato emas.
+
+### Deploy jarayonidagi haqiqiy xato va tuzatilishi
+Birinchi deploydan keyin `/dokon-api/login` doim **500** bilan
+tushardi. Sabab: `SELLER_PASSWORD_HASH` docker-compose'ning ROOT
+`.env` fayli orqali o'tganda, hash tarkibidagi harf bilan boshlanuvchi
+qism (`$jE0l5lt`) docker-compose'ning o'z `${VAR}` interpolyatsiyasi
+tomonidan o'zgaruvchi deb qabul qilinib, aniqlanmagani uchun **bo'sh
+qatorga almashtirilgan** — bcrypt hash butunlay buzilgan edi
+(`docker exec ... printenv` bilan tasdiqlandi). Tuzatish: har "$"ni
+"$$" qilib serverning ROOT `.env`iga yozildi (lokal `backend/.env`da
+bu shart emas — u docker-compose orqali emas, to'g'ridan-to'g'ri
+pydantic-settings bilan o'qiladi). `hash_seller_password.py` endi
+ikkala variantni (lokal/server) alohida chiqaradi — bu xato qayta
+takrorlanmasin deb.
+
+### Qarorlar
+- [2026-08-20] Savol: filtr tablarda "Kuryerda" alohida ko'rsatilsinmi? →
+  Qaror: yo'q, foydalanuvchi aniq 5 ta tab nomlagan (Yangi/
+  Tayyorlanmoqda/Tayyor/Yetkazildi/Barchasi) — "Kuryerda" buyurtmalar
+  "Barchasi"da ko'rinadi. → Sabab: so'ralmagan elementni o'zidan
+  qo'shmaslik (loyiha falsafasi — CLAUDE.md 6-bo'lim).
+- [2026-08-20] Savol: "band qilish" holati DB'ga yozilsinmi? →
+  Qaror: yo'q, Redis (TTL bilan). → Sabab: vaqtinchalik holat, doimiy
+  migratsiya keraksiz murakkablik qo'shadi; loyihada shunga o'xshash
+  vaqtinchalik holatlar (savat rezervatsiyasi) allaqachon Redis'da
+  saqlanadi — mavjud arxitektura naqshiga mos.
+- [2026-08-20] Savol: admin ham /dokon'ga kira olishi kerak (so'ralgan) —
+  alohida admin-bypass yo'l kerakmi? → Qaror: yo'q, admin xuddi shu
+  umumiy login/parolni biladi (o'zi belgilaydi) va oddiy sotuvchi kabi
+  kiradi. → Sabab: "juda sodda" talabiga zid keladigan qo'shimcha
+  autentifikatsiya yo'lini ixtiro qilmaslik; admin allaqachon
+  ma'lumotga ega.
+- [2026-08-20] Savol: mahsulot nomi juda uzun bo'lsa karta qanday
+  ko'rinadi (CSS overflow)? → dc.html'da bunday sahifa yo'q (yangi
+  ekran), shuning uchun mavjud ilova uslubiga mos ravishda `text-
+  overflow` va flex-wrap qo'llanildi, qattiq piksel balandlik
+  ishlatilmadi (mobile_user'da 40px overflow bugi shu sababdan
+  chiqqan edi — 8-davomga qara).
+
+### BLOKER — admin panelning qolgan bo'limlari
+Foydalanuvchi "Admin panelda qolgan bo'limlarni tugat" deb so'radi,
+lekin **`admin_web/` papkasida faqat build qilingan bundle bor**
+(`index.html` + `assets/index-*.js`/`*.css`, Vite bilan minifikatsiya
+qilingan) — **manba kodi (React/TSX) bu repo'da yo'q**. `FARGONAM_TZ.md`
+"Oddiy statik HTML+JS, bitta fayl" deb yozgan bo'lsa ham, haqiqiy
+`admin_web/index.html` atigi 15 qator — faqat bitta `<script type=
+"module">` bundle'ga havola. Demak admin panel manba kodi boshqa joyda
+(alohida repo yoki lokal papka, shu ishchi muhitda yo'q) saqlanadi.
+**Bu blokerni chetlab o'tib**, o'rniga aniq ko'rsatilgan va manba kodi
+mavjud bo'lgan ishlar (/dokon, Kuzatish jonli yangilanishi) bajarildi.
+Foydalanuvchi qaytganda: admin panel manba kodi qayerda ekanini
+(boshqa repo? lokal papka?) aniqlashtirishi kerak — shundan keyingina
+bu band bajarilishi mumkin.
+
+### Qo'shimcha — Kuzatish ekranining jonli yangilanishi
+`mobile_user/lib/features/orders/order_tracking_screen.dart`
+`StatelessWidget`dan `ConsumerStatefulWidget`ga o'tkazildi — ekran
+ochiq turganda ~12s'da bir marta buyurtma qayta so'raladi
+(`myOrdersProvider` orqali, mavjud), holat `delivered`/`cancelled`ga
+yetganda poll avtomatik to'xtaydi. Sotuvchi /dokon panelida holatni
+o'zgartirsa, xaridor ekranni qo'lda yangilamasdan ko'radi. 1 ta yangi
+widget test qo'shildi (`order_tracking_screen_test.dart`) — render va
+dispose'da Timer xavfsiz to'xtashi tekshirildi. `flutter analyze`/
+`flutter test` — toza (13/13).
+
+### Deploy
+Backend va telegram_bot konteynerlari qayta qurilib serverga
+chiqarildi (`docker compose -f docker-compose.prod.yml up -d --build
+backend telegram_bot`). `nginx/downloads/` bind-mount orqali serverga
+`git pull` bilan darhol yetadi — nginx qayta ishga tushirish shart
+emas.
+
+**Havola**: https://api.fargonam.uz/dokon — login: `sotuvchiuz`,
+parol: `asmoshop2026`.
+
+### Reliz versiyasi
+Bu safar `mobile_user`/`mobile_seller` APK versiyasi OSHIRILMADI —
+faqat backend (yangi `/dokon-api`, `/dokon` static) va telegram_bot
+o'zgardi, ular versiyasiz, darhol deploy qilinadi. Agar keyingi safar
+mobile_user'ga yana UI o'zgarishi kerak bo'lsa, alohida `release.sh`
+bilan versiya oshiriladi.
