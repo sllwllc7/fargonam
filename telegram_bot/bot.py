@@ -35,9 +35,14 @@ _webhook_secret = os.environ.get("TELEGRAM_WEBHOOK_SECRET", "")
 _backend_url = os.environ.get("BACKEND_INTERNAL_URL", "http://backend:8000")
 AUTH_WEBHOOK_URL = f"{_backend_url}/auth/telegram/webhook/{_webhook_secret}" if _webhook_secret else None
 
-APP_LABELS = {"user": "Foydalanuvchi ilovasi", "seller": "Sotuvchi ilovasi"}
+APP_LABELS = {"user": "Foydalanuvchi ilovasi"}
 # Bot faqat arm64-v8a variantini beradi (deyarli barcha zamonaviy qurilmalar) —
 # eski arm32 qurilmalar uchun foydalanuvchi saytdagi ikkinchi havoladan oladi.
+# 2026-08-20: mobile_seller ilovasi to'xtatildi (o'rniga /dokon web paneli) —
+# bot endi faqat "user" ilovasini tarqatadi. Regex "seller"ni hali ham qabul
+# qiladi — eski build'lar papkada qolib ketgan bo'lsa ham xato bermasin
+# (APP_LABELS'da "seller" yo'qligi uchun /versiya va tugma ro'yxatida
+# ko'rinmaydi, shuning uchun amalda hech qachon so'ralmaydi).
 FILENAME_RE = re.compile(r"^fargonam-(user|seller)-arm64-(?P<version>.+)\.apk$")
 
 
@@ -73,7 +78,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = InlineKeyboardMarkup(
         [
             [InlineKeyboardButton("Foydalanuvchi ilovasi", callback_data="apk:user")],
-            [InlineKeyboardButton("Sotuvchi ilovasi", callback_data="apk:seller")],
         ]
     )
     await update.message.reply_text(

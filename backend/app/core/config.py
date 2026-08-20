@@ -52,6 +52,13 @@ class Settings(BaseSettings):
     # ajratilgan ro'yxat: ADMIN_TELEGRAM_IDS=123456789,987654321
     ADMIN_TELEGRAM_IDS: str = ""
 
+    # Sotuvchi web paneli (/dokon) — oddiy umumiy login/parol, Telegram/OTP
+    # emas (2026-08-20: mobile_seller ilovasi to'xtatilib shu bilan
+    # almashtirildi). SELLER_PASSWORD_HASH — ochiq parol emas, bcrypt hash
+    # (backend/scripts/hash_password.py bilan generatsiya qilinadi).
+    SELLER_LOGIN: str = ""
+    SELLER_PASSWORD_HASH: str = ""
+
     @field_validator("SECRET_KEY")
     @classmethod
     def secret_key_must_be_strong(cls, v: str) -> str:

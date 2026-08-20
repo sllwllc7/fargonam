@@ -1,6 +1,16 @@
+import 'dart:async';
+
 import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
+import 'orders_screen.dart' show myOrdersProvider;
+
+/// Kuzatishda holat o'zgarishini o'zi bilib turishi uchun poll oralig'i —
+/// /dokon paneli ham xuddi shu ~12s bilan yangilanadi (bir-biriga mos).
+const _pollInterval = Duration(seconds: 12);
+const _terminalStatuses = {'delivered', 'cancelled'};
 
 const _stages = ['pending', 'preparing', 'ready', 'shipped', 'delivered'];
 const _stageTitles = {
@@ -22,12 +32,65 @@ const _checkIconSvg =
     '<svg viewBox="0 0 12 10"><path d="m1 5 3.5 3.5L11 1" stroke="#EEF1F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
 
 /// Kuzatish — HANDOFF.md 2-bo'lim, 9-band.
-class OrderTrackingScreen extends StatelessWidget {
+///
+/// Sotuvchi (/dokon paneli) holatni o'zgartirsa, foydalanuvchi bu ekranni
+/// qo'lda yangilamasdan ko'rishi kerak — shuning uchun ekran ochiq turganda
+/// ~12s'da bir marta buyurtma qayta so'raladi (dc.html'da bu jonli oqim
+/// yo'q edi, chunki backend/real vaqt hali mavjud emas edi).
+class OrderTrackingScreen extends ConsumerStatefulWidget {
   const OrderTrackingScreen({super.key, required this.order});
   final Map<String, dynamic> order;
 
   @override
+  ConsumerState<OrderTrackingScreen> createState() => _OrderTrackingScreenState();
+}
+
+class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
+  late Map<String, dynamic> _order;
+  Timer? _pollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _order = widget.order;
+    if (!_terminalStatuses.contains(_order['status'])) {
+      _pollTimer = Timer.periodic(_pollInterval, (_) => _refresh());
+    }
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _refresh() async {
+    ref.invalidate(myOrdersProvider);
+    List<Map<String, dynamic>> orders;
+    try {
+      orders = await ref.read(myOrdersProvider.future);
+    } catch (_) {
+      return; // keyingi pollda qayta urinamiz — foydalanuvchiga xato ko'rsatilmaydi
+    }
+    if (!mounted) return;
+    Map<String, dynamic>? updated;
+    for (final o in orders) {
+      if (o['id'] == _order['id']) {
+        updated = o;
+        break;
+      }
+    }
+    if (updated == null) return;
+    final newOrder = updated;
+    setState(() => _order = newOrder);
+    if (_terminalStatuses.contains(newOrder['status'])) {
+      _pollTimer?.cancel();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final order = _order;
     final status = order['status'] as String? ?? 'pending';
     final isPickup = order['delivery_type'] == 'pickup';
     final cancelled = status == 'cancelled';

@@ -73,64 +73,63 @@ release_app() {
 USER_RESULT=$(release_app mobile_user user fargonam-user)
 IFS='|' read -r U_VERSION U_BUILD U_ARM64 U_ARM32 U_ARM64_SIZE U_ARM32_SIZE U_DURATION <<<"$USER_RESULT"
 
-SELLER_RESULT=$(release_app mobile_seller seller fargonam-seller)
-IFS='|' read -r S_VERSION S_BUILD S_ARM64 S_ARM32 S_ARM64_SIZE S_ARM32_SIZE S_DURATION <<<"$SELLER_RESULT"
+# mobile_seller reliz qilinmaydi (2026-08-20: to'xtatildi, o'rniga /dokon
+# web paneli — PROGRESS.md'ga qara). Kod branch'da qoladi, funksiya ham
+# saqlanadi (kerak bo'lsa qaytariladi), faqat shu yerda chaqirilmaydi.
 
 echo "=== yuklab olish sahifasi yangilanmoqda ==="
 sed -i \
   -e "s#href=\"/fargonam-user-arm64-[0-9.]*\.apk\"#href=\"/$U_ARM64\"#" \
   -e "s#href=\"/fargonam-user-arm32-[0-9.]*\.apk\"#href=\"/$U_ARM32\"#" \
-  -e "s#href=\"/fargonam-seller-arm64-[0-9.]*\.apk\"#href=\"/$S_ARM64\"#" \
-  -e "s#href=\"/fargonam-seller-arm32-[0-9.]*\.apk\"#href=\"/$S_ARM32\"#" \
   -e "s#Xaridor: [0-9.]*#Xaridor: $U_VERSION#" \
-  -e "s#Sotuvchi: [0-9.]*#Sotuvchi: $S_VERSION#" \
   nginx/downloads/index.html
 
 echo "=== app_version.json yangilanmoqda ==="
-python3 - "$U_VERSION" "$U_BUILD" "$U_ARM64" "$S_VERSION" "$S_BUILD" "$S_ARM64" "$NOTES" <<'PYEOF'
+# "seller" yozuvi bor bo'lsa o'zgartirilmasdan saqlanadi (eski o'rnatilgan
+# nusxalar hali /app/version so'rasa xato bermasin) — faqat "user" yangilanadi.
+python3 - "$U_VERSION" "$U_BUILD" "$U_ARM64" "$NOTES" <<'PYEOF'
 import json, sys
-u_version, u_build, u_arm64, s_version, s_build, s_arm64, notes = sys.argv[1:8]
+u_version, u_build, u_arm64, notes = sys.argv[1:5]
+try:
+    with open("backend/app_version.json") as f:
+        data = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    data = {}
 # apk_url — ilova ichidagi yangilanish paneli uchun standart havola
 # (deyarli barcha zamonaviy qurilmalar arm64). arm32 faqat sayt/bot orqali.
-data = {
-    "user": {"version": u_version, "build": int(u_build), "apk_url": f"https://fargonam.uz/{u_arm64}", "notes": notes, "force": False},
-    "seller": {"version": s_version, "build": int(s_build), "apk_url": f"https://fargonam.uz/{s_arm64}", "notes": notes, "force": False},
-}
+data["user"] = {"version": u_version, "build": int(u_build), "apk_url": f"https://fargonam.uz/{u_arm64}", "notes": notes, "force": False}
 with open("backend/app_version.json", "w") as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
     f.write("\n")
 PYEOF
 
 echo "=== status.json yangilanmoqda ==="
-python3 - "$U_VERSION" "$U_BUILD" "$U_DURATION" "$U_ARM64_SIZE" "$U_ARM32_SIZE" "$S_VERSION" "$S_BUILD" "$S_DURATION" "$S_ARM64_SIZE" "$S_ARM32_SIZE" "$NOTES" <<'PYEOF'
+python3 - "$U_VERSION" "$U_BUILD" "$U_DURATION" "$U_ARM64_SIZE" "$U_ARM32_SIZE" "$NOTES" <<'PYEOF'
 import json, sys, datetime
-u_version, u_build, u_duration, u_arm64_size, u_arm32_size, s_version, s_build, s_duration, s_arm64_size, s_arm32_size, notes = sys.argv[1:12]
-data = {
-    "last_release": {
-        "notes": notes,
-        "at": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
-        "user": {
-            "version": u_version, "build": int(u_build), "build_seconds": int(u_duration),
-            "arm64_bytes": int(u_arm64_size), "arm32_bytes": int(u_arm32_size),
-        },
-        "seller": {
-            "version": s_version, "build": int(s_build), "build_seconds": int(s_duration),
-            "arm64_bytes": int(s_arm64_size), "arm32_bytes": int(s_arm32_size),
-        },
-    }
+u_version, u_build, u_duration, u_arm64_size, u_arm32_size, notes = sys.argv[1:6]
+try:
+    with open("backend/status.json") as f:
+        data = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    data = {"last_release": {}}
+data["last_release"]["notes"] = notes
+data["last_release"]["at"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+data["last_release"]["user"] = {
+    "version": u_version, "build": int(u_build), "build_seconds": int(u_duration),
+    "arm64_bytes": int(u_arm64_size), "arm32_bytes": int(u_arm32_size),
 }
 with open("backend/status.json", "w") as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
     f.write("\n")
 PYEOF
 
-echo "=== git commit (pubspec.yaml versiyalari) ==="
-git add mobile_user/pubspec.yaml mobile_seller/pubspec.yaml
-git commit -m "Release: user $U_VERSION+$U_BUILD, seller $S_VERSION+$S_BUILD — $NOTES"
+echo "=== git commit (pubspec.yaml versiyasi) ==="
+git add mobile_user/pubspec.yaml
+git commit -m "Release: user $U_VERSION+$U_BUILD — $NOTES"
 
 echo ""
 echo "TUGADI"
 echo "  user:   $U_VERSION+$U_BUILD  arm64 $((U_ARM64_SIZE / 1024 / 1024))MB, arm32 $((U_ARM32_SIZE / 1024 / 1024))MB"
-echo "  seller: $S_VERSION+$S_BUILD  arm64 $((S_ARM64_SIZE / 1024 / 1024))MB, arm32 $((S_ARM32_SIZE / 1024 / 1024))MB"
+echo "  (mobile_seller to'xtatilgan — reliz qilinmaydi)"
 echo "  Sayt, /app/version, /status va bot darhol yangi APK'ni ko'rsatadi —"
 echo "  konteyner qayta ishga tushirish shart emas. 'git push' qo'lda bajariladi."

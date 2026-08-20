@@ -35,6 +35,7 @@ from app.api import ride_ratings as ride_ratings_api
 from app.api import rides as rides_api
 from app.api import cart as cart_api
 from app.api import categories as categories_api
+from app.api import dokon as dokon_api
 from app.api import products as products_api
 from app.api import seller as seller_api
 from app.api import shops as shops_api
@@ -47,6 +48,8 @@ from app.core.storage import UPLOAD_ROOT, ensure_dirs
 # admin_web papkasi (loyiha ildizidan)
 from pathlib import Path as _Path
 ADMIN_WEB_DIR = _Path(__file__).resolve().parents[2] / "admin_web"
+# /dokon — sotuvchi web paneli, backend paketi ichida (alohida repo/build shart emas)
+DOKON_WEB_DIR = _Path(__file__).resolve().parent / "static_dokon"
 
 app = FastAPI(
     title="Fargonam API",
@@ -99,11 +102,16 @@ app.include_router(ride_ratings_api.router)
 app.include_router(rides_api.router)
 app.include_router(seller_api.router)
 app.include_router(admin_api.router)
+app.include_router(dokon_api.router)
 app.include_router(ws_api.router)
 
 # Admin web — same-origin xizmat (CORS muammosi yo'q)
 if ADMIN_WEB_DIR.exists():
     app.mount("/admin-web", StaticFiles(directory=ADMIN_WEB_DIR, html=True), name="admin_web")
+
+# Sotuvchi web paneli — API /dokon-api/* (yuqorida ulandi), sahifaning o'zi shu yerda
+if DOKON_WEB_DIR.exists():
+    app.mount("/dokon", StaticFiles(directory=DOKON_WEB_DIR, html=True), name="dokon_web")
 
 
 @app.get("/")
