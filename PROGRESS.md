@@ -1907,3 +1907,109 @@ tasdiqlanmagan — force-update devori tufayli foydalanuvchi ehtimol hech
 qachon chinakam login urinishiga yetib bormagan bo'lishi mumkin edi.
 Endi devor yo'q — agar xato qolsa, yangi aniq xato matni (URL + xato
 turi) ko'rinadi, shundan keyingina haqiqiy tashxis qo'yiladi.
+
+---
+
+## Sessiya (2026-08-20, davomi 8) — Haqiqiy qurilmada (adb) to'liq tekshiruv
+
+Foydalanuvchi telefonni USB bilan ulab, real qurilmada (HarmonyOS,
+`font_scale` tizim sozlamasi **1.15**, standart 1.0 emas) 4 ta aniq
+kamchilikni tuzatishni va keyin barcha 17 ta `mobile_user` ekranini
+adb (`input tap`/`swipe`, `screencap`) orqali sinab, skrinshot bilan
+tasdiqlashni so'radi. Har bir tuzatish: kod → `flutter analyze` +
+`flutter test` → lokal qayta qurish (`--target-platform android-arm64`,
+debug keystore) → `adb install -r` → skrinshot bilan tasdiqlash →
+commit + push.
+
+**Muhim kashfiyot**: bu qurilmadagi tizim shrift o'lchami (1.15×)
+avvalgi sessiyalarda (emulyator/standart 1.0×) sezilmagan bir nechta
+haqiqiy `RenderFlex` toshib ketish (overflow) xatosini oshkor qildi —
+ularning aksariyati qattiq (`SizedBox`/`childAspectRatio`) o'lchamlar
+matn balandligiga yetarli joy qoldirmaganidan edi.
+
+### 1) Savatga qo'shish bildirishnomasi — tuzatildi
+Ikkita muammo bor edi: (a) `ScaffoldMessenger`'ning standart SnackBar
+navbat xulq-atvori — ketma-ket bosilganda eskisi tugagancha yangisi
+navbatda kutardi, 2.4s turardi; (b) qo'lda yozilgan `AppToast`
+(`Overlay` + `Opacity` + `BackdropFilter`) haqiqiy qurilmada **butun
+ekranni xiralashtirib yuboradigan** xato berdi — sababi Flutter
+compositing darajasida aniq topilmadi, lekin `Overlay`+`Opacity`
+kombinatsiyasi bilan bog'liqligi elimination orqali tasdiqlandi
+(`BackdropFilter`ni olib tashlash yordam bermadi, oddiy `SnackBar`
+bilan almashtirish muammoni butunlay yo'qotdi). `showAppToast()`
+butunlay `ScaffoldMessenger`/`SnackBar` asosiga qayta yozildi —
+`hideCurrentSnackBar()` har chaqiruvda avval ishlaydi (bitta vaqtda
+bitta toast), `AppMotion.toastVisible` 2400ms → **1300ms**
+(foydalanuvchi so'ragan 1.2–1.5s oralig'ida — dc.html'dan ataylab
+og'ib ketilgan, sababi shu faylning boshida yozilgan). 4 marta
+ketma-ket bosib sinaldi — faqat bitta toast, xiralashuv yo'q.
+
+### 2) "Sinflar uchun tayyor mahsulotlar" — haqiqiy sabab topildi
+Avvalgi sessiyada `sectionLabel`ga `height:1.2` qo'shilgan edi (5.3
+qoidasi bo'yicha to'g'ri, lekin bu SABAB emas edi). Haqiqiy qurilmada
+skrinshot **"BOTTOM OVERFLOWED BY 40 PIXELS"** ko'rsatdi: to'plam
+kartasi qatoriga (`catalog_screen.dart`) qattiq `SizedBox(height: 100)`
+berilgan edi, dc.html'da esa bu qatorga umuman qattiq balandlik yo'q
+(kontent o'zi belgilaydi, `overflow-x:auto`). 100 → **144**ga
+oshirildi (loading shimmer bilan birga). Tuzatilgandan keyin: hech
+qanday overflow, "1-sinf to'plami"/"10 xil · 145 500 so'm" to'liq
+ko'rinadi.
+
+### 3) Savat FAB noto'g'ri joyda — tuzatildi
+`CartFab` faqat Bosh sahifada ishlatilgan edi. CLAUDE.md qoidasiga
+ko'ra (Market/kategoriya/to'plamda doim, Bosh sahifada faqat savat
+bo'sh bo'lmaganda) `catalog_screen.dart`, `category_products_screen.dart`,
+`kit_detail_screen.dart`ga qo'shildi. `product_groups_screen.dart` va
+`marketplace_screen.dart` — hech qaysi live route'dan chaqirilmaydigan
+o'lik kod ekani tasdiqlandi (`grep -rln "ScreenName("`), tegilmadi.
+Skrinshot bilan tasdiqlandi: Market/Kategoriya-ichi/To'plamda FAB doim
+bor, Bosh sahifada faqat savat bo'sh bo'lmaganda ko'rinadi.
+
+### 4) Yangilanish bildirishnomasi — ishlayotgani tasdiqlandi
+`PUT /admin/app-version` orqali soxta yangi versiya (0.2.3) qo'yildi,
+"Yangi versiya" bottom-sheet to'g'ri chiqdi, "Yuklab olish"/"Keyinroq"
+tugmalari ishladi, keyin haqiqiy versiya (0.2.2/6) darhol qaytarildi.
+O'zgarish kerak bo'lmadi.
+
+### 17 ekran auditi — topilgan va tuzatilgan qo'shimcha xatolar
+
+| Ekran | Muammo | Tuzatildimi | Izoh |
+|---|---|---|---|
+| Bosh sahifa | — | — | Cart FAB shartli ko'rinishi, "Yangiliklar" bo'sh holati (`SizedBox.shrink`) — dc.html bilan mos |
+| Market/Kategoriyalar | "Sinflar..." kartasi 40px toshib ketardi | ✅ | 2-band, yuqorida |
+| Kategoriya ichi (mahsulotlar) | Mahsulot kartasi (`childAspectRatio:0.66`) narx/tugmani 13px yashirardi | ✅ | 0.6ga tushirildi |
+| Mahsulot (PDP) | — | — | Uzun nom bilan sinaldi, "Jami"/tugma vizual overlap emas (yaqin joylashuv, real bug emas) |
+| To'plam | CartFab yo'q edi | ✅ | 3-band |
+| Savat | Narx ("208 000 so'm") tor joyga sig'may "..." bilan kesilardi | ✅ | maxLines 1→2, endi 2-qatorga tushadi |
+| Rasmiylashtirish | "Buyurtma berish" tugmasi manzil yozilgach gradientga o'tmasdi (TextField'da onChanged yo'q, _canPlace qayta hisoblanmasdi) | ✅ | onChanged: setState qo'shildi |
+| Muvaffaqiyat | — | — | To'g'ri ishladi, "Buyurtma raqami: FN-1" ko'rindi |
+| Kuzatish | Mahsulot nomi "· Variant" ikki marta chiqardi ("...· Standart · Standart × 4") | ✅ | backend product_name allaqachon "Nomi · Variant"; UI qayta qo'shmasin deb tuzatildi |
+| Buyurtmalar | Filtr chiplari ("Barchasi/Jarayonda/Yetkazilgan") gorizontal toshib ketardi | ✅ | SingleChildScrollView(horizontal) |
+| Bildirishnomalar | — | — | Bo'sh holat dc.html bilan bir xil (ikonkasiz, faqat matn) |
+| AI | — | — | Xabar yuborish, klaviatura, javob — hammasi ishladi |
+| Taxi | — | — | Placeholder matn CLAUDE.md 1-bo'limdagi aynan matn bilan mos |
+| Profil | — | — | Ism, avatar, menyu, versiya raqami to'g'ri |
+| Sevimlilar | Har karta 0.111px toshib narxni yashirardi | ✅ | childAspectRatio 0.72→0.68 |
+| Manzillarim | "Viloyat" yorlig'i va "Farg'ona" qiymati "Vilo…"/"Farg…" kesilardi | ✅ | flex nisbati 1:2 → 4:5 |
+| Sozlamalar | — | — | Til/Bildirishnomalar/Tungi rejim("Tez orada")/versiya — hammasi to'g'ri |
+
+Checkout order-summary qatoridagi xuddi shu variant-takrorlanish bugi
+`checkout_screen.dart`da ham topilib tuzatildi (jadvalda "Kuzatish"
+qatoriga kiritilgan, lekin ikkala joyda ham bir xil sabab/tuzatish).
+
+### Nega bu bug'lar avval sezilmagan
+Barcha topilgan `RenderFlex` toshib ketishlar (0.111px dan 40px
+gacha) standart 1.0× shrift sozlamasida yashirin edi — Flutter
+debug-rejimdagi overflow banneri faqat haqiqiy piksel farqi
+bo'lganda chiqadi. Bu qurilmaning tizim shrift o'lchami 1.15× ekani
+(`adb shell settings get system font_scale`) bu xatolarni birinchi
+marta ko'rinadigan qildi. Kelajakda shunga o'xshash qattiq
+o'lcham/aspect-ratio ishlatilgan joylarda ehtiyot bo'lish kerak.
+
+### Reliz holati
+Barcha tuzatishlar alohida commit qilinib push qilindi (5 ta commit:
+toast+CartFab+sectionLabel, savat/checkout/kuzatish, kit toshib
+ketishi+buyurtmalar filtri, sevimlilar+manzil). Versiya hali
+oshirilmagan (0.2.2+6da qoladi, lokal debug-keystore build bilan
+sinaldi) — foydalanuvchi "Hammasi tugagach release.sh bilan yangi
+versiya" deb so'ragan, shu bosqich hali oldinda.
