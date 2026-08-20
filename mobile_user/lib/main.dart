@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'core/app_config_service.dart';
 import 'core/navigator_key.dart';
@@ -202,7 +203,10 @@ class _RootState extends ConsumerState<_Root> with WidgetsBindingObserver {
           ),
           actions: [
             FilledButton(
-              onPressed: () {},
+              onPressed: () => launchUrl(
+                Uri.parse('https://fargonam.uz/'),
+                mode: LaunchMode.externalApplication,
+              ),
               child: const Text('Yangilash'),
             ),
           ],

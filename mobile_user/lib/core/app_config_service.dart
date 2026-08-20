@@ -24,10 +24,13 @@ class RemoteConfig {
     required this.supportTelegram,
   });
 
+  // minAppVersion '0.0.0' — server bilan bog'lanib bo'lmasa (tarmoq xatosi)
+  // ilova bloklanmasligi kerak, shuning uchun standart qiymat hech qachon
+  // haqiqiy versiyadan katta bo'lmaydigan qilib tanlangan ("fail open").
   static const RemoteConfig defaults = RemoteConfig(
     maintenanceMode: false,
     maintenanceMessage: '',
-    minAppVersion: '1.0.0',
+    minAppVersion: '0.0.0',
     deliveryPrice: 15000,
     minOrderAmount: 0,
     supportPhone: '',
@@ -37,7 +40,7 @@ class RemoteConfig {
   factory RemoteConfig.fromJson(Map<String, dynamic> j) => RemoteConfig(
         maintenanceMode: j['maintenance_mode'] == 'true',
         maintenanceMessage: j['maintenance_message'] as String? ?? '',
-        minAppVersion: j['min_app_version_user'] as String? ?? '1.0.0',
+        minAppVersion: j['min_app_version_user'] as String? ?? '0.0.0',
         deliveryPrice: double.tryParse(j['delivery_price'] as String? ?? '') ?? 15000,
         minOrderAmount: double.tryParse(j['min_order_amount'] as String? ?? '') ?? 0,
         supportPhone: j['support_phone'] as String? ?? '',

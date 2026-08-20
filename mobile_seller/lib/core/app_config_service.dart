@@ -19,10 +19,12 @@ class RemoteConfig {
     required this.supportTelegram,
   });
 
+  // minAppVersion '0.0.0' — server bilan bog'lanib bo'lmasa ilova
+  // bloklanmasligi kerak ("fail open").
   static const RemoteConfig defaults = RemoteConfig(
     maintenanceMode: false,
     maintenanceMessage: '',
-    minAppVersion: '1.0.0',
+    minAppVersion: '0.0.0',
     supportPhone: '',
     supportTelegram: '',
   );
@@ -30,7 +32,7 @@ class RemoteConfig {
   factory RemoteConfig.fromJson(Map<String, dynamic> j) => RemoteConfig(
         maintenanceMode: j['maintenance_mode'] == 'true',
         maintenanceMessage: j['maintenance_message'] as String? ?? '',
-        minAppVersion: j['min_app_version_seller'] as String? ?? '1.0.0',
+        minAppVersion: j['min_app_version_seller'] as String? ?? '0.0.0',
         supportPhone: j['support_phone'] as String? ?? '',
         supportTelegram: j['support_telegram'] as String? ?? '',
       );

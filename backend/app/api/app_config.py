@@ -15,8 +15,8 @@ router = APIRouter(prefix="/app-config", tags=["app-config"])
 _DEFAULTS: dict[str, str] = {
     "maintenance_mode": "false",
     "maintenance_message": "Texnik ishlar olib borilmoqda. Tez orada qaytamiz.",
-    "min_app_version_user": "1.0.0",
-    "min_app_version_seller": "1.0.0",
+    "min_app_version_user": "0.1.0",
+    "min_app_version_seller": "0.1.0",
     "delivery_price": "15000",
     "min_order_amount": "0",
     "support_phone": "+998901234567",

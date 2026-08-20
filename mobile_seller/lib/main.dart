@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'core/api_client.dart' show navigatorKey, onTokenExpired, secureStorageProvider;
 import 'core/app_config_service.dart';
@@ -121,7 +122,13 @@ class _RootState extends ConsumerState<_Root> {
             style: TextStyle(color: AppColors.textSecondary),
           ),
           actions: [
-            FilledButton(onPressed: () {}, child: const Text('Yangilash')),
+            FilledButton(
+              onPressed: () => launchUrl(
+                Uri.parse('https://fargonam.uz/'),
+                mode: LaunchMode.externalApplication,
+              ),
+              child: const Text('Yangilash'),
+            ),
           ],
         ),
       ),
