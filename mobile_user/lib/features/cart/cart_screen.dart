@@ -368,9 +368,15 @@ class _CartItemCardState extends ConsumerState<_CartItemCard> {
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
-    final name = item['product_name'] as String? ?? 'Mahsulot';
+    final rawName = item['product_name'] as String? ?? 'Mahsulot';
     final price = double.tryParse(item['product_price']?.toString() ?? '') ?? 0;
     final variantName = item['variant_name'] as String?;
+    // Backend `product_name` allaqachon "Nomi · Variant" ko'rinishida keladi
+    // (/cart javobi) — variant qatorda alohida ham ko'rsatilgani uchun
+    // takrorlanmasin deb shu yerda ajratib olinadi.
+    final name = (variantName != null && variantName.isNotEmpty && rawName.endsWith(' · $variantName'))
+        ? rawName.substring(0, rawName.length - variantName.length - 3)
+        : rawName;
     final lineTotal = price * _qty;
 
     return Container(
@@ -442,7 +448,7 @@ class _CartItemCardState extends ConsumerState<_CartItemCard> {
                       child: Text(
                         formatSom(lineTotal),
                         style: AppTypography.rowTitle,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),

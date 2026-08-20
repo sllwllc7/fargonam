@@ -209,6 +209,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                         decoration: const InputDecoration(hintText: 'Ko\'cha, uy, xonadon', isDense: true),
                                         maxLines: 2,
                                         minLines: 1,
+                                        onChanged: (_) => setState(() {}),
                                       ),
                                     ),
                                 ],
@@ -309,9 +310,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                       child: Text.rich(
                                         TextSpan(
                                           children: [
+                                            // `product_name` backend'dan allaqachon "Nomi · Variant"
+                                            // ko'rinishida keladi — variant qayta qo'shilmasin.
                                             TextSpan(text: l['product_name'] as String? ?? '', style: AppTypography.rowTitle.copyWith(fontSize: 13.5)),
                                             TextSpan(
-                                              text: ' · ${l['variant_name'] ?? ''} × ${l['quantity']}',
+                                              text: ' × ${l['quantity']}',
                                               style: AppTypography.caption.copyWith(height: null, fontSize: 13.5, color: AppColors.textMuted),
                                             ),
                                           ],
