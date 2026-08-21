@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/api_client.dart';
-import '../../core/config.dart';
 import '../marketplace/catalog_screen.dart' show categoriesProvider, productCategoryMapProvider;
 import '../marketplace/category_icons.dart';
 import '../products/product_detail_screen.dart';
@@ -138,7 +137,6 @@ class _FavoriteCardState extends ConsumerState<_FavoriteCard> {
     final item = widget.item;
     final productId = item['product_id'] as int;
     final imgUrl = item['product_image_url'] as String?;
-    final fullImg = imgUrl != null ? '${AppConfig.apiBaseUrl}$imgUrl' : null;
     final price = double.tryParse(item['product_price']?.toString() ?? '') ?? 0;
 
     return PressableScale(
@@ -161,12 +159,11 @@ class _FavoriteCardState extends ConsumerState<_FavoriteCard> {
               children: [
                 AspectRatio(
                   aspectRatio: 1,
-                  child: Container(
-                    decoration: BoxDecoration(color: widget.tint[0], borderRadius: BorderRadius.circular(AppRadius.input)),
-                    alignment: Alignment.center,
-                    child: fullImg != null
-                        ? ClipRRect(borderRadius: BorderRadius.circular(AppRadius.input), child: Image.network(fullImg, fit: BoxFit.cover))
-                        : SvgPicture.string(categorySvg(widget.slug), width: 52, height: 52, colorFilter: ColorFilter.mode(widget.tint[1], BlendMode.srcIn)),
+                  child: ProductThumb(
+                    imageUrl: imgUrl,
+                    categorySlug: widget.slug,
+                    tint: widget.tint,
+                    borderRadius: AppRadius.input,
                   ),
                 ),
                 Positioned(

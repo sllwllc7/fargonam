@@ -1,3 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import '../../core/config.dart';
+
 /// dc.html `icon(catId)` — kategoriya slug'iga mos SVG path. Market va
 /// Kategoriya-ichi ekranlari shu bitta manbadan foydalanadi.
 const categoryIconPaths = <String, String>{
@@ -24,4 +30,62 @@ const categoryIconPaths = <String, String>{
 String categorySvg(String slug) {
   final d = categoryIconPaths[slug] ?? 'M5 5h14v14H5z';
   return '<svg viewBox="0 0 24 24"><path d="$d" stroke="#000" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" fill="none"/></svg>';
+}
+
+/// Mahsulot rasmi — bor bo'lsa tarmoqdan (kesh bilan), bo'lmasa/xato/
+/// yuklanayotganda kategoriya ikonkasi (bir xil o'lcham, joy sakramaydi).
+/// Market kartasi, kategoriya ro'yxati, qidiruv, savat, sevimlilar,
+/// mahsulot detali — barchasi shu bitta widget'dan foydalanadi.
+class ProductThumb extends StatelessWidget {
+  const ProductThumb({
+    super.key,
+    required this.imageUrl,
+    required this.categorySlug,
+    required this.tint,
+    this.iconSize = 52,
+    this.borderRadius = 0,
+    this.fallbackLabel,
+  });
+
+  final String? imageUrl;
+  final String categorySlug;
+  final List<Color> tint;
+  final double iconSize;
+  final double borderRadius;
+  final Widget? fallbackLabel;
+
+  Widget _fallback() => Container(
+    color: tint[0],
+    alignment: Alignment.center,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SvgPicture.string(
+          categorySvg(categorySlug),
+          width: iconSize,
+          height: iconSize,
+          colorFilter: ColorFilter.mode(tint[1], BlendMode.srcIn),
+        ),
+        if (fallbackLabel != null) ...[const SizedBox(height: 7), fallbackLabel!],
+      ],
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final url = imageUrl;
+    final fullUrl = (url != null && url.isNotEmpty) ? '${AppConfig.apiBaseUrl}$url' : null;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: fullUrl == null
+          ? _fallback()
+          : CachedNetworkImage(
+              imageUrl: fullUrl,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => _fallback(),
+              errorWidget: (context, url, error) => _fallback(),
+            ),
+    );
+  }
 }

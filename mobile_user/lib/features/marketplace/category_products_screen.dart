@@ -383,58 +383,43 @@ class _ProductCardState extends ConsumerState<_ProductCard> {
               children: [
                 AspectRatio(
                   aspectRatio: 1,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: widget.tint[0],
-                      borderRadius: BorderRadius.circular(AppRadius.input),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SvgPicture.string(
-                          categorySvg(widget.slug),
-                          width: 52,
-                          height: 52,
-                          colorFilter: ColorFilter.mode(
-                            widget.tint[1],
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        const SizedBox(height: 7),
-                        Text(
-                          widget.categoryName.toLowerCase(),
-                          style: TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 9,
-                            color: widget.tint[1].withValues(alpha: 0.65),
-                          ),
-                        ),
-                        if (out)
-                          Align(
-                            alignment: Alignment.bottomLeft,
-                            child: Container(
-                              margin: const EdgeInsets.all(6),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.textMuted,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'Tugagan',
-                                style: AppTypography.small.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
+                  child: ProductThumb(
+                    imageUrl: (p['thumb_url'] ?? p['image_url']) as String?,
+                    categorySlug: widget.slug,
+                    tint: widget.tint,
+                    borderRadius: AppRadius.input,
+                    fallbackLabel: Text(
+                      widget.categoryName.toLowerCase(),
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 9,
+                        color: widget.tint[1].withValues(alpha: 0.65),
+                      ),
                     ),
                   ),
                 ),
+                if (out)
+                  Positioned(
+                    left: 6,
+                    bottom: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.textMuted,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'Tugagan',
+                        style: AppTypography.small.copyWith(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ),
                 Positioned(
                   top: 6,
                   right: 6,

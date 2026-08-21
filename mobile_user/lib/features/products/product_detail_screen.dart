@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/api_client.dart';
+import '../../core/config.dart';
 import '../cart/cart_screen.dart' show CartScreen, cartProvider;
 import '../favorites/favorites_screen.dart' show favoritesProvider;
 import '../marketplace/catalog_screen.dart' show categoriesProvider;
@@ -20,6 +22,20 @@ final productDetailProvider = FutureProvider.family<Map<String, dynamic>, int>((
 ) async {
   final res = await ref.watch(dioProvider).get('/products/$id');
   return res.data as Map<String, dynamic>;
+});
+
+/// Mahsulotning qo'shimcha galereya rasmlari — asosiy `image_url`dan
+/// tashqari, `/products/{id}/images` orqali (sotuvchi qo'shgan bo'lsa).
+final productGalleryProvider = FutureProvider.family<List<Map<String, dynamic>>, int>((
+  ref,
+  id,
+) async {
+  try {
+    final res = await ref.watch(dioProvider).get('/products/$id/images');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  } catch (_) {
+    return const [];
+  }
 });
 
 final isFavoriteProvider = FutureProvider.family<bool, int>((
@@ -144,6 +160,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final pAsync = ref.watch(productDetailProvider(widget.productId));
     final favAsync = ref.watch(isFavoriteProvider(widget.productId));
     final categoriesAsync = ref.watch(categoriesProvider);
+    final galleryAsync = ref.watch(productGalleryProvider(widget.productId));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -180,6 +197,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               AppColors.categoryTints[(categoryId ?? 0) %
                   AppColors.categoryTints.length];
 
+          // Barcha rasmlar: asosiy (image_url) + galereya, dublikat
+          // URL'lar bitta marta (sotuvchi galereyadagi rasmni "Asosiy"
+          // qilganda ikkalasi bir xil bo'lib qolishi mumkin).
+          final mainImg = p['image_url'] as String?;
+          final gallery = galleryAsync.value ?? const [];
+          final seenUrls = <String>{};
+          final imageUrls = <String>[
+            if (mainImg != null && mainImg.isNotEmpty) mainImg,
+            for (final g in gallery)
+              if (g['image_url'] != null) g['image_url'] as String,
+          ].where((u) => seenUrls.add(u)).toList();
+
           return SafeArea(
             bottom: false,
             child: ScreenFadeIn(
@@ -204,6 +233,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         ),
                       ),
                       _ProductImageCarousel(
+                        imageUrls: imageUrls,
                         iconPath: categorySvg(slug),
                         bg: tint[0],
                         fg: tint[1],
@@ -493,11 +523,16 @@ class _RoundFavButton extends StatelessWidget {
 /// bosilganda o'sha rasmga sakraydi.
 class _ProductImageCarousel extends StatefulWidget {
   const _ProductImageCarousel({
+    required this.imageUrls,
     required this.iconPath,
     required this.bg,
     required this.fg,
     required this.labels,
   });
+  // Haqiqiy rasm(lar) — bor bo'lsa shular ko'rsatiladi (to'liq URL, allaqachon
+  // apiBaseUrl bilan). Bo'sh bo'lsa `labels` soniga mos, ikonka+matn bilan
+  // eski placeholder ko'rinishi (hozirgi ikonka) saqlanadi.
+  final List<String> imageUrls;
   final String iconPath;
   final Color bg;
   final Color fg;
@@ -523,9 +558,11 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
     return d;
   }
 
+  bool get _hasImages => widget.imageUrls.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
-    final n = widget.labels.length;
+    final n = _hasImages ? widget.imageUrls.length : widget.labels.length;
     // dc.html `z: 100 - round(d*10)` — z kichikroq (d kattaroq) avval
     // chizilishi kerak (Stack'da keyingi bola tepada chiqadi).
     final order = List<int>.generate(n, (i) => i)
@@ -571,6 +608,38 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
     );
   }
 
+  /// Rasm yo'q/xato/yuklanayotgan holatda — ikonka (haqiqiy rasm rejimida
+  /// matnsiz, faqat CachedNetworkImage placeholder/errorWidget sifatida).
+  Widget _iconFallback(int i) {
+    return Container(
+      color: widget.bg,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.string(
+            widget.iconPath,
+            width: 96,
+            height: 96,
+            colorFilter: ColorFilter.mode(widget.fg, BlendMode.srcIn),
+          ),
+          if (!_hasImages) ...[
+            const SizedBox(height: 12),
+            Text(
+              widget.labels[i],
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 10,
+                color: widget.fg.withValues(alpha: 0.65),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   /// dc.html `pdSlides` formulasi aynan (1127-1139-qatorlar):
   /// `tf: translate(-50%,-50%) translateX(d*40) translateZ(-d*130) rotateY(clamp(d,0,1)*16deg)`,
   /// `op: d<0 ? max(0,1+d) : 1`, `filter: brightness(max(.55,1-back*.18)) blur(back*1.5px)`.
@@ -592,6 +661,27 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
       ..translateByDouble(dx, 0.0, dz, 1)
       ..rotateY(rotateDeg * math.pi / 180);
 
+    final slideContent = _hasImages
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CachedNetworkImage(
+                  imageUrl: '${AppConfig.apiBaseUrl}${widget.imageUrls[i]}',
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => _iconFallback(i),
+                  errorWidget: (context, url, error) => _iconFallback(i),
+                ),
+                // dc.html'dagi `filter:brightness()` — orqadagi qatlamlar
+                // xiralashsin, rasmning o'zi CSS filter emas (Flutter'da
+                // rasm ustiga qora overlay bilan aynan shu effekt beriladi).
+                if (back > 0) Container(color: Colors.black.withValues(alpha: 1 - brightness)),
+              ],
+            ),
+          )
+        : _iconFallback(i);
+
     Widget slide = AnimatedContainer(
       duration: AppMotion.screenIn,
       curve: AppMotion.standard,
@@ -600,30 +690,11 @@ class _ProductImageCarouselState extends State<_ProductImageCarousel> {
       width: MediaQuery.of(context).size.width * 0.78,
       height: 270,
       decoration: BoxDecoration(
-        color: Color.lerp(widget.bg, Colors.black, 1 - brightness),
+        color: _hasImages ? null : Color.lerp(widget.bg, Colors.black, 1 - brightness),
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppShadows.productImage,
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SvgPicture.string(
-            widget.iconPath,
-            width: 96,
-            height: 96,
-            colorFilter: ColorFilter.mode(widget.fg, BlendMode.srcIn),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            widget.labels[i],
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 10,
-              color: widget.fg.withValues(alpha: 0.65),
-            ),
-          ),
-        ],
-      ),
+      child: slideContent,
     );
 
     return AnimatedOpacity(

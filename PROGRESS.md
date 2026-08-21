@@ -2414,3 +2414,69 @@ bilan tozalandi (working tree toza edi, hech narsa yo'qolmadi).
 — barchasi 0.2.5+9'ni ko'rsatadi, APK haqiqatda yuklanadi (`curl -I`
 200). arm64 29.7MB, arm32 27.5MB. `mobile_seller` reliz qilinmadi
 (to'xtatilgan, o'zgarmadi — 0.2.4+8'da qoladi).
+
+## Sessiya (2026-08-21, davomi) — Mahsulot rasmi ko'rinmasligi tuzatildi
+
+Foydalanuvchi: kategoriya rasmi ishlaydi, lekin mahsulot rasmi User
+App'da ko'rinmayapti — bosqichma-bosqich diagnostika talab qildi.
+
+### Diagnostika (taxmin qilinmadi, tasdiqlandi)
+1. **Backend javobi** — `curl https://api.fargonam.uz/products/73`:
+   `image_url`/`thumb_url` **to'g'ri qaytardi** (mahsulot `id=73` — real
+   test mahsulot, ilgari sotuvchi/admin tomonidan yuklangan 46×46 test
+   rasm bilan). Muammo backend'da emas edi.
+2. **Rasm fayli** — `curl -I .../static/products/73_....jpg` → 200,
+   `image/jpeg`. Fayl mavjud, 403/404 yo'q.
+3. **Ilova kodi** — aynan foydalanuvchi taxmin qilgandek: **PDP va
+   kategoriya-ichi mahsulot kartasi hali dc.html'dagi SVG ikonka-
+   placeholder'da qolgan edi**, `image_url`/`thumb_url`ni umuman
+   o'qimasdi. Tekshirib chiqildi: `marketplace_screen.dart`,
+   `search_screen.dart`, `product_groups_screen.dart`, `order_detail_
+   screen.dart` — bularda rasm **ALLAQACHON** ishlar edi (`AppCachedImage`
+   bilan). Rasm YO'Q edi: `category_products_screen.dart` (kategoriya
+   grid kartasi), `product_detail_screen.dart` (PDP depth-carousel),
+   `cart_screen.dart` (savat qatori). `favorites_screen.dart`da rasm
+   bor edi, lekin xato ishlov YO'Q (`Image.network` to'g'ridan-to'g'ri,
+   404/tarmoq xatosida ikonkaga qaytmasdi, Flutter'ning standart
+   "buzilgan rasm" belgisini ko'rsatardi).
+
+### Tuzatish
+- **Yangi umumiy widget** `ProductThumb` (`category_icons.dart`) —
+  `cached_network_image` (loyihada allaqachon bor paket, yangisi
+  qo'shilmadi) bilan: rasm bo'lsa ko'rsatadi, yo'q/xato/yuklanayotganda
+  bir xil o'lchamdagi tint+kategoriya-ikonka fallback (joy sakramaydi).
+  4 joyda ishlatildi: kategoriya grid kartasi, savat, sevimlilar
+  (eski xavfli `Image.network` almashtirildi).
+- **PDP depth-carousel** (`_ProductImageCarousel`) — dc.html'dagi 3D
+  stack matematikasi (translateX/translateZ/rotateY/opacity/brightness/
+  blur) **bir xil qoldi** (soddalashtirilmadi), faqat slayd KONTENTI
+  endi shart: rasm(lar) bo'lsa — asosiy `image_url` + galereya
+  (`GET /products/{id}/images`, dublikat URL bitta marta), orqadagi
+  qatlamlar uchun "brightness" effekti endi qora overlay bilan
+  (CSS filternn Flutter ekvivalenti); rasm umuman yo'q bo'lsa — eski
+  3-icon+matn placeholder xatti-harakati **o'zgarishsiz** qoladi.
+- Boshqa ekranlar (Market, qidiruv, buyurtma tafsiloti) tekshirilgan —
+  ular allaqachon to'g'ri ishlagani uchun tegilmadi.
+
+`flutter analyze` — 0 muammo, `flutter test` — 13/13, `flutter build
+apk --debug` — muvaffaqiyatli. Backend'ga o'zgarish kiritilmadi (kerak
+emas edi — muammo faqat Flutter kodida edi).
+
+### BLOKER — haqiqiy qurilmada (adb) tasdiqlash qilinmadi
+Foydalanuvchi "Telefon USB'da ulangan" dedi va skrinshot bilan
+tasdiqlashni **majburiy** deb belgiladi. Tekshirdim: `adb devices`
+bo'sh ro'yxat qaytardi. Sabab qidirildi (taxmin qilinmadi) — `/sys/
+bus/usb/devices/` to'g'ridan-to'g'ri ko'rildi: shu mashinada atigi 3ta
+USB qurilma bor (2.4G simsiz qabul qilgich, ASUS veb-kamera, simsiz
+adapter) — **telefon USB darajasida ham umuman ko'rinmaydi** (bu adb
+ruxsat muammosi emas, qurilma fizik darajada yo'q). Lokal Android
+emulyator ham yo'q (`~/Android/Sdk`da emulyator paketi o'rnatilmagan,
+`~/.android/avd` mavjud emas) — tez sozlash imkonsiz (system image
+yuklab olish kerak). Xulosa: **bu Claude Code seansi ishlayotgan
+muhitda telefon USB orqali ko'rinmayapti** — ehtimol foydalanuvchi
+telefonni boshqa (o'z shaxsiy) mashinasiga ulagan, shu seans esa
+alohida/sandboxed muhitda ishlaydi. Kod darajasidagi ishonch
+(`flutter analyze`/`test`/`build` toza, backend curl bilan tasdiqlangan)
+yuqori, lekin **ko'z bilan (skrinshot) tasdiqlash hali yo'q** —
+foydalanuvchi o'z tomonida `adb devices` orqali telefonni tekshirib,
+keyingi safar shu band birinchi navbatda ko'rib chiqiladi.

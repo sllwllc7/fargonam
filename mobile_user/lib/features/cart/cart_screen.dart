@@ -125,9 +125,7 @@ class CartScreen extends ConsumerWidget {
                                 delay: AppMotion.staggerStep * i,
                                 child: _CartItemCard(
                                   item: items[i],
-                                  iconPath: categorySvg(
-                                    slugFor(items[i]['product_id'] as int?),
-                                  ),
+                                  slug: slugFor(items[i]['product_id'] as int?),
                                   tint: tintFor(items[i]['product_id'] as int?),
                                 ),
                               ),
@@ -312,11 +310,11 @@ class _EmptyCart extends StatelessWidget {
 class _CartItemCard extends ConsumerStatefulWidget {
   const _CartItemCard({
     required this.item,
-    required this.iconPath,
+    required this.slug,
     required this.tint,
   });
   final Map<String, dynamic> item;
-  final String iconPath;
+  final String slug;
   final List<Color> tint;
 
   @override
@@ -389,19 +387,15 @@ class _CartItemCardState extends ConsumerState<_CartItemCard> {
       ),
       child: Row(
         children: [
-          Container(
+          SizedBox(
             width: 84,
             height: 84,
-            decoration: BoxDecoration(
-              color: widget.tint[0],
-              borderRadius: BorderRadius.circular(AppRadius.image),
-            ),
-            alignment: Alignment.center,
-            child: SvgPicture.string(
-              widget.iconPath,
-              width: 40,
-              height: 40,
-              colorFilter: ColorFilter.mode(widget.tint[1], BlendMode.srcIn),
+            child: ProductThumb(
+              imageUrl: item['product_image_url'] as String?,
+              categorySlug: widget.slug,
+              tint: widget.tint,
+              iconSize: 40,
+              borderRadius: AppRadius.image,
             ),
           ),
           const SizedBox(width: 12),
