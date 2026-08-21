@@ -106,7 +106,7 @@ PYEOF
 echo "=== status.json yangilanmoqda ==="
 python3 - "$U_VERSION" "$U_BUILD" "$U_DURATION" "$U_ARM64_SIZE" "$U_ARM32_SIZE" "$NOTES" <<'PYEOF'
 import json, sys, datetime
-u_version, u_build, u_duration, u_arm64_size, u_arm32_size, notes = sys.argv[1:6]
+u_version, u_build, u_duration, u_arm64_size, u_arm32_size, notes = sys.argv[1:7]
 try:
     with open("backend/status.json") as f:
         data = json.load(f)

@@ -2391,3 +2391,17 @@ avtomatik konteyner ishga tushganda ishlaydi — `docker-entrypoint.sh`
 har doim shunday qiladi). `admin_web/` bind-mount orqali darhol
 yangilandi. `mobile_user` — `scripts/release.sh` server ustida
 ishga tushirildi (natija pastda).
+
+### Xato — `release.sh`dagi status.json bug (tuzatildi)
+`scripts/release.sh` ishga tushirilganda ikkala APK (arm64+arm32)
+muvaffaqiyatli qurildi, `nginx/downloads/` va `app_version.json`
+to'g'ri yangilandi — lekin `status.json` yangilash bosqichida Python
+xato berdi (`ValueError: not enough values to unpack`): heredoc'ga
+6 ta argument uzatilgan, lekin `sys.argv[1:6]` faqat 5 tasini olardi
+(oldingi sessiyada shu heredoc read-and-merge'ga o'tkazilganda kiritilgan
+off-by-one xato). `set -euo pipefail` tufayli skript shu yerda to'xtadi
+— oxirgi `git commit` bosqichi ishlamay qoldi, server'da `mobile_user/
+pubspec.yaml` (0.2.5+9) va `nginx/downloads/index.html` committalanmagan
+holda qoldi. **Tuzatildi**: `sys.argv[1:6]` → `sys.argv[1:7]`, lokal
+sinaldi, server'da qo'lda status.json to'g'rilanib, qoldiq commit
+qilindi (pastga qara).
