@@ -124,7 +124,7 @@ with open("backend/status.json", "w") as f:
 PYEOF
 
 echo "=== git commit (pubspec.yaml versiyasi) ==="
-git add mobile_user/pubspec.yaml
+git add mobile_user/pubspec.yaml nginx/downloads/index.html
 git commit -m "Release: user $U_VERSION+$U_BUILD — $NOTES"
 
 echo ""
