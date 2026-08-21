@@ -2404,4 +2404,13 @@ off-by-one xato). `set -euo pipefail` tufayli skript shu yerda to'xtadi
 pubspec.yaml` (0.2.5+9) va `nginx/downloads/index.html` committalanmagan
 holda qoldi. **Tuzatildi**: `sys.argv[1:6]` → `sys.argv[1:7]`, lokal
 sinaldi, server'da qo'lda status.json to'g'rilanib, qoldiq commit
-qilindi (pastga qara).
+qilindi (pastga qara). Server'da mustaqil commit qilinganidan keyin
+git tarixi origin'dan bir commit farqlanib qoldi (bir xil o'zgarish,
+ikki xil hash) — `git fetch && git reset --hard origin/mobile-ui-rebuild`
+bilan tozalandi (working tree toza edi, hech narsa yo'qolmadi).
+
+### APK — 0.2.5+9 chiqarildi
+`/app/version?app=user`, `/status`, yuklab olish sahifasi (fargonam.uz)
+— barchasi 0.2.5+9'ni ko'rsatadi, APK haqiqatda yuklanadi (`curl -I`
+200). arm64 29.7MB, arm32 27.5MB. `mobile_seller` reliz qilinmadi
+(to'xtatilgan, o'zgarmadi — 0.2.4+8'da qoladi).
