@@ -175,6 +175,21 @@ async def list_orders(
     return result
 
 
+@router.get("/orders/{order_id}")
+async def get_order(
+    order_id: int,
+    name: str = Depends(require_dokon_name),
+    db: AsyncSession = Depends(get_db),
+):
+    order = (await db.scalars(select(Order).where(Order.id == order_id))).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Buyurtma topilmadi")
+    enriched = await enrich_order(order, db, include_phone=True)
+    data = enriched.model_dump(mode="json")
+    data["claimed_by"] = await get_redis().get(f"{_CLAIM_PREFIX}{order_id}")
+    return data
+
+
 @router.post("/orders/{order_id}/status")
 async def change_status(
     order_id: int,

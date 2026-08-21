@@ -14,6 +14,7 @@ from app.api.ws import notify_user
 from app.core.redis_client import get_redis
 from app.db.session import get_db
 from app.models.cart import CartItem
+from app.models.category import Category
 from app.models.order import DeliveryType, Order, OrderItem, OrderStatus, PaymentMethod
 from app.models.product import Product
 from app.models.product_variant import ProductVariant
@@ -197,6 +198,12 @@ async def enrich_order(order: Order, db: AsyncSession, include_phone: bool = Fal
     variant_map, product_map = await _variant_product_map(db, variant_ids)
     customer = await db.get(User, order.user_id) if include_phone else None
 
+    category_ids = list({p.category_id for p in product_map.values() if p.category_id})
+    category_slug_map = {}
+    if category_ids:
+        cats = (await db.scalars(select(Category).where(Category.id.in_(category_ids)))).all()
+        category_slug_map = {c.id: c.slug for c in cats}
+
     enriched_items = []
     for oi in order.items:
         variant = variant_map.get(oi.variant_id)
@@ -213,6 +220,7 @@ async def enrich_order(order: Order, db: AsyncSession, include_phone: bool = Fal
             product_id=product.id if product else None,
             product_name=display_name,
             product_image_url=(variant.image_url if variant and variant.image_url else (product.image_url if product else None)),
+            category_slug=category_slug_map.get(product.category_id) if product else None,
         ))
     return OrderOut(
         id=order.id,

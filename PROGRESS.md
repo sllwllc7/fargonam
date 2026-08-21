@@ -2155,20 +2155,20 @@ takrorlanmasin deb.
   ishlatilmadi (mobile_user'da 40px overflow bugi shu sababdan
   chiqqan edi — 8-davomga qara).
 
-### BLOKER — admin panelning qolgan bo'limlari
-Foydalanuvchi "Admin panelda qolgan bo'limlarni tugat" deb so'radi,
-lekin **`admin_web/` papkasida faqat build qilingan bundle bor**
-(`index.html` + `assets/index-*.js`/`*.css`, Vite bilan minifikatsiya
-qilingan) — **manba kodi (React/TSX) bu repo'da yo'q**. `FARGONAM_TZ.md`
-"Oddiy statik HTML+JS, bitta fayl" deb yozgan bo'lsa ham, haqiqiy
-`admin_web/index.html` atigi 15 qator — faqat bitta `<script type=
-"module">` bundle'ga havola. Demak admin panel manba kodi boshqa joyda
-(alohida repo yoki lokal papka, shu ishchi muhitda yo'q) saqlanadi.
-**Bu blokerni chetlab o'tib**, o'rniga aniq ko'rsatilgan va manba kodi
-mavjud bo'lgan ishlar (/dokon, Kuzatish jonli yangilanishi) bajarildi.
-Foydalanuvchi qaytganda: admin panel manba kodi qayerda ekanini
-(boshqa repo? lokal papka?) aniqlashtirishi kerak — shundan keyingina
-bu band bajarilishi mumkin.
+### BLOKER — admin panelning qolgan bo'limlari (XATO EDI, TUZATILDI 2026-08-21)
+Foydalanuvchi "Admin panelda qolgan bo'limlarni tugat" deb so'raganda
+men faqat `admin_web/` (build natijasi) papkasini tekshirib "manba kodi
+yo'q" deb noto'g'ri xulosa qilgandim. **Bu xato edi.** `admin_web_src/`
+(to'liq React+Vite+TS+Tailwind manba, 44 fayl) shu repo'da doim mavjud
+bo'lgan, git'da tracked va `origin/mobile-ui-rebuild`ga push qilingan
+(commit `76e9573`..`383b987`, 2026-08-20 12:21–14:29 — shu kunning
+o'zida, /dokon sessiyasidan oldinroq). Ustiga, `a9e44b6` commit "barcha
+admin ekranlari production'ga chiqarilgani tasdiqlandi" deydi — ya'ni
+"qolgan bo'limlar" so'roviga kelinganida ular allaqachon tugallangan
+edi. Men shu faktni PROGRESS.md'ning yuqorisida (1301-qator atrofida)
+o'zim yozgan bo'lsam ham, /dokon sessiyasida qayta tekshirmadim.
+Bloker yo'q edi va yo'q. Xotira fayli (`project_admin_web_no_source.md`)
+ham tuzatildi.
 
 ### Qo'shimcha — Kuzatish ekranining jonli yangilanishi
 `mobile_user/lib/features/orders/order_tracking_screen.dart`
@@ -2188,8 +2188,9 @@ backend telegram_bot`). `nginx/downloads/` bind-mount orqali serverga
 `git pull` bilan darhol yetadi — nginx qayta ishga tushirish shart
 emas.
 
-**Havola**: https://api.fargonam.uz/dokon — login: `sotuvchiuz`,
-parol: `asmoshop2026`.
+**Havola**: https://api.fargonam.uz/dokon — login/parol 2026-08-21'da
+almashtirildi, pastdagi bo'limga qara (eski `sotuvchiuz`/`asmoshop2026`
+ENDI ISHLAMAYDI).
 
 ### Reliz versiyasi
 Bu safar `mobile_user`/`mobile_seller` APK versiyasi OSHIRILMADI —
@@ -2197,3 +2198,83 @@ faqat backend (yangi `/dokon-api`, `/dokon` static) va telegram_bot
 o'zgardi, ular versiyasiz, darhol deploy qilinadi. Agar keyingi safar
 mobile_user'ga yana UI o'zgarishi kerak bo'lsa, alohida `release.sh`
 bilan versiya oshiriladi.
+
+## Sessiya (2026-08-21) — admin_web manba xatosi tuzatildi, /dokon buyurtma ichi + Kiritilmagan + parol almashtirish
+
+### 1) admin_web "bloker" — TUZATILDI (xato mening tomonimdan edi)
+Avvalgi sessiyada "admin_web manba kodi yo'q" degan noto'g'ri xulosaga
+kelingan edi. Aslida `admin_web_src/` (React+Vite+TS, 44 fayl) doim
+mavjud bo'lgan, git'da tracked, `origin/mobile-ui-rebuild`ga push
+qilingan (`76e9573`..`383b987`, 2026-08-20). Ustiga, `a9e44b6` commit
+"barcha admin ekranlari production'ga chiqarilgani tasdiqlandi" deydi —
+"qolgan bo'limlar" so'roviga kelinganda ular ALLAQACHON tugallangan
+edi. Xotira fayli va yuqoridagi BLOKER yozuvi tuzatildi. Bloker yo'q.
+
+### 2) /dokon/FN-<raqam> — buyurtma ichiga kirish
+- **Backend**: `GET /dokon-api/orders/{id}` (bitta buyurtma, `claimed_by`
+  bilan). `main.py`ga `@app.get("/dokon/FN-{order_id:int}")` — StaticFiles
+  mount SPA-fallback qilmagani uchun, literal "FN-" prefiksi bilan static
+  fayllar (app.js) bilan to'qnashmaydi, mount'dan OLDIN registratsiya
+  qilindi (Starlette route tartib bo'yicha tekshiradi).
+- **Schema**: `OrderItemOut`ga `category_slug` qo'shildi (`enrich_order`
+  mahsulot `category_id` → `Category.slug` bitta qo'shimcha so'rov bilan
+  to'ldiradi) — rasm yo'q mahsulot uchun kategoriya ikonkasi tanlash uchun.
+  Boshqa hech bir consumer buzilmadi (optional field, faqat bitta joyda
+  `OrderItemOut(...)` quriladi).
+- **Frontend** (`static_dokon/app.js`, `index.html`): `history.pushState`
+  bilan marshrutlash (`/dokon` ↔ `/dokon/FN-<id>`), `popstate` handler.
+  Har item — katta rasm (yoki rasm yo'q bo'lsa `handoff/...dc.html`dagi
+  18 ta kategoriya ikonkasi, `Category.slug` bo'yicha kalitlangan, aks
+  holda umumiy "quti" ikonkasi), soni juda katta (`× N`, 40px), narxi,
+  rasmga bosilganda to'liq ekran zoom overlay. Pastda mijoz/manzil/izoh/
+  jami/holat tugmalari (list kartadagi bilan bir xil komponentlar qayta
+  ishlatildi). Ro'yxatdagi kartaning o'ziga bosilganda ichiga kiradi
+  (tugma/link bosilsa navigatsiya qilinmaydi — `closest('button,a')`
+  bilan ajratildi). "Orqaga" — ro'yxatga qaytaradi. Poll (12s) detail
+  ekranda ham davom etadi (faqat o'sha bitta buyurtma qayta so'raladi).
+
+### 3) Mijoz ma'lumoti — bug EMAS, real ma'lumot edi (aniqlandi)
+Production DB'dan to'g'ridan-to'g'ri tekshirildi (`/dokon-api/orders`
+orqali, SSH kerak bo'lmadi): `customer_name` haqiqatda `"."` yoki `"-"`
+qiymatlarga ega (foydalanuvchi Telegram orqali ro'yxatdan o'tganda ism
+so'ralmaydi — profilni keyin o'zi to'ldirishi kerak, ba'zilar shu
+maydonni tinish belgisi bilan "bypass" qilgan), `customer_phone` esa
+haqiqatda `null` (Telegram login telefon bermaydi). Backend to'g'ri
+yuborayotgan edi — **web** buni "ism"/"—" sifatida chiroyli
+ko'rsatolmasdi. Tuzatildi: `cleanField()` — bo'sh YOKI faqat tinish
+belgisidan iborat qiymatlarni "kiritilmagan" deb hisoblaydi, `Kiritilmagan`
+(kursiv, xira rang) ko'rsatiladi. Ism, telefon, manzil, izoh — to'rttasi
+ham shu qoidaga bo'ysunadi (ro'yxat kartasida ham, detail ekranda ham,
+izoh bloki endi har doim ko'rinadi, avval faqat bor bo'lsa ko'rinardi).
+
+### 4) Login/parol almashtirildi
+`.env`: `SELLER_LOGIN=Orziqulovlar2026@!Assa1221!`,
+`SELLER_PASSWORD_HASH` — yangi parol (`Assa1221!FargonamAssa1221!@`)
+`backend/scripts/hash_seller_password.py` bilan qayta hash qilindi.
+Serverning ROOT `.env`iga escaped variant ($ → $$) yozildi — bu safar
+parolda `$` belgisi yo'q, faqat bcrypt HASH ichida bor, shuning uchun
+oldingi xato (8-davomga qara) faqat hash uchun tegishli, login/parolning
+o'zi uchun emas. Eski login/parol (`sotuvchiuz`/`asmoshop2026`) endi
+ishlamaydi — production'da tasdiqlandi (pastga qara).
+
+### 5) Sinov
+Lokal (`localhost:8000`, Playwright, mobil 390×844 va desktop 1280×900):
+eski parol rad etildi, yangi parol bilan kirish, "Barchasi" filtrida
+10 buyurtma, `.muted-val` (Kiritilmagan) 28 ta joyda to'g'ri chiqdi,
+kartaga bosib ichiga kirish, rasm zoom, zoom yopish, orqaga qaytish,
+to'g'ridan-to'g'ri `/dokon/FN-1` havolasi orqali kirish (ism ekrani
+kutilganidek chiqdi, chunki yangi sessiyada ism yo'q), status
+o'zgartirish detail ekrandan (Tayyorlanmoqda → Tayyor) — ekrandan
+chiqib ketmadi, URL o'zgarmadi. Rasm yo'q mahsulot uchun kategoriya
+ikonkasi (umumiy "quti", chunki test mahsulotlarida `category_id` yo'q)
+to'g'ri chiqdi, bo'sh joy qolmadi. JS konsolida faqat kutilgan 401
+(login urinishlaridan) — boshqa xato yo'q.
+
+Production'da (`https://api.fargonam.uz`) SSH orqali (`fargonam@
+189.74.97.28`, `~/fargonam`, git pull + `docker compose -f
+docker-compose.prod.yml up -d --build backend`) deploy qilingach xuddi
+shu sinov qaytarildi, natijalar pastda.
+
+**Havola**: https://api.fargonam.uz/dokon
+Login: `Orziqulovlar2026@!Assa1221!`
+Parol: `Assa1221!FargonamAssa1221!@`

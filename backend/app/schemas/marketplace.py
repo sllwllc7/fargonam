@@ -212,6 +212,8 @@ class OrderItemOut(BaseModel):
     product_id: int | None = None
     product_name: str | None = None
     product_image_url: str | None = None
+    # Rasm yo'q bo'lganda kategoriya ikonkasini ko'rsatish uchun (/dokon)
+    category_slug: str | None = None
     model_config = {"from_attributes": True}
 
 

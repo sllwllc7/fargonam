@@ -111,6 +111,17 @@ if ADMIN_WEB_DIR.exists():
 
 # Sotuvchi web paneli — API /dokon-api/* (yuqorida ulandi), sahifaning o'zi shu yerda
 if DOKON_WEB_DIR.exists():
+    # Buyurtma ichiga chuqur havola (/dokon/FN-2) — bitta-sahifali ilova bo'lgani
+    # uchun bir xil index.html qaytariladi, marshrutlashni app.js o'zi qiladi.
+    # StaticFiles(html=True) SPA fallback qilmaydi, shuning uchun aniq path
+    # kerak; literal "FN-" prefiksi mount'dagi statik fayllar (app.js va h.k.)
+    # bilan to'qnashmaydi.
+    from fastapi.responses import FileResponse as _FileResponse
+
+    @app.get("/dokon/FN-{order_id:int}")
+    async def dokon_order_deeplink(order_id: int):
+        return _FileResponse(DOKON_WEB_DIR / "index.html")
+
     app.mount("/dokon", StaticFiles(directory=DOKON_WEB_DIR, html=True), name="dokon_web")
 
 
