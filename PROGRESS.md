@@ -2561,3 +2561,57 @@ Standart reliz (`release.sh`) 0.2.6→0.2.7→0.2.8 uchta bosqichda
 ishladi shu sessiya davomida — har birida server git tarixi origin
 bilan qo'lda tenglashtirildi (server to'g'ridan-to'g'ri push qila
 olmaydi, HTTPS credential yo'q).
+
+## Sessiya (2026-08-21, davomi) — "Productionga nima qoldi" auditi
+
+Foydalanuvchi so'radi. `PRODUCTION_TODO.md` (2026-08-15 yozilgan,
+**tegilmadi**, faqat o'qildi) asos qilib olindi, lekin har band kod/
+production'da qayta tekshirildi — hujjat 6 kun eski, shu oraliqda
+juda ko'p narsa o'zgargan.
+
+**Tasdiqlangan — ANIQ TUZATILDI (hujjat eskirgan, endi to'g'ri emas):**
+- Seller↔buyer bog'lanishi (mijoz ismi/telefoni/manzili) — `/dokon`
+  orqali hal (mobile_seller pivotidan keyin)
+- Admin `/admin/orders` — `enrich_order(include_phone=True)`
+  chaqiradi, `customer_name`/`customer_phone` bor
+- Admin do'konlar — `owner_phone`/`product_count` `ShopAdminOut`da bor
+- Buzilgan "Taksi buyurtmalar" admin bo'limi — butunlay olib
+  tashlangan (admin_web_src/src/pages'da yo'q)
+- Rang-sxema ikkilanishi (Kutuku binafsha vs Fargonam indigo) — eski
+  fayl/import izlari topilmadi, birlashtirilgan ko'rinadi
+- Soxta reyting UI (`product['rating']`) — kodda endi o'qilmaydi
+- Kategoriya kartochkasida stock badge ("Tugagan") — bor
+- Ko'p rasmli PDP galereya — shu sessiyada qo'shildi (depth-carousel)
+- `TELEGRAM_USE_POLLING=false` (webhook) production'da tasdiqlandi
+- `DEBUG=false` production'da tasdiqlandi
+- `usesCleartextTraffic` — shu sessiyada release'da o'chirildi (debug
+  build alohida manifestda true qoldi, lokal test buzilmadi)
+
+**Hali ochiq — real, tekshirilgan:**
+- **Backend'da 0 ta avtomatik test** (`backend/`ichida test papkasi
+  umuman yo'q) — checkout/to'lov kabi kritik oqim uchun xavfli.
+- **Avtomatik DB backup yo'q** — serverda crontab bo'sh
+  (`crontab -l` — `crontab: command not found`ham chiqdi), repo'da
+  backup skripti yo'q. Real foydalanuvchi ma'lumoti (buyurtmalar,
+  telefon raqamlar) uchun bu jiddiy xavf.
+- Admin panelda buyurtma/do'kon uchun detail modal yo'q (faqat jadval
+  qatori) — qayta tekshirilmadi, hujjatdagi holat o'zgarmagan
+  bo'lishi mumkin.
+- "KYC" haqiqiy hujjat tekshiruvi emas, status belgisi xolos.
+- O'zbekiston "Shaxsiy ma'lumotlar to'g'risida"gi qonuni fuqarolar
+  PII'sini mamlakat ichida saqlashni talab qiladi — server domeni
+  (`vps09325.eskiz.uz`) O'zbekiston provayderiga o'xshaydi, lekin bu
+  **rasman tasdiqlanmagan** (huquqiy masala, kod bilan tekshirib
+  bo'lmaydi — foydalanuvchi o'zi aniqlashi kerak).
+- Crashlytics/Sentry — CLAUDE.md §7 bo'yicha **ataylab** kiritilmagan
+  (MVP uchun qaror), muammo emas, faqat eslatma.
+- Play Store: feature graphic + haqiqiy skrinshotlar (avvalgi
+  Artifact'da yozilgan, hali sizdan kerak).
+
+`PRODUCTION_TODO.md`ning o'zi yangilanmadi (CLAUDE.md: "o'chirilmaydi
+va tegilmaydi") — lekin endi sezilarli qismi eskirgan, keyingi safar
+qayta yozib chiqish foydali bo'lardi.
+
+### Reliz — 0.2.9+13 (xavfsizlik: cleartext o'chirildi)
+`.aab` ham 0.2.9 uchun qayta qurildi va yuklandi
+(`fargonam-user-0.2.9.aab`), Play Console Artifact yangilandi.
