@@ -2480,3 +2480,20 @@ alohida/sandboxed muhitda ishlaydi. Kod darajasidagi ishonch
 yuqori, lekin **ko'z bilan (skrinshot) tasdiqlash hali yo'q** —
 foydalanuvchi o'z tomonida `adb devices` orqali telefonni tekshirib,
 keyingi safar shu band birinchi navbatda ko'rib chiqiladi.
+
+### Yana bitta release.sh xatosi topildi va tuzatildi
+Bu safar skript oxirigacha (git commitgacha) muvaffaqiyatli o'tdi —
+lekin natijani tekshirganda `git add mobile_user/pubspec.yaml`
+qatorida **faqat pubspec.yaml** stage qilinayotgani, `nginx/downloads/
+index.html` (yuklab olish havolalari, sed bilan to'g'ri yangilangan
+bo'lsa ham) HECH QACHON commitlanmagani aniqlandi — demak avvalgi
+har qanday muvaffaqiyatli `release.sh` ishga tushirilishida ham shu
+fayl commitlanmay qolgan bo'lishi mumkin edi (bu safar qo'lda
+tuzatildi: `git add mobile_user/pubspec.yaml nginx/downloads/
+index.html`). Server'da qolib ketgan commitlanmagan index.html qo'lda
+commit qilindi, lokal bilan tenglashtirildi.
+
+### APK — 0.2.6+10 chiqarildi
+`/app/version?app=user`, yuklab olish sahifasi, APK fayli (`curl -I`
+200) — barchasi 0.2.6+10. arm64 29.7MB (Aug 21 15:26, fayl vaqti bilan
+tasdiqlangan — eski fayl emas), arm32 27.5MB.
