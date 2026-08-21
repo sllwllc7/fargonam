@@ -1,11 +1,16 @@
 """Category endpointlari — kategoriyalarni o'qish va admin yaratish."""
-from fastapi import APIRouter, Depends, HTTPException, status
+import secrets
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, require_admin
+from app.api.products import ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES, _validate_image_magic
 from app.core.category_icons import ALLOWED_CATEGORY_ICONS
+from app.core.image_processing import process_product_image
+from app.core.storage import CATEGORIES_DIR, public_url
 from app.db.session import get_db
 from app.models.category import Category
 from app.models.product import Product
@@ -44,6 +49,7 @@ async def list_categories(db: AsyncSession = Depends(get_db)):
             id=c.id, name=c.name, slug=c.slug, parent_id=c.parent_id,
             icon=c.icon, color=c.color, sort_order=c.sort_order,
             product_count=counts.get(c.id, 0),
+            image_url=c.image_url, thumb_url=c.thumb_url,
         )
         for c in rows
     ]
@@ -118,6 +124,91 @@ async def update_category(
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=409, detail="Slug band yoki parent yo'q")
+    await db.refresh(cat)
+    return cat
+
+
+def _check_category_edit_permission(current_user: User) -> None:
+    if current_user.role not in (UserRole.admin, UserRole.seller):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Faqat admin yoki sotuvchi kategoriya o'zgartira oladi",
+        )
+
+
+def _delete_local_category_image(url: str | None) -> None:
+    if url and url.startswith("/static/"):
+        path = CATEGORIES_DIR.parent / url[len("/static/"):]
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+@router.post("/{category_id}/image", response_model=CategoryOut)
+async def upload_category_image(
+    category_id: int,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Kategoriyaga rasm yuklash — mahsulot rasmi bilan bir xil qayta ishlov
+    (siqish, max o'lcham, kvadrat preview). Bitta rasm — yuklansa eskisini
+    almashtiradi, ikonka esa rasm bo'lmagan holat uchun zaxira bo'lib qoladi
+    (bu yerda o'chirilmaydi)."""
+    _check_category_edit_permission(current_user)
+    cat = await db.get(Category, category_id)
+    if not cat:
+        raise HTTPException(status_code=404, detail="Kategoriya topilmadi")
+
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="Faqat JPEG, PNG yoki WebP rasm yuklash mumkin")
+    contents = await file.read()
+    if len(contents) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=400, detail="Rasm 5MB dan katta")
+    if not contents:
+        raise HTTPException(status_code=400, detail="Bo'sh fayl")
+    if _validate_image_magic(contents) is None:
+        raise HTTPException(status_code=400, detail="Fayl haqiqiy rasm emas")
+
+    try:
+        main_bytes, thumb_bytes = process_product_image(contents)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    token = secrets.token_hex(8)
+    filename = f"{category_id}_{token}.jpg"
+    thumb_filename = f"{category_id}_{token}_thumb.jpg"
+    (CATEGORIES_DIR / filename).write_bytes(main_bytes)
+    (CATEGORIES_DIR / thumb_filename).write_bytes(thumb_bytes)
+
+    _delete_local_category_image(cat.image_url)
+    _delete_local_category_image(cat.thumb_url)
+
+    cat.image_url = public_url(f"categories/{filename}")
+    cat.thumb_url = public_url(f"categories/{thumb_filename}")
+    await db.commit()
+    await db.refresh(cat)
+    return cat
+
+
+@router.delete("/{category_id}/image", response_model=CategoryOut)
+async def delete_category_image(
+    category_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Kategoriya rasmini o'chiradi — UI ikonkaga qaytadi (ikonka har doim
+    saqlanadi, shu uchun bu amal xavfsiz)."""
+    _check_category_edit_permission(current_user)
+    cat = await db.get(Category, category_id)
+    if not cat:
+        raise HTTPException(status_code=404, detail="Kategoriya topilmadi")
+    _delete_local_category_image(cat.image_url)
+    _delete_local_category_image(cat.thumb_url)
+    cat.image_url = None
+    cat.thumb_url = None
+    await db.commit()
     await db.refresh(cat)
     return cat
 

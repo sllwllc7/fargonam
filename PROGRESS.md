@@ -2322,3 +2322,72 @@ Production'da xuddi shu sinov qaytarildi — natija pastda.
 **Havola**: https://api.fargonam.uz/admin-web/
 Login: `feroncsAssa1221!`
 Parol: `Assa1221!fargonamadminAssa1221!`
+
+## Sessiya (2026-08-21, davomi) — Kategoriya rasmi (backend + admin + user app)
+
+Foydalanuvchi so'radi: kategoriyaga ikonka o'rniga/bilan birga rasm
+qo'shish imkoniyati — userlar Market'da rasm orqali tezroq tanishadi.
+
+### 1) Backend
+- `categories` jadvaliga `image_url`, `thumb_url` (migratsiya
+  `a3c8d1e5f206_category_image`, lokal Postgres'da sinaldi).
+- Yangi endpoint'lar `POST/DELETE /categories/{id}/image` —
+  mahsulot rasmi bilan **bir xil** qayta ishlov qayta ishlatildi
+  (`process_product_image`: max 1200px, JPEG sifat 85, 400×400 kvadrat
+  preview) va bir xil validatsiya (`ALLOWED_IMAGE_TYPES`,
+  `MAX_IMAGE_BYTES`, magic-bytes tekshiruvi) — `app.api.products`dan
+  import qilindi, dublikat yozilmadi. `storage.py`ga `CATEGORIES_DIR`.
+- `GET /categories` javobiga `image_url`/`thumb_url` qo'shildi
+  (`CategoryOut`). Ikonka maydoni **saqlanadi** — rasm yo'q holatda
+  zaxira.
+- Sinov: curl bilan yuklash/o'chirish, fayl kvadrat 400×400 ekanligi
+  tasdiqlandi, `GET /categories` yangi maydonlarni qaytardi.
+
+### 2) Admin panel (`admin_web_src/`)
+`CategoryForm.tsx` — "Rasm" bo'limi qo'shildi: preview kvadrat (rasm
+bo'lsa rasm, bo'lmasa tanlangan ikonka ko'rinadi — modal ichida ham
+haqiqiy fallback ko'rsatiladi), "Rasm yuklash"/"Almashtirish" va
+"O'chirish" tugmalari. **Yangi kategoriya**da fayl tanlansa, "Saqlash"
+kategoriya yaratilgandan KEYIN avtomatik yuklaydi (id kerak). Mavjud
+kategoriyada rasm darhol (Saqlash'ni kutmasdan) yuklanadi/o'chiriladi.
+Ro'yxatdagi (`CategoriesPage.tsx`) bo'sh kulrang kvadrat — endi
+`thumb_url`/`image_url` bo'lsa rasm, bo'lmasa ikonka.
+Ikonka tanlash **olib tashlanmadi** — talab qilingandek zaxira bo'lib
+qoldi.
+
+Playwright bilan sinaldi (1280×900): "Ruchka" kategoriyasiga rasm
+yuklandi (preview chiqdi), Saqlash bosilib ro'yxatda thumb ko'rindi,
+qayta ochib "O'chirish" bosilganda ikonkaga qaytdi. JS xatosi yo'q.
+
+### 3) User App (`mobile_user`)
+`catalog_screen.dart` — `CategoryItem`ga `thumbUrl`/`imageUrl`,
+yangi `_CategoryThumb` widget: 92×92 quti **doim bir xil o'lchamda**
+qoladi (joy sakramaydi) — rasm bo'lsa `CachedNetworkImage` (mavjud
+`cached_network_image` paketi, yangi paket qo'shilmadi) `thumb_url`
+bilan (kvadrat, kichik hajm — sekin internet uchun), rasm yo'q/xato/
+yuklanayotganda bir xil tint+ikonka fallback (shimmer EMAS — 7-bo'lim
+taqig'iga mos, o'rniga real vaqtli statik fallback). Boshqa joylardagi
+`categorySvg(...)` chaqiruvlari (mahsulot rasm-yo'q fallback'i —
+cart, favorites, product_detail, category_products) — bu boshqa
+maqsad, TEGILMADI.
+
+`flutter analyze` — 0 muammo, `flutter test` — 13/13 o'tdi,
+`flutter build apk --debug` — muvaffaqiyatli.
+
+### 4) Sinov — BLOKER (qisman)
+Backend va admin panel to'liq sinaldi (yuqoriga qara). **User App'ni
+haqiqiy qurilmada (adb) sinab bo'lmadi — bu seansda hech qanday Android
+qurilma USB orqali ulanmagan edi** (`adb devices` bo'sh ro'yxat
+qaytardi, bir necha marta tekshirildi). `flutter build apk --debug`
+muvaffaqiyatli bo'lgani va `flutter analyze`/`test` toza o'tgani kod
+darajasida ishonch beradi, lekin "Market ochib rasm ko'rinishini"
+ko'z bilan tasdiqlash qolgan band. Foydalanuvchi telefonni ulasa,
+keyingi safar shu band birinchi navbatda tekshiriladi.
+
+### Reliz
+Backend migratsiya + kod serverga deploy qilindi (`git pull` +
+`docker compose up -d --build backend`, `alembic upgrade head`
+avtomatik konteyner ishga tushganda ishlaydi — `docker-entrypoint.sh`
+har doim shunday qiladi). `admin_web/` bind-mount orqali darhol
+yangilandi. `mobile_user` — `scripts/release.sh` server ustida
+ishga tushirildi (natija pastda).

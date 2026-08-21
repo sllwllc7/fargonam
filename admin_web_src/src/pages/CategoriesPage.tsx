@@ -99,10 +99,12 @@ export function CategoriesPage() {
               className="flex items-center gap-3 rounded-xl bg-surface border border-border px-4 py-3 card-shadow"
             >
               <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg"
                 style={{ background: (c.color ?? "#16294A") + "1A", color: c.color ?? "#16294A" }}
               >
-                {c.icon && CATEGORY_ICON_PATHS[c.icon] ? (
+                {c.thumb_url || c.image_url ? (
+                  <img src={c.thumb_url ?? c.image_url ?? ""} alt="" className="h-full w-full object-cover" />
+                ) : c.icon && CATEGORY_ICON_PATHS[c.icon] ? (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                     <path
                       d={CATEGORY_ICON_PATHS[c.icon]}

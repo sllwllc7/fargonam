@@ -28,3 +28,13 @@ export function deleteCategory(id: number) {
 export function reorderCategories(items: { id: number; sort_order: number }[]) {
   return apiFetch<CategoryOut[]>(`/categories/reorder`, { method: "PATCH", body: JSON.stringify({ items }) });
 }
+
+export function uploadCategoryImage(id: number, file: Blob) {
+  const form = new FormData();
+  form.append("file", file);
+  return apiFetch<CategoryOut>(`/categories/${id}/image`, { method: "POST", body: form });
+}
+
+export function deleteCategoryImage(id: number) {
+  return apiFetch<CategoryOut>(`/categories/${id}/image`, { method: "DELETE" });
+}

@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 # ── Lokal disk sozlamalari ──────────────────────────────────
 UPLOAD_ROOT = Path(__file__).resolve().parents[2] / "uploads"
 PRODUCTS_DIR = UPLOAD_ROOT / "products"
+CATEGORIES_DIR = UPLOAD_ROOT / "categories"
 PUBLIC_PREFIX = "/static"
 
 # ── S3 client (lazy init) ──────────────────────────────────
@@ -68,6 +69,7 @@ def _get_s3():
 def ensure_dirs() -> None:
     """Lokal papkalarni yaratish."""
     PRODUCTS_DIR.mkdir(parents=True, exist_ok=True)
+    CATEGORIES_DIR.mkdir(parents=True, exist_ok=True)
     (UPLOAD_ROOT / "avatars").mkdir(parents=True, exist_ok=True)
     (UPLOAD_ROOT / "news").mkdir(parents=True, exist_ok=True)
     (UPLOAD_ROOT / "banners").mkdir(parents=True, exist_ok=True)

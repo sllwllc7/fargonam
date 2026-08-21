@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fargonam_ui/fargonam_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/api_client.dart';
+import '../../core/config.dart';
 import '../cart/cart_screen.dart' show CartScreen, cartProvider;
 import '../kits/kit_detail_screen.dart';
 import '../kits/kit_providers.dart';
@@ -16,17 +18,23 @@ class CategoryItem {
   final String name;
   final String slug;
   final int productCount;
+  final String? thumbUrl;
+  final String? imageUrl;
   CategoryItem({
     required this.id,
     required this.name,
     required this.slug,
     required this.productCount,
+    this.thumbUrl,
+    this.imageUrl,
   });
   factory CategoryItem.fromJson(Map<String, dynamic> j) => CategoryItem(
     id: j['id'] as int,
     name: j['name'] as String,
     slug: j['slug'] as String? ?? '',
     productCount: j['product_count'] as int? ?? 0,
+    thumbUrl: j['thumb_url'] as String?,
+    imageUrl: j['image_url'] as String?,
   );
 }
 
@@ -417,6 +425,47 @@ class _KitCardState extends State<_KitCard> {
   }
 }
 
+/// 92×92 kategoriya kvadrati — rasm bo'lsa shuni, aks holda (yo'q/xato/
+/// yuklanayotganda) doim bir xil o'lchamdagi tint+ikonka ko'rinadi, joy
+/// sakramaydi.
+class _CategoryThumb extends StatelessWidget {
+  const _CategoryThumb({required this.category, required this.tint});
+  final CategoryItem category;
+  final List<Color> tint;
+
+  Widget _iconFallback() => Container(
+    width: 92,
+    height: 92,
+    color: tint[0],
+    alignment: Alignment.center,
+    child: SvgPicture.string(
+      categorySvg(category.slug),
+      width: 46,
+      height: 46,
+      colorFilter: ColorFilter.mode(tint[1], BlendMode.srcIn),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final rawUrl = category.thumbUrl ?? category.imageUrl;
+    final fullUrl = (rawUrl != null && rawUrl.isNotEmpty) ? '${AppConfig.apiBaseUrl}$rawUrl' : null;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: fullUrl == null
+          ? _iconFallback()
+          : CachedNetworkImage(
+              imageUrl: fullUrl,
+              width: 92,
+              height: 92,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => _iconFallback(),
+              errorWidget: (context, url, error) => _iconFallback(),
+            ),
+    );
+  }
+}
+
 class _CategoryRow extends StatefulWidget {
   const _CategoryRow({
     required this.category,
@@ -464,21 +513,7 @@ class _CategoryRowState extends State<_CategoryRow> {
         ),
         child: Row(
           children: [
-            Container(
-              width: 92,
-              height: 92,
-              decoration: BoxDecoration(
-                color: widget.tint[0],
-                borderRadius: BorderRadius.circular(20),
-              ),
-              alignment: Alignment.center,
-              child: SvgPicture.string(
-                categorySvg(widget.category.slug),
-                width: 46,
-                height: 46,
-                colorFilter: ColorFilter.mode(widget.tint[1], BlendMode.srcIn),
-              ),
-            ),
+            _CategoryThumb(category: widget.category, tint: widget.tint),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

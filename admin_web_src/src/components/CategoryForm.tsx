@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ApiError } from "../api/client";
-import { createCategory, updateCategory } from "../api/categories";
+import { createCategory, deleteCategoryImage, updateCategory, uploadCategoryImage } from "../api/categories";
 import type { CategoryOut } from "../api/types";
 import { CATEGORY_ICON_KEYS, CATEGORY_ICON_PATHS } from "../utils/categoryIcons";
 
@@ -32,6 +32,59 @@ export function CategoryForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Rasm — yangi kategoriyada hali id yo'q, shuning uchun tanlangan fayl
+  // "Saqlash" bosilganda (kategoriya yaratilgandan keyin) yuklanadi. Mavjud
+  // kategoriyada esa darhol yuklanadi/o'chiriladi (Saqlash'ni kutmaydi).
+  const [savedCategory, setSavedCategory] = useState<CategoryOut | null>(category);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [imageBusy, setImageBusy] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+
+  function pickImageFile() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/jpeg,image/png,image/webp";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      setImageError(null);
+      if (savedCategory) {
+        // Mavjud kategoriya — darhol yuklaymiz
+        setImageBusy(true);
+        try {
+          const updated = await uploadCategoryImage(savedCategory.id, file);
+          setSavedCategory(updated);
+          onSaved(updated);
+        } catch (e) {
+          setImageError((e as ApiError).message || "Rasm yuklashda xato");
+        } finally {
+          setImageBusy(false);
+        }
+      } else {
+        // Yangi kategoriya — hali id yo'q, "Saqlash"da yuklanadi
+        setPendingFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+      }
+    };
+    input.click();
+  }
+
+  async function handleRemoveImage() {
+    if (!savedCategory?.image_url) return;
+    setImageBusy(true);
+    setImageError(null);
+    try {
+      const updated = await deleteCategoryImage(savedCategory.id);
+      setSavedCategory(updated);
+      onSaved(updated);
+    } catch (e) {
+      setImageError((e as ApiError).message || "O'chirishda xato");
+    } finally {
+      setImageBusy(false);
+    }
+  }
+
   async function handleSave() {
     if (!name.trim() || !slug.trim()) {
       setError("Nom va slug to'ldirilishi shart");
@@ -47,7 +100,10 @@ export function CategoryForm({
         icon,
         color,
       };
-      const saved = category ? await updateCategory(category.id, payload) : await createCategory(payload);
+      let saved = savedCategory ? await updateCategory(savedCategory.id, payload) : await createCategory(payload);
+      if (pendingFile) {
+        saved = await uploadCategoryImage(saved.id, pendingFile);
+      }
       onSaved(saved);
       onClose();
     } catch (e) {
@@ -105,6 +161,60 @@ export function CategoryForm({
                   </option>
                 ))}
             </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-text-muted">Rasm</label>
+            <p className="mt-0.5 text-[11px] text-text-muted">
+              Bor bo'lsa Market'da ikonka o'rniga shu ko'rinadi. Rasm yo'q bo'lsa pastdagi ikonka ishlatiladi.
+            </p>
+            <div className="mt-1.5 flex items-center gap-3">
+              <div
+                className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-background"
+                style={!previewUrl && !savedCategory?.thumb_url ? { color } : undefined}
+              >
+                {previewUrl || savedCategory?.thumb_url || savedCategory?.image_url ? (
+                  <img
+                    src={previewUrl ?? savedCategory?.thumb_url ?? savedCategory?.image_url ?? ""}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : icon ? (
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+                    <path d={CATEGORY_ICON_PATHS[icon]} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : (
+                  <span className="text-[10px] text-text-muted">rasm yo'q</span>
+                )}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={pickImageFile}
+                  disabled={imageBusy}
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-background disabled:opacity-60"
+                >
+                  {imageBusy ? "Yuklanmoqda..." : previewUrl || savedCategory?.image_url ? "Almashtirish" : "Rasm yuklash"}
+                </button>
+                {(previewUrl || savedCategory?.image_url) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (previewUrl) {
+                        setPendingFile(null);
+                        setPreviewUrl(null);
+                      } else {
+                        handleRemoveImage();
+                      }
+                    }}
+                    disabled={imageBusy}
+                    className="rounded-lg border border-danger-tint px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger-tint disabled:opacity-60"
+                  >
+                    O'chirish
+                  </button>
+                )}
+              </div>
+            </div>
+            {imageError && <div className="mt-1.5 rounded-lg bg-danger-tint px-3 py-2 text-xs text-danger">{imageError}</div>}
           </div>
           <div>
             <label className="text-xs font-medium text-text-muted">Rang</label>

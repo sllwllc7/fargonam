@@ -60,6 +60,10 @@ class CategoryOut(BaseModel):
     color: str | None = None
     sort_order: int = 0
     product_count: int = 0
+    # Bor bo'lsa UI'da ikonka o'rniga shu ko'rsatiladi, rasm yo'q holatda
+    # ikonka zaxira sifatida qoladi
+    image_url: str | None = None
+    thumb_url: str | None = None
     model_config = {"from_attributes": True}
 
 

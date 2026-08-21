@@ -75,4 +75,6 @@ export type CategoryOut = {
   color: string | null;
   sort_order: number;
   product_count: number;
+  image_url: string | null;
+  thumb_url: string | null;
 };
