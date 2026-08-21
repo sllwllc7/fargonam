@@ -87,7 +87,7 @@ class _TermsOfService extends StatelessWidget {
           _LegalSection(
             title: '4. To\'lov va qaytarish',
             body:
-                'To\'lov naqd pul, karta, Payme yoki Click orqali amalga oshiriladi. '
+                'Hozirda to\'lov naqd pul yoki kuryerdagi POS-terminal orqali amalga oshiriladi. '
                 'Mahsulot sifatiga shikoyat bo\'lsa, 3 kun ichida murojaat qiling. '
                 'Qaytarish tartibi sotuvchi va xaridor o\'rtasida hal qilinadi.',
           ),
@@ -131,16 +131,18 @@ class _PrivacyPolicy extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
           _LegalTitle('Maxfiylik siyosati'),
-          _LegalMeta('Oxirgi yangilanish: 2026-yil 1-aprel'),
+          _LegalMeta('Oxirgi yangilanish: 2026-yil 21-avgust'),
           SizedBox(height: 20),
           _LegalSection(
             title: '1. Qanday ma\'lumot yig\'amiz',
             body:
-                '• Telefon raqami (tizimga kirish uchun).\n'
-                '• Ism va familiya (ixtiyoriy).\n'
-                '• Buyurtma tarixi va manzillar.\n'
-                '• Qurilma FCM token (push xabarnomalar uchun).\n'
-                '• Joylashuv (taksi xizmatida faqat foydalanish paytida).',
+                '• Telegram orqali kirishda ism (ixtiyoriy).\n'
+                '• Telefon raqami (agar o\'zingiz kiritsangiz).\n'
+                '• Buyurtma tarixi va yetkazib berish manzillari.\n'
+                '• Profil rasmi (kamera yoki galereyadan o\'zingiz tanlasangiz).\n'
+                '• Qurilma FCM token (push xabarnomalar uchun).\n\n'
+                'Joylashuv ma\'lumoti hozircha yig\'ilmaydi. Taksi xizmati ishga '
+                'tushganda alohida, aniq ruxsat so\'ralib qo\'shiladi.',
           ),
           _LegalSection(
             title: '2. Ma\'lumotlardan foydalanish maqsadi',
@@ -169,7 +171,7 @@ class _PrivacyPolicy extends StatelessWidget {
             body:
                 'Ma\'lumotlar shifrlangan serverda saqlanadi. '
                 'HTTPS protokoli va JWT autentifikatsiya ishlatiladi. '
-                'Parol o\'rniga OTP (bir martalik kod) orqali kirish ta\'minlangan.',
+                'Kirish parolsiz — Telegram orqali tasdiqlash bilan amalga oshiriladi.',
           ),
           _LegalSection(
             title: '6. Foydalanuvchi huquqlari',
