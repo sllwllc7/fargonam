@@ -2521,3 +2521,43 @@ C2DM) o'zgarishsiz. `flutter analyze` 0 muammo, `flutter test` 13/13.
 `geolocator` paketining o'zi pubspec.yaml'da qoldirildi (faqat
 so'ralgan narsa — permission — olib tashlandi, taksi kodi ham
 o'zgartirilmadi, kelajakda oson qaytariladi).
+
+## Sessiya (2026-08-21, davomi) — Google Play Console'ga chiqarish tayyorgarligi
+
+Foydalanuvchi bugun kechqurun Play Console'ga yuklamoqchi — nima
+kerakligini tayyorlab qo'yish so'raldi.
+
+- **Ochiq maxfiylik siyosati/shartlar sahifasi yaratildi va deploy
+  qilindi** — avval faqat in-app ekranda edi (`legal_screen.dart`),
+  Play Console esa ochiq URL talab qiladi (bloker edi, hal qilindi):
+  `https://fargonam.uz/privacy.html`, `/terms.html`. Matnda ikkita
+  aniqlik kiritildi: eski "OTP orqali kirish" → "Telegram orqali
+  kirish" (STATIC_OTP ancha oldin olib tashlangan edi, hujjat
+  yangilanmagan qolgan ekan), va "karta/Payme/Click" to'lov
+  usullari → "hozircha faqat naqd/POS" (2-bosqich funksiyasi hali
+  ishga tushmagan). In-app ekran ham bir xil matn bilan yangilandi.
+- **`.aab` (Android App Bundle) qurib berildi** — Play Console 2021
+  yildan buyon `.apk` emas, faqat `.aab` qabul qiladi; `release.sh`
+  APK quradi (sayt uchun to'g'ri), shuning uchun alohida `flutter
+  build appbundle --release` bilan serverda qurildi, mavjud release
+  keystore bilan imzolandi, `fargonam-user-0.2.8.aab` (54MB) sifatida
+  yuklab olish uchun qo'yildi (git'ga emas — .aab/.apk allaqachon
+  gitignored, faqat serverdagi statik papkada).
+- **512×512 Play Store ikonkasi generatsiya qilindi** — ilovaning
+  haqiqiy adaptive icon manbasidan (navy fon `#16294A` + oq "F",
+  `ic_launcher_foreground.png`) PIL bilan composite qilindi,
+  `fargonam-play-icon-512.png` sifatida qo'yildi.
+- **Play Console uchun to'liq reference (Artifact)** tayyorlandi —
+  build fayli, ikonka, do'kon tavsifi qoralamasi (o'zbekcha, 1-bosqich
+  qamroviga mos), Data Safety jadvali, ruxsatlar ro'yxati, reviewer
+  uchun "App access" izohi (Telegram login — login/parol yo'q, buni
+  qanday tushuntirish kerakligi), content rating yo'riqnomasi.
+  **Ochiq qolgan**: feature graphic (1024×500) va haqiqiy qurilma
+  skrinshotlari — bularni faqat foydalanuvchi o'zi (yoki dizayn
+  so'rovi bilan alohida) tayyorlay oladi.
+
+### APK/AAB — 0.2.8+12 (matn to'g'irlash relizi, alohida .aab bonus)
+Standart reliz (`release.sh`) 0.2.6→0.2.7→0.2.8 uchta bosqichda
+ishladi shu sessiya davomida — har birida server git tarixi origin
+bilan qo'lda tenglashtirildi (server to'g'ridan-to'g'ri push qila
+olmaydi, HTTPS credential yo'q).
