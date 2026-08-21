@@ -59,6 +59,14 @@ class Settings(BaseSettings):
     SELLER_LOGIN: str = ""
     SELLER_PASSWORD_HASH: str = ""
 
+    # Admin web paneli (/admin-web) — 2026-08-21: Telegram login o'rniga
+    # oddiy umumiy login/parol (foydalanuvchining o'z tanlovi bilan, bitta
+    # egasi bo'lgan panel uchun). ADMIN_WEB_PASSWORD_HASH — bcrypt hash
+    # (backend/scripts/hash_seller_password.py bilan generatsiya qilinadi,
+    # xuddi shu skript ishlatiladi — ikkalasi ham bir xil hash_password()).
+    ADMIN_WEB_LOGIN: str = ""
+    ADMIN_WEB_PASSWORD_HASH: str = ""
+
     @field_validator("SECRET_KEY")
     @classmethod
     def secret_key_must_be_strong(cls, v: str) -> str:

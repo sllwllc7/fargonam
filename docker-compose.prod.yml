@@ -75,6 +75,8 @@ services:
       ADMIN_TELEGRAM_IDS: ${ADMIN_TELEGRAM_IDS:-}
       SELLER_LOGIN: ${SELLER_LOGIN:-}
       SELLER_PASSWORD_HASH: ${SELLER_PASSWORD_HASH:-}
+      ADMIN_WEB_LOGIN: ${ADMIN_WEB_LOGIN:-}
+      ADMIN_WEB_PASSWORD_HASH: ${ADMIN_WEB_PASSWORD_HASH:-}
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,10 +1,11 @@
 """Auth endpointlar — OTP login, me, refresh, change-password."""
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.config import settings
 from app.core.middleware import limiter
 from app.core.security import (
     create_access_token,
@@ -16,7 +17,7 @@ from app.core.security import (
     verify_password,
 )
 from app.db.session import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.auth import (
     AddPhoneRequest,
     ChangePasswordRequest,
@@ -83,6 +84,60 @@ async def login(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Hisob faol emas",
         )
+    return TokenResponse(
+        access_token=create_access_token(user.id),
+        refresh_token=await create_refresh_token(user.id),
+    )
+
+
+class AdminLoginRequest(BaseModel):
+    login: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=1, max_length=200)
+
+
+# admin_web statik login/parol bilan kirganda ishlatiladigan tizim
+# foydalanuvchisi — real Telegram akkaunt emas, shuning uchun haqiqiy
+# telegram_id'lar (musbat) bilan hech qachon to'qnashmasligi uchun sentinel
+# manfiy qiymat (_get_or_create_dev_user'dagi DEBUG-only qiymatlardan alohida).
+_ADMIN_WEB_TELEGRAM_ID = -9000
+
+
+@router.post("/admin-login", response_model=TokenResponse)
+@limiter.limit("5/minute")
+async def admin_login(
+    request: Request,
+    payload: AdminLoginRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin web paneli (/admin-web) uchun kirish — 2026-08-21: Telegram
+    o'rniga oddiy umumiy login/parol (.env: ADMIN_WEB_LOGIN,
+    ADMIN_WEB_PASSWORD_HASH). Muvaffaqiyatli bo'lsa, doimiy "tizim" admin
+    foydalanuvchisiga (yoki topilmasa, birinchi marta yaratib) oddiy
+    access/refresh token beriladi — qolgan /admin/* endpoint'lar buni
+    boshqa hech narsani bilmasdan qabul qiladi (require_admin faqat
+    role=admin'ni tekshiradi)."""
+    if not settings.ADMIN_WEB_LOGIN or not settings.ADMIN_WEB_PASSWORD_HASH:
+        raise HTTPException(status_code=503, detail="Admin panel kirishi hali sozlanmagan")
+    valid = payload.login.strip() == settings.ADMIN_WEB_LOGIN and verify_password(
+        payload.password, settings.ADMIN_WEB_PASSWORD_HASH
+    )
+    if not valid:
+        raise HTTPException(status_code=401, detail="Login yoki parol noto'g'ri")
+
+    user = await db.scalar(select(User).where(User.telegram_id == _ADMIN_WEB_TELEGRAM_ID))
+    if user is None:
+        user = User(
+            telegram_id=_ADMIN_WEB_TELEGRAM_ID,
+            full_name="Admin",
+            role=UserRole.admin,
+            hashed_password=None,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+    elif not user.is_active:
+        raise HTTPException(status_code=403, detail="Hisob faol emas")
+
     return TokenResponse(
         access_token=create_access_token(user.id),
         refresh_token=await create_refresh_token(user.id),

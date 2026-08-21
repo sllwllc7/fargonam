@@ -2278,3 +2278,47 @@ shu sinov qaytarildi, natijalar pastda.
 **Havola**: https://api.fargonam.uz/dokon
 Login: `Orziqulovlar2026@!Assa1221!`
 Parol: `Assa1221!FargonamAssa1221!@`
+
+## Sessiya (2026-08-21, davomi) — /admin-web: Telegram o'rniga login/parol
+
+Foydalanuvchi so'radi: admin panel ("mani sahifam") ham /dokon kabi
+oddiy login/parol bilan himoyalansin. Aniqlashtirdim — Telegram auth
+qoldirilib ustiga qo'shimcha devor qo'yiladimi, yoki to'liq
+almashtiriladimi. Javob: **to'liq almashtirish** (Telegram tekshiruvi
+admin panel uchun endi ishlatilmaydi).
+
+### Backend
+- `POST /auth/admin-login` (`backend/app/api/auth.py`) — `.env`:
+  `ADMIN_WEB_LOGIN`, `ADMIN_WEB_PASSWORD_HASH` (bcrypt, xuddi SELLER_*
+  bilan bir xil qoida). To'g'ri bo'lsa, sentinel `telegram_id=-9000`
+  bilan doimiy "tizim" admin User topiladi/yaratiladi (real Telegram
+  akkauntlardan mustaqil) va oddiy access/refresh token beriladi —
+  `require_admin` (barcha `/admin/*`) buni hech narsani bilmasdan qabul
+  qiladi, chunki faqat `role=admin`ni tekshiradi. Rate limit 5/daqiqa.
+- `ADMIN_TELEGRAM_IDS` mexanizmi (`telegram_auth.py`) koddan OLIB
+  TASHLANMADI — hech kimga ta'sir qilmaydi, faqat endi admin_web uni
+  ishlatmaydi. Kelajakda kerak bo'lsa qoladi.
+- `backend/scripts/hash_seller_password.py` ikkinchi ixtiyoriy argument
+  oldi (`ENV_NOMI`) — endi ADMIN_WEB_PASSWORD_HASH uchun ham ishlatiladi.
+
+### Frontend (`admin_web_src/`)
+`AuthContext.tsx` va `LoginPage.tsx` — Telegram popup+polling oqimi olib
+tashlandi, o'rniga oddiy login/parol forma (`/dokon`dagi bilan bir xil
+UX naqshi: login+parol, xato bo'lsa "Login yoki parol noto'g'ri").
+`npm run build` bilan `admin_web/`ga qayta chiqarildi (eski hash'langan
+`assets/*.js`/`*.css` avtomatik tozalandi, git'da yangi fayllar bilan
+almashtirildi).
+
+### Sinov
+Lokal: `curl /auth/admin-login` — noto'g'ri parol 401, to'g'ri parol
+token beradi, token bilan `/auth/me` → `role: "admin"` tasdiqlandi.
+Playwright (1280×900): login formasi ko'rinadi, noto'g'ri parolda xato
+xabari chiqadi, to'g'ri parolda dashboard ochiladi (Moderatsiya,
+Mahsulotlar, Kategoriyalar... barcha bo'limlar ko'rinadi), JS xatosi
+yo'q (faqat kutilgan bitta 401 — noto'g'ri parol urinishidan).
+
+Production'da xuddi shu sinov qaytarildi — natija pastda.
+
+**Havola**: https://api.fargonam.uz/admin-web/
+Login: `feroncsAssa1221!`
+Parol: `Assa1221!fargonamadminAssa1221!`

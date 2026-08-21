@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { apiFetch, clearTokens, getAccessToken, setTokens } from "../api/client";
 import type { MeUser } from "../api/types";
 
@@ -10,8 +10,7 @@ type AuthState =
 
 type AuthContextValue = {
   state: AuthState;
-  login: () => Promise<void>;
-  cancelLogin: () => void;
+  login: (login: string, password: string) => Promise<void>;
   logout: () => void;
 };
 
@@ -19,7 +18,6 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: "loading" });
-  const cancelledRef = useRef(false);
 
   async function refreshMe() {
     if (!getAccessToken()) {
@@ -40,34 +38,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function login() {
-    cancelledRef.current = false;
-    const popup = window.open("about:blank", "_blank");
-    const session = await apiFetch<{ session_id: string; bot_url: string }>(
-      "/auth/telegram/session?role=admin",
-      { method: "POST" },
-    );
-    if (popup) popup.location.href = session.bot_url;
-
-    for (let i = 0; i < 150; i++) {
-      if (cancelledRef.current) return;
-      await new Promise((r) => setTimeout(r, 2000));
-      const s = await apiFetch<{
-        status: string;
-        access_token?: string;
-        refresh_token?: string;
-      }>(`/auth/telegram/session/${session.session_id}`);
-      if (s.status === "confirmed" && s.access_token && s.refresh_token) {
-        setTokens(s.access_token, s.refresh_token);
-        await refreshMe();
-        return;
-      }
-    }
-    throw new Error("Sessiya muddati tugadi, qaytadan urinib ko'ring");
-  }
-
-  function cancelLogin() {
-    cancelledRef.current = true;
+  async function login(loginValue: string, password: string) {
+    const res = await apiFetch<{ access_token: string; refresh_token: string }>("/auth/admin-login", {
+      method: "POST",
+      body: JSON.stringify({ login: loginValue, password }),
+    });
+    setTokens(res.access_token, res.refresh_token);
+    await refreshMe();
   }
 
   function logout() {
@@ -76,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ state, login, cancelLogin, logout }}>
+    <AuthContext.Provider value={{ state, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

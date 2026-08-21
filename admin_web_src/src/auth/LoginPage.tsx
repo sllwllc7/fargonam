@@ -1,18 +1,26 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { ApiError } from "../api/client";
 import { useAuth } from "./AuthContext";
 
 export function LoginPage() {
-  const { login, cancelLogin, state, logout } = useAuth();
+  const { login, state, logout } = useAuth();
+  const [loginValue, setLoginValue] = useState("");
+  const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleLogin() {
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
     setError(null);
     setPending(true);
     try {
-      await login();
+      await login(loginValue.trim(), password);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Kirishda xato yuz berdi");
+      setError(
+        e instanceof ApiError && e.status === 401
+          ? "Login yoki parol noto'g'ri."
+          : "Kirishda xato yuz berdi, qayta urining.",
+      );
     } finally {
       setPending(false);
     }
@@ -30,7 +38,7 @@ export function LoginPage() {
           Fargonam Admin
         </h1>
         <p className="mt-2 text-sm text-text-muted" style={{ lineHeight: 1.45 }}>
-          Faqat admin huquqiga ega Telegram hisobi orqali kirish mumkin.
+          Login va parol bilan kiring.
         </p>
 
         {forbidden && (
@@ -49,25 +57,39 @@ export function LoginPage() {
         )}
 
         {!forbidden && (
-          <button
-            onClick={handleLogin}
-            disabled={pending}
-            className="btn-primary mt-6 w-full rounded-xl py-3 text-[15px] font-semibold disabled:opacity-60"
-          >
-            {pending ? "Kutilmoqda..." : "Telegram orqali kirish"}
-          </button>
-        )}
-
-        {pending && (
-          <button
-            onClick={() => {
-              cancelLogin();
-              setPending(false);
-            }}
-            className="mt-3 text-sm text-text-muted underline"
-          >
-            Bekor qilish
-          </button>
+          <form onSubmit={handleSubmit} className="mt-6 text-left">
+            <label className="block text-xs font-semibold text-text-secondary mb-1.5" htmlFor="login">
+              Login
+            </label>
+            <input
+              id="login"
+              type="text"
+              autoComplete="username"
+              required
+              value={loginValue}
+              onChange={(e) => setLoginValue(e.target.value)}
+              className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-text-primary"
+            />
+            <label className="block text-xs font-semibold text-text-secondary mb-1.5 mt-3" htmlFor="password">
+              Parol
+            </label>
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-text-primary"
+            />
+            <button
+              type="submit"
+              disabled={pending}
+              className="btn-primary mt-5 w-full rounded-xl py-3 text-[15px] font-semibold disabled:opacity-60"
+            >
+              {pending ? "Kirilmoqda..." : "Kirish"}
+            </button>
+          </form>
         )}
       </div>
     </div>
