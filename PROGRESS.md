@@ -2497,3 +2497,27 @@ commit qilindi, lokal bilan tenglashtirildi.
 `/app/version?app=user`, yuklab olish sahifasi, APK fayli (`curl -I`
 200) — barchasi 0.2.6+10. arm64 29.7MB (Aug 21 15:26, fayl vaqti bilan
 tasdiqlangan — eski fayl emas), arm32 27.5MB.
+
+## Sessiya (2026-08-21, davomi) — ishlatilmayotgan location permission olib tashlandi
+
+Google Play Store'ga chiqarish haqida savol-javob paytida aniqlangan
+edi: `ACCESS_FINE_LOCATION`/`ACCESS_COARSE_LOCATION` manifestda bor,
+lekin `geolocator` paketi faqat `taxi_screen.dart`da ishlatiladi va u
+yerda butunlay commentga olingan (taksi hali ishga tushmagan,
+2-bosqich) — ya'ni permission hech narsa uchun ishlatilmasdi.
+Foydalanuvchi olib tashlashni so'radi.
+
+`AndroidManifest.xml`dan ikkala qator olib tashlandi (izoh bilan —
+taksi ishga tushganda qaytariladi). Tekshirildi:
+`geolocator_android` paketining o'z manifesti bu ruxsatlarni
+o'zi so'ramaydi (faqat location-turi foreground service e'lon qiladi,
+permission emas) — shuning uchun manifest merge orqali qaytadan
+qo'shilib qolish xavfi yo'q edi. `flutter build apk --debug` dan
+keyin `aapt dump permissions` bilan tasdiqlandi — ikkalasi ham
+yakuniy APK'da yo'q, qolgan permissionlar (INTERNET, POST_NOTIFICATIONS,
+CAMERA, VIBRATE va FCM uchun avtomatik WAKE_LOCK/ACCESS_NETWORK_STATE/
+C2DM) o'zgarishsiz. `flutter analyze` 0 muammo, `flutter test` 13/13.
+
+`geolocator` paketining o'zi pubspec.yaml'da qoldirildi (faqat
+so'ralgan narsa — permission — olib tashlandi, taksi kodi ham
+o'zgartirilmadi, kelajakda oson qaytariladi).
