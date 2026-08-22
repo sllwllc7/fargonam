@@ -50,6 +50,9 @@ from pathlib import Path as _Path
 ADMIN_WEB_DIR = _Path(__file__).resolve().parents[2] / "admin_web"
 # /dokon — sotuvchi web paneli, backend paketi ichida (alohida repo/build shart emas)
 DOKON_WEB_DIR = _Path(__file__).resolve().parent / "static_dokon"
+# /miniapp — Telegram Mini App (xaridor uchun, sinov maqsadida) — mavjud
+# marketplace API'larini qayta ishlatadi, alohida repo/build shart emas
+MINIAPP_WEB_DIR = _Path(__file__).resolve().parent / "static_miniapp"
 
 app = FastAPI(
     title="Fargonam API",
@@ -123,6 +126,10 @@ if DOKON_WEB_DIR.exists():
         return _FileResponse(DOKON_WEB_DIR / "index.html")
 
     app.mount("/dokon", StaticFiles(directory=DOKON_WEB_DIR, html=True), name="dokon_web")
+
+# Telegram Mini App — xaridor uchun yengil web-katalog (sinov)
+if MINIAPP_WEB_DIR.exists():
+    app.mount("/miniapp", StaticFiles(directory=MINIAPP_WEB_DIR, html=True), name="miniapp_web")
 
 
 @app.get("/")

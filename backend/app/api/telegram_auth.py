@@ -17,11 +17,16 @@ foydalanuvchiga har safar avtomatik `role=admin` beriladi. Ro'yxatdan
 olib tashlangan foydalanuvchi keyingi safar kirganda huquqi ham avtomatik
 qaytariladi (do'kon egasi bo'lsa 'seller', aks holda 'buyer').
 """
+import hashlib
+import hmac
 import json
 import logging
 import uuid
+from datetime import datetime, timezone
+from urllib.parse import parse_qsl
 
 from fastapi import APIRouter, HTTPException, Request, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,7 +38,7 @@ from app.core.telegram_bot import send_message
 from app.db.session import AsyncSessionLocal
 from app.models.shop import Shop
 from app.models.user import User, UserRole
-from app.schemas.auth import TelegramSessionResponse, TelegramSessionStatusResponse
+from app.schemas.auth import TelegramSessionResponse, TelegramSessionStatusResponse, TokenResponse
 
 logger = logging.getLogger("fargonam.telegram_auth")
 
@@ -209,6 +214,76 @@ async def process_telegram_update(update: dict, db: AsyncSession) -> None:
         ex=_SESSION_TTL,
     )
     await send_message(chat_id, "✅ Fargonam ilovasiga muvaffaqiyatli kirdingiz! Ilovaga qaytishingiz mumkin.")
+
+
+class TelegramWebAppAuthRequest(BaseModel):
+    init_data: str
+
+
+def _validate_webapp_init_data(init_data: str, bot_token: str) -> dict:
+    """Telegram Mini App `initData` imzosini tekshiradi (Telegram hujjatidagi
+    HMAC-SHA256 algoritmi) va parslangan maydonlar lug'atini qaytaradi."""
+    pairs = dict(parse_qsl(init_data, strict_parsing=False))
+    received_hash = pairs.pop("hash", None)
+    if not received_hash:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="initData imzosi yo'q")
+    data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(pairs.items()))
+    secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
+    computed_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(computed_hash, received_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="initData imzosi noto'g'ri")
+    auth_date = int(pairs.get("auth_date", "0") or "0")
+    if auth_date and (datetime.now(timezone.utc).timestamp() - auth_date) > 86400:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="initData muddati tugagan, Mini App'ni qayta oching")
+    return pairs
+
+
+@router.post("/webapp", response_model=TokenResponse)
+@limiter.limit("30/minute")
+async def telegram_webapp_login(request: Request, payload: TelegramWebAppAuthRequest):
+    """Telegram Mini App ichida ishga tushganda chaqiriladi — foydalanuvchi
+    Telegram'da allaqachon autentifikatsiya qilingani uchun bot/session-polling
+    oqimi (yuqoridagi /session) shart emas, `initData` imzosi tekshirilib
+    to'g'ridan-to'g'ri JWT beriladi."""
+    if not settings.TELEGRAM_BOT_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Telegram login hali sozlanmagan",
+        )
+    pairs = _validate_webapp_init_data(payload.init_data, settings.TELEGRAM_BOT_TOKEN)
+    user_raw = pairs.get("user")
+    if not user_raw:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Foydalanuvchi ma'lumoti yo'q")
+    tg_user = json.loads(user_raw)
+    telegram_id = tg_user.get("id")
+    if not telegram_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Telegram ID topilmadi")
+
+    is_admin_id = str(telegram_id) in settings.admin_telegram_ids
+    async with AsyncSessionLocal() as db:
+        user = await db.scalar(select(User).where(User.telegram_id == telegram_id))
+        if user is None:
+            full_name = " ".join(
+                filter(None, [tg_user.get("first_name"), tg_user.get("last_name")])
+            ) or None
+            role = UserRole.admin if is_admin_id else UserRole.buyer
+            user = User(
+                telegram_id=telegram_id,
+                phone=None,
+                full_name=full_name,
+                role=role,
+                hashed_password=None,
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+        elif not user.is_active:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Hisobingiz faol emas")
+
+        return TokenResponse(
+            access_token=create_access_token(user.id),
+            refresh_token=await create_refresh_token(user.id),
+        )
 
 
 @router.post("/webhook/{secret}")
