@@ -35,7 +35,7 @@ _LOCK_TTL = 45
 
 WELCOME_TEXT = (
     "Assalomu alaykum! 👋\n\n"
-    "Fargonam — Farg'ona vodiysi o'quv qurollari do'koniga xush kelibsiz.\n\n"
+    "Asmo shop — Farg'ona vodiysi o'quv qurollari do'koniga xush kelibsiz.\n\n"
     "Quyidagi tugma orqali do'konni oching va xarid qilishni boshlang."
 )
 

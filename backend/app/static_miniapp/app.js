@@ -538,9 +538,11 @@
   }
 
   function renderCartBadge() {
-    var totalQty = state.cart.reduce(function (s, i) { return s + i.quantity; }, 0);
+    // Miqdorlar yig'indisi emas — savatdagi TURLI mahsulot (qator) soni.
+    // Masalan bitta ruchkadan 10 ta olingan bo'lsa ham badge "1" ko'rsatadi.
     var badge = document.getElementById("cartBadge");
-    if (totalQty > 0) { badge.textContent = totalQty; badge.classList.remove("hidden"); }
+    var lineCount = state.cart.length;
+    if (lineCount > 0) { badge.textContent = lineCount; badge.classList.remove("hidden"); }
     else badge.classList.add("hidden");
   }
 
