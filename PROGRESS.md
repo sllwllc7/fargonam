@@ -2615,3 +2615,59 @@ qayta yozib chiqish foydali bo'lardi.
 ### Reliz — 0.2.9+13 (xavfsizlik: cleartext o'chirildi)
 `.aab` ham 0.2.9 uchun qayta qurildi va yuklandi
 (`fargonam-user-0.2.9.aab`), Play Console Artifact yangilandi.
+
+## Telegram Mini App — to'liq sayqal (2026-08-24)
+
+`/miniapp` (backend/app/static_miniapp) — allaqachon mavjud bo'lgan sinov
+ilovasi to'liq Telegram integratsiyasi, tezlik, UX va test bilan
+kengaytirildi. `mobile_user`, `mobile_seller`, `/admin-web`, `/dokon`,
+eski `fargonam_bot` session-polling login oqimiga TEGILMADI.
+
+| Blok | Nima qilindi | Holat |
+|---|---|---|
+| 1. Auth | `users` jadvaliga telegram_username/first_name/last_name/language_code (migratsiya `b7d2f4a891c3`). Yagona `upsert_telegram_user()` — ham `/auth/telegram/webapp`, ham yangi miniapp-bot `/start` shundan foydalanadi. Miniapp bot (`fargonamtele_bot`, `TELEGRAM_MINIAPP_BOT_TOKEN`) o'z long-polling loop'iga ega (`telegram_miniapp_bot.py`) — /start'da upsert + xush kelibsiz xabari + WebApp tugma + "Raqamni ulashish" (request_contact) + setChatMenuButton. `auth_date` 24 soat tekshiruvi va /start'siz ham upsert — allaqachon bor edi/qo'shildi. | ✅ Real Telegram bilan sinaldi (jonli /start, xabar yetib bordi) |
+| 2. Telegram SDK | BackButton (har ekranda to'g'ri show/hide + navigatsiya), MainButton (Savat→"Buyurtma berish", Checkout→"Tasdiqlash" — sahifa ichi tugma emas), HapticFeedback (bor edi, saqlandi), closingConfirmation (savat bo'sh bo'lmasa), disableVerticalSwipes, setBottomBarColor, safe-area-inset-top/bottom. Eski Telegram klient (MainButton yo'q) uchun sahifa-ichi tugma fallback saqlandi. | ✅ Playwright bilan ikkala yo'l (native va fallback) sinaldi |
+| 3. Tezlik | Kategoriya/mahsulot ro'yxati localStorage'da keshlanadi (stale-while-revalidate — avval keshdan, keyin fon rejimida yangilanadi). Rasmlar `loading="lazy"`. `/status` javobiga `miniapp_bundle_kb` qo'shildi. | ✅ |
+| 4. UX | Narx NBSP bilan edi, tasdiqlandi. Rasm yuklanmasa ikonkaga almashadi (inline onerror emas — CSP script-src'da unsafe-inline yo'q, JS orqali ulanadi). Offline holat: "Ulanish yo'q" + "Qayta urinish" tugmasi (tarmoq xatosi bilan server xatosi ajratiladi). Savatga qo'shish toast'i 1.2s. | ✅ Playwright: bo'sh savat/buyurtma, offline holat skrinshot bilan tasdiqlandi |
+| 5. Buyurtma oqimi | To'liq zanjir sinaldi: mahsulot→variant→savat→checkout→buyurtma→muvaffaqiyat. `notify_order_status()` (mavjud push funksiyasi, `app/core/push.py`) ga Telegram bot xabari qo'shildi — foydalanuvchining `telegram_id`si bo'lsa, holat o'zgarganda miniapp bot orqali xabar + "Mini App'ni ochish" tugmasi boradi (mobil push bilan parallel, mustaqil kanal). | ✅ To'g'ridan-to'g'ri `transition_order_status()` chaqirib sinaldi — xato yo'q, telegram_id yo'q foydalanuvchida to'g'ri sukut saqlaydi |
+| 6. Rasm/statik | **Topilgan xato**: `S3_PUBLIC_URL=/s3` bo'lsa ham nginx'da `/s3/` uchun location yo'q edi — MinIO orqali yuklangan rasm 404 bergan bo'lardi (hozircha real ma'lumot `/static/` orqali, shuning uchun sezilmagan). nginx.conf'ga `/s3/ → minio:9000` proxy qo'shildi. **Topilgan xato**: CSP `script-src 'self'` telegram-web-app.js skriptini bloklagan — `https://telegram.org` qo'shildi. | ✅ |
+| 7. Sinov | Backend'da birinchi marta pytest (`tests/test_telegram_webapp_auth.py`, 6 test — to'g'ri/soxta/eskirgan/noto'g'ri bot token imzo, hammasi o'tdi). Playwright (`/usr/bin/chromium`, 380px) bilan barcha ekranlar skrinshot qilindi: katalog, mahsulotlar, mahsulot detali, savat (bo'sh va to'la), checkout, muvaffaqiyat, buyurtmalar (bo'sh va to'la), offline holat. | ✅ |
+
+### Testda topilgan va tuzatilgan real xato (kod yozilishidan oldin mavjud emas edi, shu sessiyada paydo bo'lgan)
+`.fixed-cta` (MainButton fallback tugmalari) joriy qilinganda, mavjud
+`.toast` bildirishnomasi bilan bir xil zonada joylashib qolgani
+aniqlandi — toast tugmani bosishga xalaqit berardi. `.toast`ga
+`pointer-events:none` qo'shildi (bildirishnoma hech qachon interaktiv
+bo'lmasligi kerak, umumiy to'g'ri tuzatish).
+
+### Real, oldindan mavjud bo'lgan xato (bu sessiyada topildi va tuzatildi)
+Mahsulot detali ekranida "Savatga qo'shish" tugmasi content balandligi
+viewport'ga aynan teng kelganda (scroll imkonsiz) tabbar ostida qolib,
+bosilmay qolar edi — `body{padding-bottom:84px}` yetarli emas edi.
+Tugma endi `.fixed-cta` bilan viewport'ga nisbatan qat'iy joylashadi
+(cart/checkout fallback tugmalari ham xuddi shunday).
+
+### Qarorlar
+- 2026-08-24: Savol — "Profilda o'zgartirish imkoni bo'lsin" qanday
+  qilinsin? → Qaror: mavjud `PATCH /auth/me` (`full_name`) allaqachon
+  buni ta'minlaydi, miniapp'da alohida Profil ekrani yo'q va bu
+  sessiyada qo'shilmadi (7 blokning birortasida so'ralmagan, yangi
+  ekran o'ylab topmaslik qoidasiga mos) → Sabab: scope disciplinasi.
+- 2026-08-24: Savol — order status Telegram xabari qaysi bot orqali? →
+  Qaror: `TELEGRAM_MINIAPP_BOT_TOKEN` (fargonamtele_bot), chunki
+  foydalanuvchi shu bot orqali auth qilgan va shu botga yozgan → Sabab:
+  boshqa bot orqali yuborish "chat not found" beradi (foydalanuvchi u
+  bilan hech qachon /start bermagan).
+- 2026-08-24: DB-bog'liq testlar (upsert, endpoint integratsiya
+  testlari) qo'shilmadi — test DB fixture infratuzilmasi hali yo'q
+  (bu birinchi test fayli). Keyingi safar `conftest.py` + test DB bilan
+  kengaytirish tavsiya etiladi.
+
+### Backend farqlari
+- Yo'q — miniapp mavjud marketplace API'larini o'zgarishsiz ishlatadi.
+
+### Deploy
+`git pull` (server: `/home/fargonam/fargonam`, `mobile-ui-rebuild` branch) +
+`alembic upgrade head` + `docker compose build backend` +
+`docker compose up -d --no-deps backend` + nginx reload (`/s3/` route
+uchun). Batafsil: git log.

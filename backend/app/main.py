@@ -149,17 +149,25 @@ async def health_check():
 
 
 _telegram_polling_task: asyncio.Task | None = None
+_miniapp_polling_task: asyncio.Task | None = None
 
 
 @app.on_event("startup")
 async def _start_telegram_polling() -> None:
-    global _telegram_polling_task
+    global _telegram_polling_task, _miniapp_polling_task
     if settings.TELEGRAM_BOT_TOKEN and settings.TELEGRAM_USE_POLLING:
         from app.core.telegram_polling import run_polling_loop
         _telegram_polling_task = asyncio.create_task(run_polling_loop())
+    # Miniapp bot uchun webhook infratuzilmasi hali yo'q — shu sababli
+    # TELEGRAM_USE_POLLING'dan mustaqil, token bo'lsa doim polling qiladi.
+    if settings.TELEGRAM_MINIAPP_BOT_TOKEN:
+        from app.core.telegram_miniapp_bot import run_miniapp_polling_loop
+        _miniapp_polling_task = asyncio.create_task(run_miniapp_polling_loop())
 
 
 @app.on_event("shutdown")
 async def _stop_telegram_polling() -> None:
     if _telegram_polling_task:
         _telegram_polling_task.cancel()
+    if _miniapp_polling_task:
+        _miniapp_polling_task.cancel()

@@ -26,6 +26,13 @@ class User(Base):
     phone: Mapped[str | None] = mapped_column(String(20), unique=True, index=True, nullable=True)
     telegram_id: Mapped[int | None] = mapped_column(BigInteger, unique=True, index=True, nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # Telegram'dan kelgan xom ma'lumot — har login/​start'da yangilanadi.
+    # `full_name` esa faqat birinchi yaratilishda shundan hosil qilinadi va
+    # keyin foydalanuvchi profilda o'zgartirsa saqlanib qoladi (qayta yozilmaydi).
+    telegram_username: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    telegram_first_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    telegram_last_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    language_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
     hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
     role: Mapped[UserRole] = mapped_column(
         SAEnum(UserRole, name="user_role"),

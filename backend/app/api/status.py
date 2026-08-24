@@ -6,6 +6,7 @@ bilan birga qaytaradi.
 """
 import json
 import os
+from pathlib import Path
 
 from fastapi import APIRouter
 from sqlalchemy import text
@@ -15,6 +16,17 @@ from app.db.session import AsyncSessionLocal
 router = APIRouter(tags=["status"])
 
 _STATUS_FILE = os.environ.get("STATUS_FILE", "/app/status.json")
+_MINIAPP_DIR = Path(__file__).resolve().parents[1] / "static_miniapp"
+
+
+def _miniapp_bundle_kb() -> float | None:
+    """/miniapp jami hajmi (index.html + app.js), KB — sekin internetda
+    birinchi ochilish tezligini kuzatish uchun."""
+    try:
+        total = sum(f.stat().st_size for f in _MINIAPP_DIR.iterdir() if f.is_file())
+        return round(total / 1024, 1)
+    except FileNotFoundError:
+        return None
 
 
 @router.get("/status")
@@ -37,4 +49,5 @@ async def get_status():
         "backend": "ok",
         "database": "ok" if db_ok else "error",
         "last_release": last_release,
+        "miniapp_bundle_kb": _miniapp_bundle_kb(),
     }

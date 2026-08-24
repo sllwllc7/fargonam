@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     # TELEGRAM_BOT_TOKEN ishlatiladi. Asosiy login bot'idan mustaqil, shu
     # sababli sinov paytida fargonam_bot login oqimiga ta'sir qilmaydi.
     TELEGRAM_MINIAPP_BOT_TOKEN: str = ""
+    # Mini App'ning o'zi ochiladigan HTTPS manzili — bot xabarlaridagi
+    # WebApp tugmasi va setChatMenuButton shu URL'ga ishora qiladi.
+    MINIAPP_URL: str = "https://api.fargonam.uz/miniapp/"
     # true = long-polling (ochiq HTTPS domen shart emas, lokal dev uchun).
     # false = webhook (production, domen kerak).
     TELEGRAM_USE_POLLING: bool = False

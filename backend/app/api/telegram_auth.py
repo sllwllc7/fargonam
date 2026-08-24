@@ -216,6 +216,63 @@ async def process_telegram_update(update: dict, db: AsyncSession) -> None:
     await send_message(chat_id, "✅ Fargonam ilovasiga muvaffaqiyatli kirdingiz! Ilovaga qaytishingiz mumkin.")
 
 
+async def upsert_telegram_user(db: AsyncSession, tg_user: dict) -> User:
+    """Telegram foydalanuvchisini `telegram_id` bo'yicha topadi yoki yaratadi.
+
+    Mini App (`/auth/telegram/webapp`) va miniapp bot'ning o'z `/start`
+    ishlovchisi (`app/core/telegram_miniapp_bot.py`) ikkalasi ham shu
+    funksiyani chaqiradi — bitta joyda, bir xil qoida bilan. Eski
+    session-polling oqimi (`process_telegram_update`, yuqorida) bunga
+    tegmaydi va o'zgarmaydi.
+
+    Telegram'dan kelgan xom maydonlar (username/ism/til) har safar
+    yangilanadi. `full_name` esa faqat birinchi yaratilishda shundan
+    hosil qilinadi — foydalanuvchi keyin profilda o'zgartirsa, keyingi
+    kirishlarda qayta yozib yuborilmaydi."""
+    telegram_id = tg_user.get("id")
+    username = tg_user.get("username")
+    first_name = tg_user.get("first_name")
+    last_name = tg_user.get("last_name")
+    language_code = tg_user.get("language_code")
+    is_admin_id = str(telegram_id) in settings.admin_telegram_ids
+
+    user = await db.scalar(select(User).where(User.telegram_id == telegram_id))
+    if user is None:
+        full_name = " ".join(filter(None, [first_name, last_name])) or None
+        user = User(
+            telegram_id=telegram_id,
+            phone=None,
+            full_name=full_name,
+            telegram_username=username,
+            telegram_first_name=first_name,
+            telegram_last_name=last_name,
+            language_code=language_code,
+            role=UserRole.admin if is_admin_id else UserRole.buyer,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        return user
+
+    changed = False
+    for field, value in (
+        ("telegram_username", username),
+        ("telegram_first_name", first_name),
+        ("telegram_last_name", last_name),
+        ("language_code", language_code),
+    ):
+        if getattr(user, field) != value:
+            setattr(user, field, value)
+            changed = True
+    if is_admin_id and user.role != UserRole.admin:
+        user.role = UserRole.admin
+        changed = True
+    if changed:
+        await db.commit()
+        await db.refresh(user)
+    return user
+
+
 class TelegramWebAppAuthRequest(BaseModel):
     init_data: str
 
@@ -260,25 +317,9 @@ async def telegram_webapp_login(request: Request, payload: TelegramWebAppAuthReq
     if not telegram_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Telegram ID topilmadi")
 
-    is_admin_id = str(telegram_id) in settings.admin_telegram_ids
     async with AsyncSessionLocal() as db:
-        user = await db.scalar(select(User).where(User.telegram_id == telegram_id))
-        if user is None:
-            full_name = " ".join(
-                filter(None, [tg_user.get("first_name"), tg_user.get("last_name")])
-            ) or None
-            role = UserRole.admin if is_admin_id else UserRole.buyer
-            user = User(
-                telegram_id=telegram_id,
-                phone=None,
-                full_name=full_name,
-                role=role,
-                hashed_password=None,
-            )
-            db.add(user)
-            await db.commit()
-            await db.refresh(user)
-        elif not user.is_active:
+        user = await upsert_telegram_user(db, tg_user)
+        if not user.is_active:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Hisobingiz faol emas")
 
         return TokenResponse(

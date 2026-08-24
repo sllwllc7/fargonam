@@ -66,7 +66,7 @@
 
   .topbar {
     position: sticky; top: 0; z-index: 5; background: var(--bg);
-    padding: 16px 16px 10px;
+    padding: calc(16px + env(safe-area-inset-top)) 16px 10px;
   }
   .topbar h1 { font-size: 22px; font-weight: 800; letter-spacing: -.5px; margin: 0; }
   .topbar .sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
@@ -259,11 +259,24 @@
     display: flex; align-items: center; justify-content: center; padding: 0 4px;
   }
 
+  /* ---- pastda muallaq CTA (Savatga qo'shish va h.k.) ----
+     Ekran mazmuni to'liq viewport'ni to'ldirsa ham (scroll yo'q holatda ham)
+     tugma tabbar ostida qolib bosilmay qolmasin deb, oqim ichida emas,
+     viewport'ga nisbatan qat'iy joylashadi. */
+  .fixed-cta {
+    position: fixed; left: 16px; right: 16px; max-width: 528px;
+    margin: 0 auto; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 8;
+  }
+  .cta-spacer { height: 88px; }
+
   .toast {
     position: fixed; left: 16px; right: 16px; bottom: 92px; z-index: 30;
     background: #171327; color: #EEF1F6; border-radius: 14px; padding: 13px 16px;
     font-size: 14px; font-weight: 600; text-align: center; max-width: 420px; margin: 0 auto;
     box-shadow: 0 12px 26px -10px rgba(0,0,0,.4);
+    /* Bildirishnoma — hech qachon interaktiv emas, tagidagi (fixed-cta)
+       tugmani bosishga xalaqit bermasin */
+    pointer-events: none;
   }
 </style>
 </head>
@@ -277,13 +290,19 @@
   </div>
 </div>
 
-<div id="screenTelegramLogin" class="center-screen hidden">
+<div id="screenTelegramOnly" class="center-screen hidden">
   <div class="center-card">
     <div class="logo">F</div>
     <h1>Fargonam</h1>
-    <p>Davom etish uchun Telegram orqali kiring.</p>
-    <div id="loginError" class="error-box hidden"></div>
-    <button class="btn btn-primary" id="telegramLoginBtn">Telegram orqali kirish</button>
+    <p>Bu ilova faqat Telegram ichida ishlaydi. Iltimos, Telegram orqali oching.</p>
+  </div>
+</div>
+
+<div id="screenAuthError" class="center-screen hidden">
+  <div class="center-card">
+    <div class="logo">F</div>
+    <h1>Fargonam</h1>
+    <div id="authErrorText" class="error-box"></div>
   </div>
 </div>
 

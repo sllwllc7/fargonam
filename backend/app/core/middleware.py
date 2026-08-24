@@ -49,9 +49,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # mobil ilovaga ta'sir yo'q (Flutter CSP'ni umuman o'qimaydi).
         # img-src'ga blob: qo'shilgan — admin_web rasm qirqish (react-easy-crop)
         # tanlangan faylni URL.createObjectURL() bilan blob: URL sifatida ko'rsatadi.
+        # script-src'ga https://telegram.org qo'shilgan — /miniapp shu yerdan
+        # Telegram WebApp SDK'ni yuklaydi (telegram-web-app.js), aks holda CSP
+        # uni bloklaydi va Mini App Telegram tashqarisida ochilganidek ishlaydi.
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self'; "
+            "script-src 'self' https://telegram.org; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: blob:; "

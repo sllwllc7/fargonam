@@ -213,6 +213,42 @@ async def notify_order_status(user_id: int, order_id: int, status: str) -> None:
     title = f"Buyurtma #{order_id}"
     await send_push_to_user(user_id, title, label, data={"type": "order", "order_id": str(order_id)})
     await _create_notification(user_id, title, label, "order", ref_id=order_id)
+    await _notify_order_status_telegram(user_id, order_id, title, label)
+
+
+async def _notify_order_status_telegram(user_id: int, order_id: int, title: str, label: str) -> None:
+    """Mini App'da push imkoniyati yo'q — shu o'rnini Telegram bot xabari
+    bosadi. Foydalanuvchi `telegram_id`ga ega bo'lsagina yuboriladi (mobil
+    ilova orqali kirgan, Telegram bog'lamagan foydalanuvchiga tegmaydi)."""
+    from app.core.config import settings
+
+    if not settings.TELEGRAM_MINIAPP_BOT_TOKEN:
+        return
+    try:
+        from sqlalchemy import select
+
+        from app.db.session import AsyncSessionLocal
+        from app.models.user import User
+
+        async with AsyncSessionLocal() as db:
+            telegram_id = await db.scalar(select(User.telegram_id).where(User.id == user_id))
+        if not telegram_id:
+            return
+
+        from app.core.telegram_bot import send_message
+
+        await send_message(
+            telegram_id,
+            f"{title}\n{label}",
+            bot_token=settings.TELEGRAM_MINIAPP_BOT_TOKEN,
+            reply_markup={
+                "inline_keyboard": [[
+                    {"text": "Mini App'ni ochish", "web_app": {"url": settings.MINIAPP_URL}}
+                ]]
+            },
+        )
+    except Exception as e:
+        logger.error(f"Miniapp bot orqali xabar yuborishda xato: {e}")
 
 
 async def notify_new_message(user_id: int, sender_name: str) -> None:
