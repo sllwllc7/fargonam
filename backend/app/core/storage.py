@@ -41,21 +41,28 @@ def _get_s3():
             _s3_client.head_bucket(Bucket=settings.S3_BUCKET)
         except Exception:
             _s3_client.create_bucket(Bucket=settings.S3_BUCKET)
-            # Public o'qish uchun policy
-            import json
-            policy = {
-                "Version": "2012-10-17",
-                "Statement": [{
-                    "Effect": "Allow",
-                    "Principal": "*",
-                    "Action": ["s3:GetObject"],
-                    "Resource": [f"arn:aws:s3:::{settings.S3_BUCKET}/*"],
-                }],
-            }
+
+        # Public o'qish policy'si — bucket allaqachon (policy'siz) mavjud
+        # bo'lsa ham har safar tekshirilib qo'yiladi, faqat yangi
+        # yaratilganda emas. Aks holda bucket policy'siz qolib ketsa,
+        # rasm URL'lari (masalan /s3/...) "AccessDenied" berardi.
+        import json
+        policy = {
+            "Version": "2012-10-17",
+            "Statement": [{
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": ["s3:GetObject"],
+                "Resource": [f"arn:aws:s3:::{settings.S3_BUCKET}/*"],
+            }],
+        }
+        try:
             _s3_client.put_bucket_policy(
                 Bucket=settings.S3_BUCKET,
                 Policy=json.dumps(policy),
             )
+        except Exception as e:
+            logger.warning(f"Bucket policy o'rnatilmadi: {e}")
         logger.info(f"S3 storage ulandi: {settings.S3_ENDPOINT}/{settings.S3_BUCKET}")
         return _s3_client
     except ImportError:
