@@ -245,12 +245,13 @@ async def telegram_webapp_login(request: Request, payload: TelegramWebAppAuthReq
     Telegram'da allaqachon autentifikatsiya qilingani uchun bot/session-polling
     oqimi (yuqoridagi /session) shart emas, `initData` imzosi tekshirilib
     to'g'ridan-to'g'ri JWT beriladi."""
-    if not settings.TELEGRAM_BOT_TOKEN:
+    bot_token = settings.TELEGRAM_MINIAPP_BOT_TOKEN or settings.TELEGRAM_BOT_TOKEN
+    if not bot_token:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Telegram login hali sozlanmagan",
         )
-    pairs = _validate_webapp_init_data(payload.init_data, settings.TELEGRAM_BOT_TOKEN)
+    pairs = _validate_webapp_init_data(payload.init_data, bot_token)
     user_raw = pairs.get("user")
     if not user_raw:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Foydalanuvchi ma'lumoti yo'q")

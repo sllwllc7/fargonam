@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_TOKEN: str = ""
     TELEGRAM_BOT_USERNAME: str = ""  # @ belgisiz, masalan: fargonam_login_bot
     TELEGRAM_WEBHOOK_SECRET: str = ""
+    # /miniapp (Telegram Mini App) sinovi uchun alohida bot — bo'sh bo'lsa
+    # TELEGRAM_BOT_TOKEN ishlatiladi. Asosiy login bot'idan mustaqil, shu
+    # sababli sinov paytida fargonam_bot login oqimiga ta'sir qilmaydi.
+    TELEGRAM_MINIAPP_BOT_TOKEN: str = ""
     # true = long-polling (ochiq HTTPS domen shart emas, lokal dev uchun).
     # false = webhook (production, domen kerak).
     TELEGRAM_USE_POLLING: bool = False
