@@ -570,7 +570,10 @@
         '</div>';
     }).join("") +
       '<div class="cart-summary"><div class="row"><div class="label">Jami</div><div class="value">' + formatPrice(total) + '</div></div></div>' +
-      (hasNativeMainButton ? "" : '<div class="cta-spacer"></div><div class="fixed-cta"><button class="btn btn-primary" id="checkoutBtn">Buyurtma berish</button></div>');
+      // Tabbar har doim ko'rinadi (native MainButton bo'lsa ham) — shuning
+      // uchun spacer shartsiz qo'shiladi, tugma esa faqat fallback rejimida.
+      '<div class="cta-spacer"></div>' +
+      (hasNativeMainButton ? "" : '<div class="fixed-cta"><button class="btn btn-primary" id="checkoutBtn">Buyurtma berish</button></div>');
 
     list.querySelectorAll(".cart-item").forEach(function (el) {
       var id = parseInt(el.getAttribute("data-id"), 10);
@@ -631,7 +634,8 @@
       '</div>' +
       '<div class="cart-summary" style="margin-bottom:16px"><div class="row"><div class="label">Jami to\'lov</div><div class="value">' + formatPrice(total) + '</div></div></div>' +
       '<div style="font-size:12.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.45">To\'lov naqd — kuryer POS terminali orqali yetkazib berishda amalga oshiriladi.</div>' +
-      (hasNativeMainButton ? "" : '<div class="cta-spacer"></div><div class="fixed-cta"><button class="btn btn-primary" id="submitOrderBtn">Buyurtmani tasdiqlash</button></div>');
+      '<div class="cta-spacer"></div>' +
+      (hasNativeMainButton ? "" : '<div class="fixed-cta"><button class="btn btn-primary" id="submitOrderBtn">Buyurtmani tasdiqlash</button></div>');
 
     form.querySelectorAll(".seg button").forEach(function (b) {
       b.addEventListener("click", function () {
