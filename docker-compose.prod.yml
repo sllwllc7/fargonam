@@ -61,6 +61,7 @@ services:
       REDIS_URL: ${REDIS_URL}
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY kerak (32+ belgi)}
       DEBUG: "false"
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-60}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
       FCM_SERVER_KEY: ${FCM_SERVER_KEY:-}
       S3_ENDPOINT: http://minio:9000
