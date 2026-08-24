@@ -25,18 +25,36 @@
     --text-muted: #3F3F49;
     --border: #E0E6EF;
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; }
+  * {
+    box-sizing: border-box; -webkit-tap-highlight-color: transparent;
+    /* Uzoq bosganda link/rasm konteksti menyusi chiqmasin — brauzer
+       o'rniga mobil ilova kabi tuyulsin. touch-action tugma bosilishi
+       tezroq (300ms kechikishsiz) va ikki barmoq bilan zoom qilinmasin
+       deb qo'yilgan. */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none; user-select: none;
+    touch-action: manipulation;
+  }
+  html, body { height: 100%; overscroll-behavior-y: none; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
     font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     padding-bottom: 84px;
+    -webkit-overflow-scrolling: touch;
   }
   button { font-family: inherit; }
   .hidden { display: none !important; }
-  img { -webkit-user-drag: none; }
+  img { -webkit-user-drag: none; pointer-events: none; }
+  input, textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+  a { -webkit-touch-callout: none; }
+
+  @keyframes screenIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .screen-enter { animation: screenIn 260ms cubic-bezier(.2,.8,.2,1); }
 
   .btn {
     display: flex; align-items: center; justify-content: center; gap: 6px;

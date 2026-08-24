@@ -232,7 +232,19 @@
 
   function showAppScreen(name) {
     ["screenCatalog", "screenProducts", "screenProduct", "screenCart", "screenCheckout", "screenSuccess", "screenOrders"]
-      .forEach(function (id) { document.getElementById(id).classList.toggle("hidden", id !== name); });
+      .forEach(function (id) {
+        var el = document.getElementById(id);
+        var wasHidden = el.classList.contains("hidden");
+        el.classList.toggle("hidden", id !== name);
+        if (id === name && wasHidden) {
+          // Ekran o'zgarishi silliq bo'lsin — mobil ilovadagidek fade+slide.
+          // classList'ni olib-qo'yish (reflow bilan) animatsiyani har safar
+          // qaytadan boshlatadi.
+          el.classList.remove("screen-enter");
+          void el.offsetWidth;
+          el.classList.add("screen-enter");
+        }
+      });
   }
 
   function switchTab(tab) {
