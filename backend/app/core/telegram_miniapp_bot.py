@@ -14,15 +14,24 @@ ochiq HTTPS domen shart emas.
 """
 import asyncio
 import logging
+import uuid
 
 import httpx
 from sqlalchemy import select
 
 from app.core.config import settings
+from app.core.redis_client import get_redis
 from app.core.telegram_bot import call_bot_api, send_message
 from app.db.session import AsyncSessionLocal
 
 logger = logging.getLogger("fargonam.telegram_miniapp_bot")
+
+# Production 4 ta uvicorn worker'da ishlaydi — har biri o'z startup
+# event'ida shu funksiyani chaqiradi. Telegram bitta bot tokenida faqat
+# bitta getUpdates ulanishiga ruxsat beradi (409 Conflict), shuning uchun
+# Redis orqali "faqat bitta worker poll qiladi" qulfi kerak.
+_LOCK_KEY = "miniapp_bot:poll_lock"
+_LOCK_TTL = 45
 
 WELCOME_TEXT = (
     "Assalomu alaykum! 👋\n\n"
@@ -107,10 +116,32 @@ def _api_url(method: str, bot_token: str) -> str:
     return f"https://api.telegram.org/bot{bot_token}/{method}"
 
 
+async def _acquire_or_wait_lock(worker_id: str) -> None:
+    """Faqat bitta worker poll qilishi kerak — Redis NX qulfi orqali
+    "yetakchi" tanlanadi. Boshqalar qulf bo'shashini kutib turadi (yetakchi
+    yiqilsa TTL tugab, kutayotganlardan biri egallab oladi)."""
+    redis = get_redis()
+    while True:
+        acquired = await redis.set(_LOCK_KEY, worker_id, nx=True, ex=_LOCK_TTL)
+        if acquired:
+            return
+        await asyncio.sleep(_LOCK_TTL / 3)
+
+
+async def _renew_lock(worker_id: str) -> None:
+    redis = get_redis()
+    current = await redis.get(_LOCK_KEY)
+    if current == worker_id:
+        await redis.expire(_LOCK_KEY, _LOCK_TTL)
+
+
 async def run_miniapp_polling_loop() -> None:
     bot_token = settings.TELEGRAM_MINIAPP_BOT_TOKEN
     if not bot_token:
         return
+
+    worker_id = uuid.uuid4().hex
+    await _acquire_or_wait_lock(worker_id)
 
     async with httpx.AsyncClient(timeout=40) as client:
         await client.post(_api_url("deleteWebhook", bot_token))
@@ -119,11 +150,12 @@ async def run_miniapp_polling_loop() -> None:
         await call_bot_api(
             "setChatMenuButton", bot_token, {"menu_button": _menu_button(settings.MINIAPP_URL)}
         )
-        logger.info("Miniapp bot long-polling boshlandi")
+        logger.info("Miniapp bot long-polling boshlandi (worker=%s)", worker_id)
 
         offset = 0
         while True:
             try:
+                await _renew_lock(worker_id)
                 resp = await client.get(
                     _api_url("getUpdates", bot_token),
                     params={"offset": offset, "timeout": 30},
