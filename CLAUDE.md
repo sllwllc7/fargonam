@@ -491,3 +491,4 @@ Javob "yo'q" bo'lsa — ekran tugamagan:
   ```
 - Android qurilma USB orqali ulanadi (`adb devices`), birinchi o'rnatishda qurilma ekranida ruxsat tasdiqlanadi.
 - Ish `mobile-ui-rebuild` branch'ida olib boriladi, `master` ga to'g'ridan-to'g'ri commit qilinmaydi.
+- **Deploy manzili faqat `DEPLOY.md` dan olinadi.** Boshqa SSH alias yoki IP ishlatilmaydi. (2026-08-25: `~/.ssh/config`dagi tasodifiy `vps-sharq` alias — Fargonam bilan hech qanday aloqasi bo'lmagan boshqa server — deploy manzili deb noto'g'ri taxmin qilingan edi. Haqiqiy server har doim `DEPLOY.md`da yozilgan: `fargonam@189.74.97.28`.)
