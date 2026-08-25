@@ -304,6 +304,150 @@
     border-radius: 999px; background: rgba(255,255,255,.12); color: #fff;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
   }
+
+  /* ---- bo'lim almashtirgich (Buyurtmalar/Mahsulotlar/Kategoriyalar) ---- */
+  .section-nav {
+    display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto;
+    -ms-overflow-style: none; scrollbar-width: none;
+  }
+  .section-nav::-webkit-scrollbar { display: none; }
+  .section-pill {
+    flex: none; padding: 9px 15px; border-radius: 999px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    font-size: 13.5px; font-weight: 700; color: var(--text-secondary);
+    cursor: pointer; white-space: nowrap;
+  }
+  .section-pill.active { background: var(--primary); border-color: var(--primary); color: #EEF1F6; }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .fab-add {
+    position: fixed; right: 18px; bottom: 24px; z-index: 6;
+    width: 58px; height: 58px; border-radius: 999px;
+    background: linear-gradient(180deg, #24406F, #12233F); color: #EEF1F6;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 24px -6px rgba(16,31,56,.5); border: none; cursor: pointer;
+  }
+  .fab-add:active { transform: scale(.94); }
+
+  /* ---- mahsulot/kategoriya kartalari ---- */
+  .catalog-filters { display: flex; gap: 8px; margin-bottom: 12px; }
+  .catalog-filters input[type=text] { flex: 1; }
+  .catalog-filters select {
+    border: 1.5px solid var(--border); background: var(--surface);
+    border-radius: 12px; padding: 0 12px; font-size: 14px; font-family: inherit;
+    color: var(--text); max-width: 150px;
+  }
+  .catalog-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 12px; margin-bottom: 12px;
+    display: flex; gap: 12px; box-shadow: 0 1px 2px rgba(23,19,39,.04), 0 12px 26px -16px rgba(23,19,39,.08);
+  }
+  .catalog-thumb {
+    width: 64px; height: 64px; border-radius: 12px; background: var(--bg);
+    flex: none; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; color: var(--text-muted);
+  }
+  .catalog-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .catalog-body { flex: 1; min-width: 0; }
+  .catalog-name {
+    font-size: 15px; font-weight: 700; letter-spacing: -.2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .catalog-meta { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+  .catalog-price { font-size: 14.5px; font-weight: 800; margin-top: 6px; }
+  .status-pill {
+    display: inline-flex; font-size: 10.5px; font-weight: 700; padding: 3px 8px;
+    border-radius: 7px; margin-left: 6px; vertical-align: middle;
+  }
+  .status-pill.pending { background: #FEF3C7; color: #92400E; }
+  .status-pill.hidden-pill { background: var(--border); color: var(--text-muted); }
+  .quick-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .quick-input {
+    width: 78px; border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 7px 9px; font-size: 13.5px; font-family: inherit; text-align: center;
+  }
+  .quick-label { font-size: 11px; color: var(--text-muted); }
+  .icon-link { color: var(--text-muted); cursor: pointer; padding: 4px; }
+
+  /* ---- forma (mahsulot/kategoriya) ---- */
+  .form-screen main { padding-bottom: 110px; }
+  .form-field { margin-bottom: 16px; }
+  .form-field label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 7px; }
+  .form-field select {
+    width: 100%; border: 1.5px solid var(--border); background: var(--surface);
+    border-radius: 12px; padding: 14px 16px; font-size: 16px; font-family: inherit; color: var(--text);
+  }
+  .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+  .form-sticky-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 8;
+    background: var(--bg); padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 20px -12px rgba(0,0,0,.15);
+  }
+  .form-sticky-bar .row { max-width: 640px; margin: 0 auto; display: flex; gap: 10px; }
+  .form-sticky-bar .btn { flex: 1; }
+
+  .image-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+  .image-tile {
+    width: 84px; height: 84px; border-radius: 14px; overflow: hidden;
+    position: relative; background: var(--surface); border: 1.5px solid var(--border);
+  }
+  .image-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .image-tile .main-badge {
+    position: absolute; left: 4px; bottom: 4px; background: rgba(15,20,35,.75); color: #fff;
+    font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 6px;
+  }
+  .image-tile .rm-btn {
+    position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 999px;
+    background: rgba(15,20,35,.75); color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; cursor: pointer;
+  }
+  .image-tile .set-main-btn {
+    position: absolute; inset: 0; background: rgba(15,20,35,.35); color: #fff;
+    font-size: 10.5px; font-weight: 700; display: none; align-items: center; justify-content: center;
+    text-align: center; cursor: pointer;
+  }
+  .image-tile:not(.is-main):hover .set-main-btn { display: flex; }
+  .image-add-tile {
+    width: 84px; height: 84px; border-radius: 14px; border: 1.5px dashed var(--border);
+    background: var(--surface); display: flex; align-items: center; justify-content: center;
+    color: var(--primary-mid); cursor: pointer; flex-direction: column; gap: 3px; font-size: 11px; font-weight: 700;
+  }
+
+  .param-block {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px;
+    padding: 12px; margin-bottom: 10px;
+  }
+  .param-block-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .param-block-head input {
+    border: none; background: transparent; font-size: 14.5px; font-weight: 700; padding: 4px 0; flex: 1;
+  }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .value-chip {
+    display: inline-flex; align-items: center; gap: 5px; background: var(--primary-light);
+    color: var(--primary); font-size: 13px; font-weight: 700; padding: 6px 6px 6px 12px; border-radius: 999px;
+  }
+  .value-chip .x { cursor: pointer; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+  .chip-input {
+    border: 1.5px dashed var(--border); border-radius: 999px; padding: 6px 12px;
+    font-size: 13px; font-family: inherit; min-width: 90px; flex: 1;
+  }
+  .add-param-btn {
+    width: 100%; border: 1.5px dashed var(--border); border-radius: 14px; background: var(--surface);
+    color: var(--primary-mid); font-weight: 700; font-size: 14px; padding: 12px; cursor: pointer; margin-bottom: 14px;
+  }
+
+  .sku-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  .sku-table th { text-align: left; font-size: 11px; color: var(--text-muted); font-weight: 700; padding: 6px 6px; text-transform: uppercase; letter-spacing: .4px; }
+  .sku-table td { padding: 6px; border-top: 1px solid var(--border); vertical-align: middle; }
+  .sku-table .combo-label { font-size: 13.5px; font-weight: 700; }
+  .sku-table input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 8px 9px; font-size: 13.5px; font-family: inherit; text-align: center;
+  }
+
+  .conflict-banner {
+    background: #FEF3C7; color: #92400E; border-radius: 12px; padding: 10px 14px;
+    font-size: 13px; font-weight: 700; margin-bottom: 12px; line-height: 1.4;
+  }
 </style>
 </head>
 <body>
@@ -358,6 +502,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
     </div>
+    <div class="section-nav" id="sectionNavMain"></div>
     <div id="connBanner" class="conn-banner hidden">Ulanish yo'q, qayta urinilmoqda...</div>
     <div class="tabs" id="tabs"></div>
   </div>
@@ -377,10 +522,69 @@
   <main id="detailContent"></main>
 </div>
 
+<!-- ============ MAHSULOTLAR ============ -->
+<div id="screenProducts" class="hidden">
+  <div class="topbar">
+    <div class="topbar-row">
+      <h1>Mahsulotlar</h1>
+      <div class="icon-btn" id="logoutBtnProducts" title="Chiqish">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="section-nav" id="sectionNavProducts"></div>
+    <div class="catalog-filters">
+      <input type="text" id="productSearch" placeholder="Mahsulot qidirish...">
+      <select id="productCategoryFilter"><option value="">Barcha kategoriya</option></select>
+    </div>
+  </div>
+  <main id="productsList"></main>
+  <button class="fab-add" id="addProductBtn" title="Yangi mahsulot">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+  </button>
+</div>
+
+<!-- ============ KATEGORIYALAR ============ -->
+<div id="screenCategories" class="hidden">
+  <div class="topbar">
+    <div class="topbar-row">
+      <h1>Kategoriyalar</h1>
+      <div class="icon-btn" id="logoutBtnCategories" title="Chiqish">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="section-nav" id="sectionNavCategories"></div>
+  </div>
+  <main id="categoriesList"></main>
+  <button class="fab-add" id="addCategoryBtn" title="Yangi kategoriya">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+  </button>
+</div>
+
+<!-- ============ MAHSULOT FORMASI ============ -->
+<div id="screenProductForm" class="hidden form-screen">
+  <div class="topbar">
+    <div class="topbar-row" style="max-width:640px;margin:0 auto;display:block">
+      <div class="detail-back" id="productFormBackBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="productFormTitle">Yangi mahsulot</span>
+      </div>
+    </div>
+  </div>
+  <main id="productFormContent"></main>
+</div>
+
+<!-- ============ KATEGORIYA FORMASI (modal) ============ -->
+<div id="categoryFormOverlay" class="modal-overlay hidden">
+  <div class="modal-sheet" id="categoryFormSheet"></div>
+</div>
+
+<input type="file" id="hiddenFileInput" accept="image/jpeg,image/png,image/webp" capture="environment" class="hidden">
+
 <div id="zoomOverlay" class="zoom-overlay hidden"></div>
 
 <div id="toastHost"></div>
 
 <script src="app.js"></script>
+<script src="catalog.js"></script>
 </body>
 </html>

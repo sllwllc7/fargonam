@@ -36,6 +36,7 @@ from app.api import rides as rides_api
 from app.api import cart as cart_api
 from app.api import categories as categories_api
 from app.api import dokon as dokon_api
+from app.api import dokon_catalog as dokon_catalog_api
 from app.api import products as products_api
 from app.api import seller as seller_api
 from app.api import shops as shops_api
@@ -106,6 +107,7 @@ app.include_router(rides_api.router)
 app.include_router(seller_api.router)
 app.include_router(admin_api.router)
 app.include_router(dokon_api.router)
+app.include_router(dokon_catalog_api.router)
 app.include_router(ws_api.router)
 
 # Admin web — same-origin xizmat (CORS muammosi yo'q)

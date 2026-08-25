@@ -150,10 +150,47 @@
   }
 
   // ---------- ekranlar ----------
+  var ALL_SCREENS = [
+    "screenLogin", "screenName", "screenMain", "screenDetail",
+    "screenProducts", "screenProductForm", "screenCategories",
+  ];
   function showScreen(id) {
-    ["screenLogin", "screenName", "screenMain", "screenDetail"].forEach(function (s) {
+    ALL_SCREENS.forEach(function (s) {
       $(s).classList.toggle("hidden", s !== id);
     });
+  }
+
+  // ---------- bo'lim almashtirgich (Buyurtmalar/Mahsulotlar/Kategoriyalar) ----------
+  var SECTION_NAV_ITEMS = [
+    { key: "orders", label: "Buyurtmalar" },
+    { key: "products", label: "Mahsulotlar" },
+    { key: "categories", label: "Kategoriyalar" },
+  ];
+  function renderSectionNav(hostId, activeKey) {
+    var host = $(hostId);
+    if (!host) return;
+    host.innerHTML = "";
+    SECTION_NAV_ITEMS.forEach(function (s) {
+      var el = document.createElement("div");
+      el.className = "section-pill" + (s.key === activeKey ? " active" : "");
+      el.textContent = s.label;
+      el.addEventListener("click", function () {
+        if (s.key === activeKey) return;
+        goToSection(s.key);
+      });
+      host.appendChild(el);
+    });
+  }
+  function goToSection(key) {
+    stopPolling();
+    if (key === "orders") { navigateToList(); return; }
+    if (key === "products") { window.DokonCatalog && window.DokonCatalog.showProducts(); return; }
+    if (key === "categories") { window.DokonCatalog && window.DokonCatalog.showCategories(); return; }
+  }
+  function renderAllSectionNavs(activeKey) {
+    renderSectionNav("sectionNavMain", activeKey);
+    renderSectionNav("sectionNavProducts", activeKey);
+    renderSectionNav("sectionNavCategories", activeKey);
   }
 
   // ---------- marshrutlash (/dokon yoki /dokon/FN-<id>) ----------
@@ -183,6 +220,7 @@
     state.view = "list";
     state.detailOrderId = null;
     showScreen("screenMain");
+    renderAllSectionNavs("orders");
     renderTabs();
     loadOrders();
     if (!state.pollTimer) startPolling();
@@ -261,11 +299,15 @@
     }
   });
 
-  $("logoutBtn").addEventListener("click", async function () {
+  async function doLogout() {
     if (!confirm("Chiqmoqchimisiz?")) return;
     stopPolling();
     try { await api("/logout", { method: "POST" }); } catch (e) {}
     showScreen("screenLogin");
+  }
+  ["logoutBtn", "logoutBtnProducts", "logoutBtnCategories"].forEach(function (id) {
+    var el = $(id);
+    if (el) el.addEventListener("click", doLogout);
   });
 
   // ---------- tab/ro'yxat ----------
@@ -618,6 +660,21 @@
       btn.disabled = false;
     }
   }
+
+  // ---------- catalog.js bilan umumiy interfeys ----------
+  window.Dokon = {
+    $: $,
+    api: api,
+    escapeHtml: escapeHtml,
+    formatSom: formatSom,
+    minutesAgo: minutesAgo,
+    showToast: showToast,
+    showScreen: showScreen,
+    renderAllSectionNavs: renderAllSectionNavs,
+    stopPolling: stopPolling,
+    navigateToList: navigateToList,
+    categoryIconSvg: categoryIconSvg,
+  };
 
   boot();
 })();

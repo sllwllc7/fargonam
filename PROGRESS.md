@@ -2671,3 +2671,92 @@ Tugma endi `.fixed-cta` bilan viewport'ga nisbatan qat'iy joylashadi
 `alembic upgrade head` + `docker compose build backend` +
 `docker compose up -d --no-deps backend` + nginx reload (`/s3/` route
 uchun). Batafsil: git log.
+
+## /dokon — katalog boshqaruvi (2026-08-25)
+
+`/dokon`ga uydagilar uchun **Mahsulotlar** va **Kategoriyalar** bo'limlari
+qo'shildi (avval faqat Buyurtmalar bor edi). `mobile_seller` ilovasiga
+TEGILMADI (to'xtatilgan holida qoladi). `mobile_user`, `/admin-web`, Mini App
+auth oqimi, mavjud `/products`/`/categories`/`/seller` endpointlari
+o'zgarishsiz qoldi.
+
+**Arxitektura qarori — nega yangi endpointlar mavjudlarini ICHKI FUNKSIYA
+CHAQIRUVI sifatida qayta ishlatadi:** `backend/app/api/dokon_catalog.py`
+(yangi fayl, `/dokon-api` prefiksi) `products.py`/`categories.py`dagi
+`create_product`/`update_product`/`create_variant`/`upload_product_image`
+va h.k. funksiyalarini **to'g'ridan-to'g'ri Python darajasida** chaqiradi
+(`current_user` sifatida yagona MVP1 do'kon egasi — `Shop.owner_id`dan
+topilgan admin foydalanuvchi uzatiladi), HTTP orqali emas. Sabab: rasm
+siqish/validatsiya, SKU/variant CRUD, savat-bog'liq o'chirish himoyasi —
+bari BITTA joyda qoladi, ikkinchi marta yozilmaydi va ikki xil xatti-harakat
+xavfi yo'q. `products.py`/`categories.py`ga birorta qator o'zgartirilmadi.
+
+| Bo'lim | Nima qilindi |
+|---|---|
+| Auth | Mavjud `require_dokon_name` (dokon.py, umumiy login/parol + ism) qayta ishlatildi — yangi auth yozilmadi |
+| Moderatsiya | Yangi `AppConfig["dokon_catalog_moderation"]` (standart yo'q qator = "false" = **o'chiq**). O'chiq bo'lsa: yangi mahsulot/tahrir darhol `approved` (mavjud `approve()`/`stage_protected_update()` — moderation.py, o'zgartirilmagan — kombinatsiyasi bilan). Yoqilsa: odatdagi pending/tasdiqlash navbati qaytadi. Narx/zaxira har doim darhol (mavjud qoida, o'zgarmadi) |
+| "Kim/qachon" + tahrir to'qnashuvi | DB'ga YANGI USTUN QO'SHILMADI — Redis'da (`dokon:meta:{kind}:{id}` hash: rev/created_by/created_at/updated_by/updated_at), xuddi mavjud buyurtma-band qilish mexanizmi (dokon.py) kabi. Har saqlashda frontend oxirgi ko'rgan `rev`ni yuboradi (`known_rev`) — orada boshqa xodim saqlagan bo'lsa oxirgi saqlagan g'olib chiqadi, lekin javobda `conflict:{conflict_by}` qaytadi, UI toast ko'rsatadi. **Bilib turib qilingan tanlov**: Redis flush bo'lsa faqat shu "kim/qachon" yorlig'i yo'qoladi (asosiy mahsulot/kategoriya ma'lumoti tegilmaydi) — DB migratsiyasidan ko'ra soddaroq va mavjud pattern bilan izchil deb topildi |
+| Rasm | Mavjud `process_product_image`/`PRODUCTS_DIR`/`CATEGORIES_DIR` qayta ishlatildi. Yangi mahsulotda rasmlar CLIENT-SIDE navbatga qo'yiladi (`URL.createObjectURL`, darhol preview), Saqlash bosilganda ketma-ket yuklanadi (birinchisi asosiy). Tahrirlashda rasm tanlangan zahoti serverga yuklanadi (mahsulot allaqachon bor) |
+| SKU/parametr | `admin_web_src/src/utils/skuMatrix.ts`dagi dekart-ko'paytma mantig'i vanilla JS'ga ko'chirildi (`catalog.js: cartesianCombos`) — bir xil algoritm, ikki xil til (React admin_web TS, /dokon build-tizimsiz vanilla JS, birlashtirib bo'lmaydi). Yangi mahsulotda: N ta parametr → to'liq SKU jadvali. Tahrirlashda: mavjud variantlar narx/zaxira tahrirlanadi + "+ Yangi variant" bitta combo qo'shadi (to'liq qayta-kombinatsiya tahrirlashda YO'Q — "sodda bo'lsin" va vaqt cheklovi sababli ataylab qisqartirilgan, kerak bo'lsa alohida so'rov bilan kengaytiriladi) |
+| **Topilgan va tuzatilgan xato** | `categories.py`dagi mavjud `delete_category` hech qanday himoyasiz edi — `Product.category_id` ustuni `ON DELETE SET NULL` bo'lgani uchun IntegrityError chiqmay, kategoriyani mahsulotlar bor holda ham jim o'chirib yuborardi (5-bo'lim talabi: "ichida mahsulot bo'lsa o'chirishga ruxsat berma" buzilardi). `dokon_catalog.py`dagi wrapper'da alohida son tekshiruvi qo'shildi (400 + son bilan xabar). `categories.py`ning o'ziga tegilmadi — kamchilik faqat yangi qatlamda yopildi |
+| Bot xabari | Yangi mahsulot qo'shilganda va nom/narx o'zgarganda `ADMIN_TELEGRAM_IDS`ga (`TELEGRAM_MINIAPP_BOT_TOKEN` orqali) xabar. Mini App'da "ko'rish havolasi" — aniq mahsulotga CHUQUR HAVOLA emas, `MINIAPP_URL` (ildiz) — Mini App'da product-level deep link infratuzilmasi umuman yo'q, uni qo'shish Mini App kodiga tegishni talab qilardi (taqiqlangan) |
+
+### Qarorlar
+- 2026-08-25: Savol — moderatsiyani qanday yoqish/o'chirish kerak
+  bo'lganda? → Qaror: `PUT /app-config/dokon_catalog_moderation` (admin
+  JWT bilan, `{"value":"true"}` yoki `"false"`) → Sabab: mavjud
+  AppConfig tizimi allaqachon shu maqsad uchun yozilgan, yangi UI/sozlama
+  ekrani kerak emas.
+- 2026-08-25: Savol — "kim/qachon" va tahrir to'qnashuvi uchun DB ustuni
+  qo'shilsinmi? → Qaror: yo'q, Redis (yuqoriga qara) → Sabab: mavjud
+  order-claim pattern bilan bir xil, migratsiya shart emas.
+- 2026-08-25: Savol — bir nechta parametrni tahrirlashda qayta
+  kombinatsiya qilish kerakmi? → Qaror: yo'q, faqat yaratishda; tahrirda
+  narx/zaxira + bitta-bitta variant qo'shish → Sabab: sodda UI, vaqt
+  cheklovi, ehtiyoj bo'lsa keyinroq kengaytiriladi.
+
+### Zanjir tekshiruvi (Playwright, `/usr/bin/chromium`, 393px viewport)
+1. `/dokon` → kirish → Kategoriyalar → "+" → rasm bilan yangi kategoriya
+   yaratildi ✅
+2. Mahsulotlar → "+" → rasm + tavsif + "Varoq soni" parametri (500/1000) →
+   SKU jadvali avtomatik 2 qator → narx/zaxira kiritildi → Saqlash →
+   "Qo'shildi, do'konda ko'rinmoqda" ✅
+3. Mini App (`/miniapp`, `initData` HMAC qo'lda haqiqiy
+   `TELEGRAM_MINIAPP_BOT_TOKEN` bilan imzolanib sinaldi — real Telegram
+   klient shart emas) → yangi kategoriya va mahsulot rasm bilan ko'rindi ✅
+4. Mahsulotni ochib "500" variantini tanlash → narx "5 000 so'm" to'g'ri
+   ko'rsatildi ✅
+5. Savatga qo'shildi → checkout (do'kondan olib ketish) → buyurtma #15
+   muvaffaqiyatli yaratildi (pickup kod: 4411) ✅
+6. `/dokon` Buyurtmalar bo'limida buyurtma #15 to'g'ri ma'lumotlar bilan
+   ko'rindi (mahsulot rasmi, narx, miqdor) ✅
+7. `/admin/products` (mavjud, o'zgartirilmagan endpoint) yangi mahsulotni
+   variant/attributes bilan to'liq qaytardi — admin_web'ning mavjud
+   `ProductEditModal`/`SkuEditor` kodi buni allaqachon qo'llab-quvvatlaydi
+   (kod tekshiruvi bilan tasdiqlandi — real login parol qo'lda emas, shu
+   sabab brauzerda emas, API orqali tasdiqlandi) ✅
+8. Bot xabari — mahsulot yaratish/nom o'zgartirish/narx o'zgartirish
+   testlarida real `ADMIN_TELEGRAM_IDS`ga haqiqatan yuborildi (test
+   paytida bir necha marta) — foydalanuvchi qabul qilganini tasdiqlashi
+   kerak ✅ (yuborilgani kod darajasida tasdiqlangan)
+
+Test mahsuloti (`QA Playwright A4 qog'oz`, id=88) buyurtma tarixida
+ishlatilgani uchun o'chirilmadi, `is_active=false` qilindi (mavjud
+"o'chirib bo'lmaydi, nofaol qiling" himoyasi ishladi — bu ham kutilgan
+xatti-harakat tasdiqlandi). Test kategoriyasi ("QA Playwright toifa",
+id=26) ham shu sabab qoldi.
+
+### Backend farqlari
+- Yo'q.
+
+### Yangi test
+`backend/tests/test_dokon_catalog.py` — sof funksiyalar (`_combo_label`,
+`_conflict_info`), DB'siz. To'liq zanjir Playwright bilan qo'lda
+tekshirildi (yuqoriga qara) — DB-bog'liq integratsiya test fixture'i
+loyihada hali yo'q (avvalgi sessiyada ham shu izoh qoldirilgan).
+
+### Deploy
+Hali qilinmadi — shu commit push qilingandan keyin serverda
+`git pull` + `docker compose build backend` + `docker compose up -d
+--no-deps backend` (alembic migratsiya SHART EMAS — bu sessiyada yangi
+DB ustuni qo'shilmadi).
