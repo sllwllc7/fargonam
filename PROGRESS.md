@@ -2756,7 +2756,33 @@ tekshirildi (yuqoriga qara) — DB-bog'liq integratsiya test fixture'i
 loyihada hali yo'q (avvalgi sessiyada ham shu izoh qoldirilgan).
 
 ### Deploy
-Hali qilinmadi — shu commit push qilingandan keyin serverda
-`git pull` + `docker compose build backend` + `docker compose up -d
---no-deps backend` (alembic migratsiya SHART EMAS — bu sessiyada yangi
-DB ustuni qo'shilmadi).
+Qilindi — `fargonam@189.74.97.28` (`DEPLOY.md`dagi manzil): `git pull
+origin mobile-ui-rebuild` (24ffab5, 1916b91) + `docker compose -f
+docker-compose.prod.yml up -d --build backend`. Alembic migratsiya shart
+emas edi (bu sessiyada yangi DB ustuni qo'shilmadi). Konteyner sog'lom
+ishga tushdi, xato yo'q (`docker logs fargonam_backend`).
+
+**Muhim eslatma — keyingi sessiyalar uchun:** deploy paytida `~/.ssh/config`
+dagi tasodifiy `vps-sharq` (`45.92.173.42`) alias — Fargonam bilan aloqasi
+yo'q boshqa (pentest) server — noto'g'ri manzil deb taxmin qilingan edi.
+Foydalanuvchi ulanishdan oldin to'xtatib tekshirtirdi. Endi CLAUDE.md §14'da
+qat'iy qoida: **deploy manzili faqat `DEPLOY.md`dan olinadi**
+(`fargonam@189.74.97.28`). Xato bo'lgan `45.92.173.42`ga hech qachon
+ulanilmadi va uning `known_hosts` yozuvi tegilmadi.
+
+To'liq zanjir PRODUCTIONda (`api.fargonam.uz`) qayta tasdiqlandi (Playwright,
+signed Telegram `initData` `docker exec fargonam_backend python3` orqali
+serverning o'zida hisoblandi — bot tokeni hech qachon lokalga chiqmadi):
+kategoriya+rasm → mahsulot+rasm+parametr → Mini App'da narx to'g'ri
+(6 000 so'm) → savat → checkout (pickup) → **buyurtma #32** (kod 4155) →
+`/dokon` Buyurtmalarda ko'rindi (API bilan tasdiqlandi). Bot xabari haqiqiy
+`ADMIN_TELEGRAM_IDS`ga yuborildi (mahsulot yaratilganda). Test mahsuloti
+(id=76) buyurtmada ishlatilgani uchun `is_active=false` qilindi, o'chirilmadi.
+
+**Tekshirilmagan qoldi:** `/admin-web`da tahrirlash (8.7-band) — real
+`ADMIN_WEB_LOGIN` paroli mavjud emas (faqat bcrypt hash saqlangan,
+production'da `DEBUG=false` bo'lgani uchun dev-bypass ham ishlamaydi).
+Lokal (dev, DEBUG=true) muhitda buning o'rniga `/admin/products` API
+to'g'ridan-to'g'ri tekshirilgan edi (ProductOut/VariantOut o'zgarishsiz —
+mos ekanligi kod darajasida tasdiqlangan), lekin real brauzerda
+`/admin-web` orqali productionda ko'rilmadi.
